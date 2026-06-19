@@ -3,8 +3,8 @@
 > _Learn **real** Kubernetes by building it with `kubeadm` — every component in the open, no toy clusters._
 
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.30%2B-326CE5?logo=kubernetes&logoColor=white)
-![kubeadm](https://img.shields.io/badge/Cluster-kubeadm-326CE5?logo=kubernetes&logoColor=white)
-![k9s](https://img.shields.io/badge/Inspect-k9s-0E7FBF?logo=k9s&logoColor=white)
+![Cluster](https://img.shields.io/badge/Cluster-kubeadm-0F766E)
+![Inspect](https://img.shields.io/badge/Inspect-k9s-5D3FD3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 > **Problem**: Running containers by hand — `docker run` on one machine, restarting them when they crash, wiring up networking, scaling by copy-paste — falls apart the moment you have more than one container or more than one machine.
@@ -23,7 +23,7 @@ Every concept is paired with a runnable `kubectl apply` example, all building to
      Save it to docs/images/demo.gif and replace this comment with:
      ![The two-tier app running, inspected live in k9s](docs/images/demo.gif) -->
 
-**The cluster you'll build by hand — and the app you'll run on it:**
+**The single-node cluster you'll build by hand — control plane _and_ your app on one machine:**
 
 ```mermaid
 ---
@@ -36,30 +36,31 @@ config:
 flowchart TB
     you["👩‍💻 you<br/>kubectl · k9s"] --> api
 
-    subgraph cp["🧠 Control Plane"]
-        direction LR
-        api["🚪 kube-apiserver<br/>the front door"]
-        etcd[("🗄️ etcd<br/>cluster state")]
-        sched["📌 kube-scheduler"]
-        kcm["🔁 kube-controller-manager"]
-        api --- etcd
-        sched --> api
-        kcm --> api
-    end
+    subgraph host["🖥️ Your ONE node — a single machine (control-plane taint removed so it also runs your apps)"]
+        direction TB
+        subgraph cp["🧠 Control Plane · static Pods"]
+            direction LR
+            api["🚪 kube-apiserver<br/>the front door"]
+            etcd[("🗄️ etcd<br/>cluster state")]
+            sched["📌 kube-scheduler"]
+            kcm["🔁 kube-controller-manager"]
+            api --- etcd
+            sched --> api
+            kcm --> api
+        end
 
-    subgraph node["🖥️ Node"]
         kubelet["🤖 kubelet"] --> cri["📦 containerd<br/>CRI runtime"]
         proxy["🔀 kube-proxy"]
         cri --> pods["🚀 your Pods<br/>web &amp; database"]
+
+        subgraph addons["🔌 Add-ons you wire up · also Pods"]
+            cni["🌐 CNI · flannel<br/>pod networking"]
+            dns["📇 CoreDNS<br/>in-cluster DNS"]
+        end
+        addons -.-> pods
     end
 
     api ==>|"schedule &amp; run"| kubelet
-
-    subgraph addons["🔌 Add-ons you wire up"]
-        cni["🌐 CNI · flannel<br/>pod networking"]
-        dns["📇 CoreDNS<br/>in-cluster DNS"]
-    end
-    addons -.-> pods
 
     classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
     classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:3px,color:#0F172A;
@@ -67,7 +68,7 @@ flowchart TB
     class you ctrl;
     class api eng;
     class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt;
-    linkStyle 6 stroke:#D97706,stroke-width:3px;
+    linkStyle 7 stroke:#D97706,stroke-width:3px;
 ```
 
 > Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
@@ -82,6 +83,7 @@ flowchart TB
 - [**Architecture Overview**](#architecture-overview)
 - [**Set Up a Cluster (kubeadm)**](#set-up-a-cluster-kubeadm)
 - [**kubectl 101**](#kubectl-101)
+- [**Anatomy of a Manifest**](#anatomy-of-a-manifest)
 - [**Inspect with k9s**](#inspect-with-k9s)
 
 **Part 1 — Core Objects**
@@ -89,6 +91,8 @@ flowchart TB
 - [**Pod**](#pod)
 - [**Deployment**](#deployment)
 - [**ReplicaSet**](#replicaset)
+- [**DaemonSet (intro)**](#daemonset-intro)
+- [**Job & CronJob**](#job--cronjob)
 - [**Service**](#service)
 - [**Namespace**](#namespace)
 - [**Labels & Selectors**](#labels--selectors)
@@ -199,7 +203,7 @@ _TODO — walk through each component the installer wires up, in pipeline order,
 2. **containerd (the CRI runtime)** — what the Container Runtime Interface is; why the **systemd cgroup driver** must match kubelet.
 3. **kubelet / kubeadm / kubectl** — the node agent vs. the bootstrapper vs. the client; why versions are held/pinned.
 4. **`kubeadm init`** — what it actually creates: control-plane static Pods (apiserver, etcd, scheduler, controller-manager), the `--pod-network-cidr`, and the kubeconfig at `/etc/kubernetes/admin.conf`.
-5. **CNI (flannel)** — why nodes stay `NotReady` until a CNI is applied; what the pod network CIDR binds to.
+5. **CNI (flannel)** — why nodes stay `NotReady` until a CNI is applied; what the pod network CIDR binds to. _(Multi-node note: the CNI's real job is routing Pod traffic **across** nodes via an overlay — on one node that cross-node magic stays hidden, but it's why a CNI is mandatory.)_
 6. **Single-node scheduling** — the `node-role.kubernetes.io/control-plane` taint and why you remove it to run workloads on one node.
 
 > **Heads-up — vanilla k8s ships fewer batteries than k3s.** There is no default StorageClass, LoadBalancer provider, or Ingress controller. Those are installed in their own chapters: local-path-provisioner ([Volumes](#volumes--persistentvolumes)), MetalLB or NodePort ([Service](#service)), ingress-nginx ([Ingress](#ingress)).
@@ -207,6 +211,10 @@ _TODO — walk through each component the installer wires up, in pipeline order,
 ### kubectl 101
 
 _TODO_
+
+### Anatomy of a Manifest
+
+_TODO — every object shares the same top-level fields: `apiVersion`, `kind`, `metadata`, `spec` (plus a `status` the cluster fills in). Read one Pod manifest field by field so every YAML later in the guide feels familiar._
 
 ### Inspect with k9s
 
@@ -226,9 +234,21 @@ _TODO_
 
 _TODO_
 
+### DaemonSet (intro)
+
+_TODO — runs exactly one Pod per node (log shippers, monitoring agents, CNI). Contrast with a Deployment's "N replicas placed anywhere."_
+
+> 📝 **Multi-node note:** a DaemonSet places one Pod on _every_ node. On this single-node cluster you'll see exactly one — picture it fanning out to every machine in a real cluster.
+
+### Job & CronJob
+
+_TODO — **Job**: run-to-completion batch work, with retries and parallelism. **CronJob**: Jobs on a schedule. Contrast with long-running Deployments that should never "finish."_
+
 ### Service
 
 _TODO — ClusterIP / NodePort / LoadBalancer. On vanilla kubeadm there is no LoadBalancer provider: use NodePort, or install MetalLB to make `type: LoadBalancer` work on bare metal._
+
+> 📝 **Multi-node note:** all your Pod endpoints sit on one node here, so kube-proxy has nothing to balance across machines. On a multi-node cluster a Service load-balances traffic to Pods wherever they run.
 
 ### Namespace
 
@@ -256,6 +276,8 @@ _TODO_
 
 _TODO — emptyDir vs PV/PVC. Vanilla kubeadm has no default StorageClass; install local-path-provisioner (or define a hostPath PV) so PVCs can bind._
 
+> 📝 **Multi-node note:** local-path / hostPath volumes live on one node's disk. On a single node that's invisible — but on a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage exists to solve exactly this.
+
 ### StatefulSet (intro)
 
 _TODO_
@@ -272,7 +294,9 @@ _TODO_
 
 ### Scaling
 
-_TODO_
+_TODO — `kubectl scale`, replica count, and an HPA intro (autoscale on CPU)._
+
+> 📝 **Multi-node note:** scaling a Deployment to 3 replicas here lands all 3 on the one node. On a multi-node cluster the scheduler spreads them across machines for real high availability — and a dead node's Pods get rescheduled elsewhere (something a single node can't demonstrate).
 
 ### Rolling Update & Rollback
 
@@ -324,4 +348,10 @@ _TODO_
 
 ### Further Reading
 
-_TODO_
+Topics beyond this beginner path — reach for these once the fundamentals click:
+
+- **RBAC & ServiceAccounts** — who and what can do what in the cluster. [Docs](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+- **NetworkPolicy** — firewall rules between Pods. [Docs](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+- **Advanced scheduling** — `nodeSelector`, affinity / anti-affinity, taints & tolerations. [Docs](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
+- **Init containers & sidecars** — setup steps and helper containers within a Pod. [Docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
+- **Official tutorials** — [kubernetes.io/docs/tutorials](https://kubernetes.io/docs/tutorials/)
