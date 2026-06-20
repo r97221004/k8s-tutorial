@@ -2,7 +2,7 @@
 
 > The one CLI you'll live in — talk to the API server to create, inspect, and debug everything.
 
-[← Set Up a Cluster (kubeadm)](setup-kubeadm.md) · [🏠 Home](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)
+[← Set Up a Cluster (kubeadm)](setup-kubeadm.md) · [↑ Contents](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — the everyday verbs: `get`, `describe`, `apply`, `delete`, `logs`, `exe
 
 ---
 
-[← Set Up a Cluster (kubeadm)](setup-kubeadm.md) · [🏠 Home](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)
+[← Set Up a Cluster (kubeadm)](setup-kubeadm.md) · [↑ Contents](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)

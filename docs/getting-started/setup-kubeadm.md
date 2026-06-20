@@ -2,7 +2,7 @@
 
 > Installation lives in the companion Ansible tutorial — here we explain what each piece it installs actually is.
 
-[← Architecture Overview](architecture.md) · [🏠 Home](../../README.md) · [kubectl 101 →](kubectl-101.md)
+[← Architecture Overview](architecture.md) · [↑ Contents](../../README.md) · [kubectl 101 →](kubectl-101.md)
 
 ---
 
@@ -21,4 +21,4 @@ _TODO — walk through each component the installer wires up, in pipeline order,
 
 ---
 
-[← Architecture Overview](architecture.md) · [🏠 Home](../../README.md) · [kubectl 101 →](kubectl-101.md)
+[← Architecture Overview](architecture.md) · [↑ Contents](../../README.md) · [kubectl 101 →](kubectl-101.md)

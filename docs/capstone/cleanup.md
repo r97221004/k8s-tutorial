@@ -2,7 +2,7 @@
 
 > Tear the app (and the cluster) back down so you end where you started.
 
-[← Deploy a Two-Tier App](two-tier-app.md) · [🏠 Home](../../README.md) · [kubectl Cheat Sheet →](../appendix/cheatsheet.md)
+[← Deploy a Two-Tier App](two-tier-app.md) · [↑ Contents](../../README.md) · [kubectl Cheat Sheet →](../appendix/cheatsheet.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — `kubectl delete -f` / delete by namespace; confirm PVCs (and their dat
 
 ---
 
-[← Deploy a Two-Tier App](two-tier-app.md) · [🏠 Home](../../README.md) · [kubectl Cheat Sheet →](../appendix/cheatsheet.md)
+[← Deploy a Two-Tier App](two-tier-app.md) · [↑ Contents](../../README.md) · [kubectl Cheat Sheet →](../appendix/cheatsheet.md)

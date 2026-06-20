@@ -2,7 +2,7 @@
 
 > The controller you'll actually use — keeps N replicas of a Pod running, replaces dead ones, and rolls out new versions.
 
-[← Pod](pod.md) · [🏠 Home](../../README.md) · [ReplicaSet →](replicaset.md)
+[← Pod](pod.md) · [↑ Contents](../../README.md) · [ReplicaSet →](replicaset.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — declare `replicas` + a Pod template; self-healing (delete a Pod, watch
 
 ---
 
-[← Pod](pod.md) · [🏠 Home](../../README.md) · [ReplicaSet →](replicaset.md)
+[← Pod](pod.md) · [↑ Contents](../../README.md) · [ReplicaSet →](replicaset.md)

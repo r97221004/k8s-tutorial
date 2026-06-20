@@ -2,7 +2,7 @@
 
 > The thing that actually keeps the replica count — usually managed for you by a Deployment.
 
-[← Deployment](deployment.md) · [🏠 Home](../../README.md) · [DaemonSet (intro) →](daemonset.md)
+[← Deployment](deployment.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — what a ReplicaSet does (maintain N matching Pods via a selector), and 
 
 ---
 
-[← Deployment](deployment.md) · [🏠 Home](../../README.md) · [DaemonSet (intro) →](daemonset.md)
+[← Deployment](deployment.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)

@@ -2,7 +2,7 @@
 
 > Every Kubernetes object is the same four fields — learn them once and all YAML looks familiar.
 
-[← kubectl 101](kubectl-101.md) · [🏠 Home](../../README.md) · [Inspect with k9s →](k9s.md)
+[← kubectl 101](kubectl-101.md) · [↑ Contents](../../README.md) · [Inspect with k9s →](k9s.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — every object shares the same top-level fields: `apiVersion`, `kind`, `
 
 ---
 
-[← kubectl 101](kubectl-101.md) · [🏠 Home](../../README.md) · [Inspect with k9s →](k9s.md)
+[← kubectl 101](kubectl-101.md) · [↑ Contents](../../README.md) · [Inspect with k9s →](k9s.md)

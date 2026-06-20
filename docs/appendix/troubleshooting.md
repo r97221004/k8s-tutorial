@@ -2,7 +2,7 @@
 
 > Common failure modes and the first thing to check for each.
 
-[← kubectl Cheat Sheet](cheatsheet.md) · [🏠 Home](../../README.md) · [Further Reading →](further-reading.md)
+[← kubectl Cheat Sheet](cheatsheet.md) · [↑ Contents](../../README.md) · [Further Reading →](further-reading.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — symptom → cause → fix table: `Pending` (no schedulable node / unbo
 
 ---
 
-[← kubectl Cheat Sheet](cheatsheet.md) · [🏠 Home](../../README.md) · [Further Reading →](further-reading.md)
+[← kubectl Cheat Sheet](cheatsheet.md) · [↑ Contents](../../README.md) · [Further Reading →](further-reading.md)

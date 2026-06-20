@@ -2,7 +2,7 @@
 
 > A terminal UI that turns `kubectl get/describe/logs` into a live, navigable dashboard.
 
-[← Anatomy of a Manifest](manifest-anatomy.md) · [🏠 Home](../../README.md) · [Pod →](../core-objects/pod.md)
+[← Anatomy of a Manifest](manifest-anatomy.md) · [↑ Contents](../../README.md) · [Pod →](../core-objects/pod.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — install k9s, navigate Pods/Services/logs in the terminal UI as a compa
 
 ---
 
-[← Anatomy of a Manifest](manifest-anatomy.md) · [🏠 Home](../../README.md) · [Pod →](../core-objects/pod.md)
+[← Anatomy of a Manifest](manifest-anatomy.md) · [↑ Contents](../../README.md) · [Pod →](../core-objects/pod.md)

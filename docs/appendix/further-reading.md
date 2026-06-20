@@ -2,7 +2,7 @@
 
 > Topics beyond this beginner path — reach for these once the fundamentals click.
 
-[← Troubleshooting](troubleshooting.md) · [🏠 Home](../../README.md)
+[← Troubleshooting](troubleshooting.md) · [↑ Contents](../../README.md)
 
 ---
 
@@ -14,4 +14,4 @@
 
 ---
 
-[← Troubleshooting](troubleshooting.md) · [🏠 Home](../../README.md)
+[← Troubleshooting](troubleshooting.md) · [↑ Contents](../../README.md)

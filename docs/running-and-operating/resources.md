@@ -2,7 +2,7 @@
 
 > Tell the scheduler how much CPU/memory a Pod needs, and cap how much it may use.
 
-[← Health Checks](health-checks.md) · [🏠 Home](../../README.md) · [Scaling →](scaling.md)
+[← Health Checks](health-checks.md) · [↑ Contents](../../README.md) · [Scaling →](scaling.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — `requests` (used for scheduling) vs `limits` (enforced ceiling); what 
 
 ---
 
-[← Health Checks](health-checks.md) · [🏠 Home](../../README.md) · [Scaling →](scaling.md)
+[← Health Checks](health-checks.md) · [↑ Contents](../../README.md) · [Scaling →](scaling.md)

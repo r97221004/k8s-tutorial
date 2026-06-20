@@ -2,7 +2,7 @@
 
 > For workloads that need stable identity and their own persistent storage — like databases.
 
-[← Volumes & PersistentVolumes](volumes.md) · [🏠 Home](../../README.md) · [Health Checks →](../running-and-operating/health-checks.md)
+[← Volumes & PersistentVolumes](volumes.md) · [↑ Contents](../../README.md) · [Health Checks →](../running-and-operating/health-checks.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — how a StatefulSet differs from a Deployment: stable network identity (
 
 ---
 
-[← Volumes & PersistentVolumes](volumes.md) · [🏠 Home](../../README.md) · [Health Checks →](../running-and-operating/health-checks.md)
+[← Volumes & PersistentVolumes](volumes.md) · [↑ Contents](../../README.md) · [Health Checks →](../running-and-operating/health-checks.md)

@@ -2,7 +2,7 @@
 
 > Declare the state you want; let the cluster make reality match — and keep it that way.
 
-[🏠 Home](../../README.md) · [Architecture Overview →](architecture.md)
+[↑ Contents](../../README.md) · [Architecture Overview →](architecture.md)
 
 ---
 
@@ -17,4 +17,4 @@ That single idea — _declare the goal, let controllers converge on it_ — is t
 
 ---
 
-[🏠 Home](../../README.md) · [Architecture Overview →](architecture.md)
+[↑ Contents](../../README.md) · [Architecture Overview →](architecture.md)

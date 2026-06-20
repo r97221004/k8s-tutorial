@@ -2,7 +2,7 @@
 
 > The handful of commands that explain almost any broken Pod.
 
-[← Rolling Update & Rollback](rolling-updates.md) · [🏠 Home](../../README.md) · [Service Discovery & DNS →](../networking/dns.md)
+[← Rolling Update & Rollback](rolling-updates.md) · [↑ Contents](../../README.md) · [Service Discovery & DNS →](../networking/dns.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — `kubectl describe`, `logs` (incl. `--previous`), `get events`, `exec`;
 
 ---
 
-[← Rolling Update & Rollback](rolling-updates.md) · [🏠 Home](../../README.md) · [Service Discovery & DNS →](../networking/dns.md)
+[← Rolling Update & Rollback](rolling-updates.md) · [↑ Contents](../../README.md) · [Service Discovery & DNS →](../networking/dns.md)

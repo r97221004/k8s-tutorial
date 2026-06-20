@@ -2,7 +2,7 @@
 
 > Tell Kubernetes when your container is alive, ready for traffic, and done starting up.
 
-[← StatefulSet (intro)](../config-and-data/statefulset.md) · [🏠 Home](../../README.md) · [Resource Requests & Limits →](resources.md)
+[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Resource Requests & Limits →](resources.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — `livenessProbe` (restart if unhealthy), `readinessProbe` (hold traffic
 
 ---
 
-[← StatefulSet (intro)](../config-and-data/statefulset.md) · [🏠 Home](../../README.md) · [Resource Requests & Limits →](resources.md)
+[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Resource Requests & Limits →](resources.md)

@@ -2,7 +2,7 @@
 
 > The package manager for Kubernetes — template your manifests and install them as one versioned unit.
 
-[← Ingress](../networking/ingress.md) · [🏠 Home](../../README.md) · [Kustomize (intro) →](kustomize.md)
+[← Ingress](../networking/ingress.md) · [↑ Contents](../../README.md) · [Kustomize (intro) →](kustomize.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — the problem Helm solves (copy-pasting near-identical YAML per environm
 
 ---
 
-[← Ingress](../networking/ingress.md) · [🏠 Home](../../README.md) · [Kustomize (intro) →](kustomize.md)
+[← Ingress](../networking/ingress.md) · [↑ Contents](../../README.md) · [Kustomize (intro) →](kustomize.md)

@@ -2,7 +2,7 @@
 
 > Keep configuration out of your image — inject it at runtime instead.
 
-[← Labels & Selectors](../core-objects/labels-selectors.md) · [🏠 Home](../../README.md) · [Secret →](secret.md)
+[← Labels & Selectors](../core-objects/labels-selectors.md) · [↑ Contents](../../README.md) · [Secret →](secret.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — store non-secret config as key/value or whole files; consume it as env
 
 ---
 
-[← Labels & Selectors](../core-objects/labels-selectors.md) · [🏠 Home](../../README.md) · [Secret →](secret.md)
+[← Labels & Selectors](../core-objects/labels-selectors.md) · [↑ Contents](../../README.md) · [Secret →](secret.md)

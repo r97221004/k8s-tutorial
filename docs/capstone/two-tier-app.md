@@ -2,7 +2,7 @@
 
 > Put it all together: a web front end + a database back end, configured, persisted, and exposed.
 
-[← Kustomize (intro)](../packaging/kustomize.md) · [🏠 Home](../../README.md) · [Cleanup →](cleanup.md)
+[← Kustomize (intro)](../packaging/kustomize.md) · [↑ Contents](../../README.md) · [Cleanup →](cleanup.md)
 
 ---
 
@@ -16,4 +16,4 @@ _TODO — the capstone that ties the guide together:_
 
 ---
 
-[← Kustomize (intro)](../packaging/kustomize.md) · [🏠 Home](../../README.md) · [Cleanup →](cleanup.md)
+[← Kustomize (intro)](../packaging/kustomize.md) · [↑ Contents](../../README.md) · [Cleanup →](cleanup.md)

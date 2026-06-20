@@ -2,7 +2,7 @@
 
 > Where data survives a container restart — and how Pods request durable storage.
 
-[← Environment Variables & Mounts](env-and-mounts.md) · [🏠 Home](../../README.md) · [StatefulSet (intro) →](statefulset.md)
+[← Environment Variables & Mounts](env-and-mounts.md) · [↑ Contents](../../README.md) · [StatefulSet (intro) →](statefulset.md)
 
 ---
 
@@ -12,4 +12,4 @@ _TODO — emptyDir vs PV/PVC. Vanilla kubeadm has no default StorageClass; insta
 
 ---
 
-[← Environment Variables & Mounts](env-and-mounts.md) · [🏠 Home](../../README.md) · [StatefulSet (intro) →](statefulset.md)
+[← Environment Variables & Mounts](env-and-mounts.md) · [↑ Contents](../../README.md) · [StatefulSet (intro) →](statefulset.md)

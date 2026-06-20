@@ -2,7 +2,7 @@
 
 > How Pods find each other by name instead of chasing IP addresses.
 
-[← Debugging](../running-and-operating/debugging.md) · [🏠 Home](../../README.md) · [Ingress →](ingress.md)
+[← Debugging](../running-and-operating/debugging.md) · [↑ Contents](../../README.md) · [Ingress →](ingress.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — CoreDNS and the `service.namespace.svc.cluster.local` naming scheme; r
 
 ---
 
-[← Debugging](../running-and-operating/debugging.md) · [🏠 Home](../../README.md) · [Ingress →](ingress.md)
+[← Debugging](../running-and-operating/debugging.md) · [↑ Contents](../../README.md) · [Ingress →](ingress.md)

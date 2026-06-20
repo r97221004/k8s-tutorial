@@ -2,7 +2,7 @@
 
 > The component map to carry through the whole tutorial — and why "kubeadm" is not a different kind of Kubernetes.
 
-[← What is Kubernetes?](what-is-kubernetes.md) · [🏠 Home](../../README.md) · [Set Up a Cluster (kubeadm) →](setup-kubeadm.md)
+[← What is Kubernetes?](what-is-kubernetes.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](setup-kubeadm.md)
 
 ---
 
@@ -24,4 +24,4 @@ _TODO — trace what happens on a `kubectl apply`: kubectl → apiserver → etc
 
 ---
 
-[← What is Kubernetes?](what-is-kubernetes.md) · [🏠 Home](../../README.md) · [Set Up a Cluster (kubeadm) →](setup-kubeadm.md)
+[← What is Kubernetes?](what-is-kubernetes.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](setup-kubeadm.md)

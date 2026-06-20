@@ -2,7 +2,7 @@
 
 > A stable address and load balancer for a set of Pods, whose IPs come and go.
 
-[← Job & CronJob](job-cronjob.md) · [🏠 Home](../../README.md) · [Namespace →](namespace.md)
+[← Job & CronJob](job-cronjob.md) · [↑ Contents](../../README.md) · [Namespace →](namespace.md)
 
 ---
 
@@ -12,4 +12,4 @@ _TODO — ClusterIP / NodePort / LoadBalancer. On vanilla kubeadm there is no Lo
 
 ---
 
-[← Job & CronJob](job-cronjob.md) · [🏠 Home](../../README.md) · [Namespace →](namespace.md)
+[← Job & CronJob](job-cronjob.md) · [↑ Contents](../../README.md) · [Namespace →](namespace.md)

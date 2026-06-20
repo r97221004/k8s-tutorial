@@ -2,7 +2,7 @@
 
 > The smallest thing Kubernetes runs — one (or a few) containers that share a network and storage, scheduled together onto one node.
 
-[← Inspect with k9s](../getting-started/k9s.md) · [🏠 Home](../../README.md) · [Deployment →](deployment.md)
+[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
 
 ---
 
@@ -70,4 +70,4 @@ A standalone Pod has no safety net: delete it, or let its node fail, and it's si
 
 ---
 
-[← Inspect with k9s](../getting-started/k9s.md) · [🏠 Home](../../README.md) · [Deployment →](deployment.md)
+[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)

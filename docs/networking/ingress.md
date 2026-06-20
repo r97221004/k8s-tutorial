@@ -2,7 +2,7 @@
 
 > One entry point that routes outside traffic to many Services by host and path.
 
-[← Service Discovery & DNS](dns.md) · [🏠 Home](../../README.md) · [Helm (intro) →](../packaging/helm.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Helm (intro) →](../packaging/helm.md)
 
 ---
 
@@ -10,4 +10,4 @@ _TODO — vanilla kubeadm has no built-in ingress controller; install ingress-ng
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [🏠 Home](../../README.md) · [Helm (intro) →](../packaging/helm.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Helm (intro) →](../packaging/helm.md)
