@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  # simple key/value pairs
+  APP_GREETING: "Hello from a ConfigMap"
+  APP_TIER: "frontend"
+  # a whole file, addressed by its key
+  app.properties: |
+    color=blue
+    log.level=info

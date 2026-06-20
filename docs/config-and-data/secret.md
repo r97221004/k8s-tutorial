@@ -4,7 +4,57 @@
 
 ---
 
-_TODO — Secret vs ConfigMap; base64 is encoding, not encryption (and what that means); consuming Secrets as env/files; a note on encryption-at-rest and RBAC for real-world safety._
+A **Secret** is structurally almost identical to a [ConfigMap](configmap.md) — key/value data injected into Pods — but it's meant for **sensitive** values: passwords, API keys, TLS certs. Kubernetes treats Secrets a little more carefully (kept out of some logs, mountable as in-memory `tmpfs`), and you should treat them *much* more carefully.
+
+## Create a Secret
+
+Use `stringData` so you can write plain text; Kubernetes base64-encodes it for storage:
+
+▶ **Runnable manifest:** [`manifests/config-and-data/app-secret.yaml`](../../manifests/config-and-data/app-secret.yaml)
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+stringData:
+  DB_USER: appuser
+  DB_PASSWORD: s3cr3t-change-me
+```
+
+```bash
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d   # reads back the value
+```
+
+## ⚠️ base64 is encoding, not encryption
+
+This is the single most misunderstood thing about Secrets:
+
+```bash
+echo 's3cr3t-change-me' | base64        # czNjcjN0LWNoYW5nZS1tZQ==
+echo 'czNjcjN0LWNoYW5nZS1tZQ==' | base64 -d   # s3cr3t-change-me  ← trivially reversed
+```
+
+Base64 is just an encoding so binary data fits in YAML — **anyone who can read the Secret object can read the value**. A Secret is "secret" only because of *who is allowed to read it*, not because it's scrambled.
+
+To make Secrets genuinely safe:
+
+- **RBAC** — restrict who/what can `get` Secrets (most important).
+- **Encryption at rest** — enable etcd encryption so the value isn't plaintext on disk.
+- **Don't commit real secrets to Git.** Commit the *Deployment* that references a Secret, but inject the actual values via a sealed-secrets / external-secrets tool or your CI — never the raw `Secret` YAML with live credentials.
+
+## Consuming it
+
+Same as a ConfigMap — as env vars or mounted files — covered next in [Environment Variables & Mounts](env-and-mounts.md). Mounting as files is slightly safer than env vars (env can leak via crash dumps / child processes).
+
+## Best practices
+
+- **RBAC-restrict Secret access** and **enable encryption at rest**.
+- **Prefer file mounts over env vars** for the most sensitive values.
+- **Never bake secrets into images or commit them to Git** — keep real values out of version control.
+- **Rotate** secrets periodically; with Secrets mounted as files, updates propagate without rebuilding the Pod.
 
 ---
 

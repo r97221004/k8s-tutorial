@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-config
+  labels:
+    app: web-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-config
+  template:
+    metadata:
+      labels:
+        app: web-config
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          # 1. Single values as env vars
+          env:
+            - name: APP_GREETING
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_GREETING
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
+          # 2. A whole ConfigMap/Secret at once
+          envFrom:
+            - configMapRef:
+                name: app-config
+          # 3. Config as files on disk
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/app
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-config
