@@ -32,54 +32,47 @@ config:
   theme: default
   themeVariables:
     fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
-    fontSize: '30px'
-  flowchart:
-    nodeSpacing: 75
-    rankSpacing: 90
-    padding: 24
 ---
 flowchart TB
-    you["👩‍💻 you<br/>kubectl · k9s"] --> api
+    you["👩‍💻 you<br/>kubectl · k9s"]
 
-    subgraph host["🖥️ Your ONE node — a single machine (control-plane taint removed so it also runs your apps)"]
+    subgraph host["🖥️ Your ONE node — control-plane taint removed, so it runs your apps too"]
         direction TB
+
         subgraph cp["🧠 Control Plane · static Pods"]
             direction LR
-            api["🚪 kube-apiserver<br/>the front door"]
-            etcd[("🗄️ etcd<br/>cluster state")]
-            sched["📌 kube-scheduler"]
-            kcm["🔁 kube-controller-manager"]
-            api --- etcd
-            sched --> api
-            kcm --> api
+            sched["📌 kube-scheduler"] --> api
+            kcm["🔁 kube-controller-manager"] --> api
+            api["🚪 kube-apiserver<br/>the front door"] <--> etcd[("🗄️ etcd<br/>cluster state")]
         end
 
-        kubelet["🤖 kubelet"] --> cri["📦 containerd<br/>CRI runtime"]
-        proxy["🔀 kube-proxy"]
-        cri --> pods["🚀 your Pods<br/>web &amp; database"]
+        kubelet["🤖 kubelet<br/>runs Pods on this node"]
+        cri["📦 containerd<br/>CRI runtime"]
+        proxy["🔀 kube-proxy<br/>Service routing"]
+        pods["🚀 your Pods<br/>web &amp; database"]
 
         subgraph addons["🔌 Add-ons you wire up · also Pods"]
+            direction LR
             cni["🌐 CNI · flannel<br/>pod networking"]
             dns["📇 CoreDNS<br/>in-cluster DNS"]
         end
-        addons -.-> pods
+
+        kubelet --> cri --> pods
+        cni -. networking .-> pods
+        dns -. DNS .-> pods
+        proxy -. routes traffic to .-> pods
     end
 
+    you --> api
     api ==>|"schedule &amp; run"| kubelet
 
-    classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:6px,color:#0F172A,font-weight:bold;
-    classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:9px,color:#0F172A,font-weight:bold;
-    classDef tgt fill:#D7F7E6,stroke:#16A34A,stroke-width:6px,color:#0F172A,font-weight:bold;
+    classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:3px,color:#0F172A;
+    classDef tgt fill:#D7F7E6,stroke:#16A34A,stroke-width:2px,color:#0F172A;
     class you ctrl;
     class api eng;
     class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt;
-
-    style host fill:#FFFFFF,stroke:#334155,stroke-width:8px,color:#0F172A;
-    style cp fill:#F8FAFF,stroke:#2563EB,stroke-width:6px,color:#0F172A;
-    style addons fill:#FAF5FF,stroke:#7C3AED,stroke-width:6px,color:#0F172A;
-
-    linkStyle default stroke-width:6px;
-    linkStyle 7 stroke:#D97706,stroke-width:9px;
+    linkStyle 9 stroke:#D97706,stroke-width:3px;
 ```
 
 > Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
