@@ -32,6 +32,11 @@ config:
   theme: default
   themeVariables:
     fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    fontSize: '30px'
+  flowchart:
+    nodeSpacing: 75
+    rankSpacing: 90
+    padding: 24
 ---
 flowchart TB
     you["👩‍💻 you<br/>kubectl · k9s"] --> api
@@ -62,13 +67,19 @@ flowchart TB
 
     api ==>|"schedule &amp; run"| kubelet
 
-    classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
-    classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:3px,color:#0F172A;
-    classDef tgt fill:#D7F7E6,stroke:#16A34A,stroke-width:2px,color:#0F172A;
+    classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:6px,color:#0F172A,font-weight:bold;
+    classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:9px,color:#0F172A,font-weight:bold;
+    classDef tgt fill:#D7F7E6,stroke:#16A34A,stroke-width:6px,color:#0F172A,font-weight:bold;
     class you ctrl;
     class api eng;
     class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt;
-    linkStyle 7 stroke:#D97706,stroke-width:3px;
+
+    style host fill:#FFFFFF,stroke:#334155,stroke-width:8px,color:#0F172A;
+    style cp fill:#F8FAFF,stroke:#2563EB,stroke-width:6px,color:#0F172A;
+    style addons fill:#FAF5FF,stroke:#7C3AED,stroke-width:6px,color:#0F172A;
+
+    linkStyle default stroke-width:6px;
+    linkStyle 7 stroke:#D97706,stroke-width:9px;
 ```
 
 > Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
