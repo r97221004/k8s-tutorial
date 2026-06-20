@@ -18,7 +18,9 @@ Most Pods hold exactly one container. The multi-container case is for tightly-co
 
 ## Your first Pod
 
-Save this as `pod.yaml`. Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../getting-started/manifest-anatomy.md)):
+Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../getting-started/manifest-anatomy.md)):
+
+▶ **Runnable manifest:** [`manifests/core-objects/nginx-pod.yaml`](../../manifests/core-objects/nginx-pod.yaml)
 
 ```yaml
 apiVersion: v1
@@ -38,7 +40,7 @@ spec:
 Apply it and watch it come up:
 
 ```bash
-kubectl apply -f pod.yaml
+kubectl apply -f manifests/core-objects/nginx-pod.yaml
 kubectl get pods            # STATUS: ContainerCreating → Running
 kubectl get pods -o wide    # which node it landed on, its Pod IP
 ```
