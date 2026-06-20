@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"        # every minute (standard cron syntax)
+  successfulJobsHistoryLimit: 3   # keep the last 3 completed Jobs
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: hello
+              image: busybox:1.36
+              command: ["sh", "-c", "date; echo Hello from a CronJob"]

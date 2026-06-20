@@ -4,7 +4,57 @@
 
 ---
 
-_TODO — what a namespace isolates (and what it doesn't); the default/kube-system namespaces; `kubectl -n`, setting a default namespace in your context._
+A **Namespace** is a virtual partition of one cluster. It scopes object **names**, and gives you a unit to attach **quotas** and **access control** to. Think folders: two teams can each have a `web` Deployment without clashing, as long as they're in different namespaces.
+
+## What you already have
+
+Your cluster came with a few:
+
+```bash
+kubectl get namespaces
+```
+
+```
+NAME              STATUS   AGE
+default           Active   1h     ← where your objects go if you don't say otherwise
+kube-system       Active   1h     ← the control plane + add-ons (don't touch)
+kube-public       Active   1h
+kube-node-lease   Active   1h
+```
+
+Everything you've created so far landed in `default`. The control plane you saw in [Set Up](../getting-started/setup-kubeadm.md) lives in `kube-system`.
+
+## Using namespaces
+
+```bash
+kubectl create namespace dev
+kubectl apply -f manifests/core-objects/web-deployment.yaml -n dev   # create in dev
+kubectl get pods -n dev                                              # view dev only
+kubectl get pods -A                                                  # every namespace
+```
+
+Tired of typing `-n dev`? Pin it to your context:
+
+```bash
+kubectl config set-context --current --namespace=dev
+```
+
+In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
+
+## What a namespace does and doesn't isolate
+
+- ✅ **Names** — `web` in `dev` and `web` in `prod` are different objects.
+- ✅ **A scope for `ResourceQuota`, `LimitRange`, and RBAC** — cap resources or restrict access per namespace.
+- ✅ **DNS** — a Service is reachable cross-namespace as `web.dev.svc.cluster.local` (see [Service Discovery & DNS](../networking/dns.md)).
+- ❌ **Not a security boundary by default** — without a [NetworkPolicy](../appendix/further-reading.md), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
+- ❌ **Not for every little thing** — cluster-wide objects (Nodes, PersistentVolumes, Namespaces themselves) aren't namespaced.
+
+## Best practices
+
+- **Separate environments/teams** with namespaces (`dev`, `staging`, `prod`), not separate clusters, when isolation needs are modest.
+- **Never deploy your apps into `kube-system`** — it's reserved for cluster components.
+- **Add `ResourceQuota`/`LimitRange`** per namespace in shared clusters so one team can't starve others.
+- For real isolation between namespaces, add **NetworkPolicies** and **RBAC**.
 
 ---
 
