@@ -2,8 +2,6 @@
 
 > Installation lives in the companion Ansible tutorial — here we explain what each piece it installs actually is.
 
-[← Architecture Overview](architecture.md) · [↑ Contents](../../README.md) · [kubectl 101 →](kubectl-101.md)
-
 ---
 
 > ⚠️ **Build the cluster before starting this chapter.** The install steps aren't repeated here — they're fully covered in the companion Ansible tutorial, which provisions this exact single-node kubeadm cluster over SSH: **[r97221004/ansible-tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial#kubeadm-role)**. Run that first. Once the cluster is up, this section explains **what each piece it installed actually is**, so the cluster isn't a black box.

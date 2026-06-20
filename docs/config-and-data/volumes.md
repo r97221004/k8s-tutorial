@@ -2,8 +2,6 @@
 
 > Where data survives a container restart — and how Pods request durable storage.
 
-[← Environment Variables & Mounts](env-and-mounts.md) · [↑ Contents](../../README.md) · [StatefulSet (intro) →](statefulset.md)
-
 ---
 
 _TODO — emptyDir vs PV/PVC. Vanilla kubeadm has no default StorageClass; install local-path-provisioner (or define a hostPath PV) so PVCs can bind._

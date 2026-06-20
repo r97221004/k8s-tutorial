@@ -2,8 +2,6 @@
 
 > Topics beyond this beginner path — reach for these once the fundamentals click.
 
-[← Troubleshooting](troubleshooting.md) · [↑ Contents](../../README.md)
-
 ---
 
 - **RBAC & ServiceAccounts** — who and what can do what in the cluster. [Docs](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)

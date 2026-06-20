@@ -2,8 +2,6 @@
 
 > The smallest thing Kubernetes runs — one (or a few) containers that share a network and storage, scheduled together onto one node.
 
-[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
-
 ---
 
 ## Why a Pod, not just a container?

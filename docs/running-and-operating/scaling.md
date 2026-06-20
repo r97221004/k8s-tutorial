@@ -2,8 +2,6 @@
 
 > Run more copies on demand — by hand, or automatically based on load.
 
-[← Resource Requests & Limits](resources.md) · [↑ Contents](../../README.md) · [Rolling Update & Rollback →](rolling-updates.md)
-
 ---
 
 _TODO — `kubectl scale`, replica count, and an HPA intro (autoscale on CPU)._

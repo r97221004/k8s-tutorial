@@ -2,8 +2,6 @@
 
 > The component map to carry through the whole tutorial — and why "kubeadm" is not a different kind of Kubernetes.
 
-[← What is Kubernetes?](what-is-kubernetes.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](setup-kubeadm.md)
-
 ---
 
 > **Clear up a common beginner confusion first: "kubeadm" is not a different kind of Kubernetes.**

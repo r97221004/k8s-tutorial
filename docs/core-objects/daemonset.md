@@ -2,8 +2,6 @@
 
 > Runs exactly one Pod per node — the pattern for node-level agents.
 
-[← ReplicaSet](replicaset.md) · [↑ Contents](../../README.md) · [Job & CronJob →](job-cronjob.md)
-
 ---
 
 _TODO — runs exactly one Pod per node (log shippers, monitoring agents, CNI). Contrast with a Deployment's "N replicas placed anywhere."_

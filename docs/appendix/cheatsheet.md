@@ -2,8 +2,6 @@
 
 > The commands from this guide on one page.
 
-[← Cleanup](../capstone/cleanup.md) · [↑ Contents](../../README.md) · [Troubleshooting →](troubleshooting.md)
-
 ---
 
 _TODO — one-page quick reference grouped by task: inspect, apply/delete, debug, scale/rollout, contexts/namespaces._
