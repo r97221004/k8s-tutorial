@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+spec:
+  ingressClassName: nginx        # which controller handles this Ingress
+  rules:
+    - host: demo.localdev.me     # resolves to 127.0.0.1 — handy for local testing
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web        # the ClusterIP Service from the Service chapter
+                port:
+                  number: 80
