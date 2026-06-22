@@ -35,6 +35,7 @@ config:
     clusterBkg: '#FAFAFA'
     clusterBorder: '#94A3B8'
     lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
 ---
 flowchart TB
     you(["👩‍💻 you<br/>kubectl · k9s"])
@@ -77,9 +78,9 @@ flowchart TB
     you --> api
     api ==>|"schedule &amp; run"| kubelet
 
-    classDef ctrl fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A
-    classDef eng fill:#FFE8B3,stroke:#D97706,stroke-width:3px,color:#0F172A
-    classDef tgt fill:#D7F7E6,stroke:#16A34A,stroke-width:2px,color:#0F172A
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
     class you ctrl
     class api eng
     class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt
