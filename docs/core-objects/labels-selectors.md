@@ -4,6 +4,10 @@
 
 ---
 
+## Before you start
+
+No objects are required for this chapter. If you just finished [Pod](pod.md), the standalone `nginx` Pod should already be deleted.
+
 You can read this chapter before creating any new objects. The next chapters use labels constantly, so this is the small idea that makes Deployments and Services feel much less mysterious.
 
 Kubernetes has no foreign keys. A [Service](service.md) doesn't store a list of "its" Pods; a [Deployment](deployment.md) doesn't hold pointers to Pods. Instead, objects carry **labels** (key/value tags), and other objects use a **selector** to *query* for them at runtime. That loose coupling is how almost everything connects.

@@ -4,6 +4,10 @@
 
 ---
 
+## Before you start
+
+You only need the cluster components from setup. This chapter observes existing DaemonSets in `kube-system`; it does not create new app resources.
+
 A [Deployment](deployment.md) says *"run N copies, anywhere there's room."* A **DaemonSet** says something different: *"run exactly one copy on every node."* As nodes join the cluster, they automatically get the Pod; as they leave, it goes with them.
 
 That's the right model for **per-node agents** — things that must touch each machine:

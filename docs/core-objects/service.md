@@ -4,6 +4,15 @@
 
 ---
 
+## Before you start
+
+This chapter expects three `web` Pods from the Deployment chapter. Recreate them if needed:
+
+```bash
+kubectl apply -f manifests/core-objects/web-deployment.yaml
+kubectl rollout status deployment/web
+```
+
 Pods are disposable: every time one is recreated it gets a **new IP**. So you can't hand out a Pod's IP and expect it to keep working — the [Deployment](deployment.md) replaces Pods all the time. A **Service** solves this: it's a *stable* name and IP in front of a changing set of Pods, and it load-balances across them.
 
 > **Analogy:** Pods are staff who come and go; a Service is the **front desk phone number** that always reaches whoever's on duty. Callers never need to know individual names.
@@ -11,13 +20,6 @@ Pods are disposable: every time one is recreated it gets a **new IP**. So you ca
 ## How it finds its Pods
 
 A Service selects Pods by **label** — the same [labels & selectors](labels-selectors.md) mechanism as everywhere else. Any Pod matching the selector becomes an *endpoint*.
-
-This chapter expects the `web` Deployment from [Deployment](deployment.md) to be running. If you cleaned it up earlier, recreate it first:
-
-```bash
-kubectl apply -f manifests/core-objects/web-deployment.yaml
-kubectl rollout status deployment/web
-```
 
 ▶ **Runnable manifest:** [`manifests/core-objects/web-service.yaml`](../../manifests/core-objects/web-service.yaml) (pairs with the [Deployment](deployment.md)'s `app: web` Pods)
 

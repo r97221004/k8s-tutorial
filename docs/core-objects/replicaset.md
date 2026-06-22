@@ -4,6 +4,14 @@
 
 ---
 
+## Before you start
+
+This chapter expects the `web` Deployment from [Deployment](deployment.md) to be running:
+
+```bash
+kubectl get deployment web
+```
+
 A **ReplicaSet** has one job: keep exactly *N* Pods matching its `selector` running. If there are too few, it creates more; too many, it deletes some. That's the self-healing you saw with a [Deployment](deployment.md) — and it's no coincidence.
 
 ## You already used one

@@ -4,6 +4,15 @@
 
 ---
 
+## Before you start
+
+You should have a healthy cluster and be in the `default` namespace:
+
+```bash
+kubectl get nodes
+kubectl config set-context --current --namespace=default
+```
+
 ## Why a Pod, not just a container?
 
 You might expect Kubernetes to run *containers* directly. It doesn't — it runs **Pods**. A Pod is a thin wrapper around one or more containers that:

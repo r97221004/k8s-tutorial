@@ -4,6 +4,15 @@
 
 ---
 
+## Before you start
+
+Use the `default` namespace as your starting point, then this chapter creates a separate `dev` namespace:
+
+```bash
+kubectl config set-context --current --namespace=default
+kubectl delete namespace dev --ignore-not-found
+```
+
 A **Namespace** is a virtual partition of one cluster. It scopes object **names**, and gives you a unit to attach **quotas** and **access control** to. Think folders: two teams can each have a `web` Deployment without clashing, as long as they're in different namespaces.
 
 ## What you already have

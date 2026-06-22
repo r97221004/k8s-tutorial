@@ -4,6 +4,14 @@
 
 ---
 
+## Before you start
+
+Start from a clean `default` namespace. If an old `web` Deployment exists from a previous run, delete it first:
+
+```bash
+kubectl delete -f manifests/core-objects/web-deployment.yaml --ignore-not-found
+```
+
 ## Why you don't deploy Pods directly
 
 A bare [Pod](pod.md) has no safety net: if it crashes hard or its node dies, nothing brings it back. You also can't scale it, and updating its image means deleting and recreating it by hand — with downtime.
