@@ -34,6 +34,7 @@ config:
     fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
     clusterBkg: '#FAFAFA'
     clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
 ---
 flowchart TB
     you(["👩‍💻 you<br/>kubectl · k9s"])
