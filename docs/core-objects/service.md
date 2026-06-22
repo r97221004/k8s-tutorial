@@ -56,6 +56,8 @@ kubectl get svc web            # note the PORT(S) like 80:31234/TCP
 curl localhost:31234
 ```
 
+> 💡 **Running on a remote node?** `localhost` only works if you're on the node itself. SSH'd in from elsewhere? Use the node's IP instead: `kubectl get nodes -o wide` shows it under `INTERNAL-IP`, then `curl <node-ip>:31234`.
+
 > 📝 **Multi-node note:** all your Pod endpoints sit on one node here, so kube-proxy has nothing to balance across machines. On a multi-node cluster a Service load-balances traffic to Pods wherever they run.
 
 ## A note on LoadBalancer (vanilla kubeadm)

@@ -30,7 +30,7 @@ kube-proxy        1         1         1       kubernetes.io/os=linux  1h
 
 `DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../getting-started/k9s.md) and type `:ds` to watch them.
 
-> **Why is `kube-proxy` a DaemonSet?** Every node needs Service routing, so it's the textbook DaemonSet use case — one copy per node, always.
+> **Why is `kube-proxy` a DaemonSet?** Every node needs [Service](service.md) routing, so it's the textbook DaemonSet use case — one copy per node, always. (Haven't met Service yet? It's next — the short version: it's how traffic finds a moving target of Pods, and `kube-proxy` is the piece on each node that makes that routing work.)
 
 ## When (not) to use one
 

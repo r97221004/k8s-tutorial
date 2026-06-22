@@ -54,6 +54,21 @@ Both are key/value metadata, but:
 
 Rule of thumb: if something needs to *find* the object, it's a label; if it's just attached data, it's an annotation.
 
+## The standard label scheme
+
+This guide's examples use plain `app: web` to keep YAML short, but Kubernetes defines a [recommended set](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/) of `app.kubernetes.io/*` labels for anything beyond a toy example — tools like Helm rely on them:
+
+```yaml
+metadata:
+  labels:
+    app.kubernetes.io/name: web          # the app itself, e.g. "nginx"
+    app.kubernetes.io/instance: web-prod  # this specific deployment of it
+    app.kubernetes.io/component: frontend # its role within the larger app
+    app.kubernetes.io/part-of: two-tier-app # the larger app it belongs to
+```
+
+A Service or Deployment `selector` can match on just one or two of these (e.g. `app.kubernetes.io/name` + `app.kubernetes.io/instance`) — it doesn't need to repeat every label.
+
 ## Best practices
 
 - **Adopt a consistent label scheme.** Kubernetes recommends `app.kubernetes.io/name`, `app.kubernetes.io/instance`, `app.kubernetes.io/component`, etc. — predictable labels make selectors and tooling sane.

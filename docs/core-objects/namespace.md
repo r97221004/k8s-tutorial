@@ -41,6 +41,46 @@ kubectl config set-context --current --namespace=dev
 
 In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
 
+## Capping usage with a ResourceQuota
+
+A namespace by itself doesn't stop one team from eating all the cluster's CPU/memory. A **ResourceQuota** sets hard caps on a namespace — total Pod count, total requested/limited CPU and memory.
+
+▶ **Runnable manifest:** [`manifests/core-objects/dev-resourcequota.yaml`](../../manifests/core-objects/dev-resourcequota.yaml)
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dev-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "4"
+    requests.cpu: "300m"
+    requests.memory: 320Mi
+    limits.cpu: "1"
+    limits.memory: 640Mi
+```
+
+```bash
+kubectl apply -f manifests/core-objects/dev-resourcequota.yaml
+kubectl describe resourcequota dev-quota -n dev   # USED vs HARD for each resource
+```
+
+Once a quota exists, **every Pod in that namespace must declare `resources.requests`/`limits`** — the [Deployment](deployment.md) example already does, which is why it works here unmodified. Try pushing past the cap:
+
+```bash
+kubectl scale deployment/web -n dev --replicas=5
+kubectl get pods -n dev                  # only 4 Running — quota caps at pods: "4"
+kubectl get events -n dev | grep quota   # "exceeded quota: dev-quota …" for the 5th Pod
+```
+
+The 5th Pod never gets created — the apiserver rejects it at admission time, before the scheduler even sees it. Scale back down to clean up:
+
+```bash
+kubectl scale deployment/web -n dev --replicas=3
+```
+
 ## What a namespace does and doesn't isolate
 
 - ✅ **Names** — `web` in `dev` and `web` in `prod` are different objects.

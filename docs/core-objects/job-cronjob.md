@@ -54,6 +54,7 @@ metadata:
 spec:
   schedule: "*/1 * * * *"        # every minute (standard cron syntax)
   successfulJobsHistoryLimit: 3   # keep the last 3 completed Jobs
+  failedJobsHistoryLimit: 1       # keep the last 1 failed Job
   jobTemplate:
     spec:
       template:
