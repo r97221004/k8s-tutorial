@@ -83,10 +83,10 @@ flowchart TB
     class api eng
     class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt
     linkStyle 9 stroke:#D97706,stroke-width:3px
-    style host fill:#1E293B,stroke:#334155,color:#F1F5F9
-    style cp fill:#FFFFFF,stroke:#94A3B8,color:#0F172A
-    style runtime fill:#FFFFFF,stroke:#94A3B8,color:#0F172A
-    style addons fill:#FFFFFF,stroke:#94A3B8,color:#0F172A
+    style host fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+    style cp fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style runtime fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style addons fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
 ```
 
 > Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
