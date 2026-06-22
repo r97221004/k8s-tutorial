@@ -32,6 +32,8 @@ Easy to confuse because they share a prefix:
 
 Their versions are **held/pinned** (`apt-mark hold`) so an unattended `apt upgrade` can't skew versions and break the cluster — k8s only supports a narrow version skew.
 
+> 📌 **This guide targets Kubernetes 1.30+** (see the badge on the [README](../../README.md)). The Ansible role pins `kubelet`/`kubeadm`/`kubectl` to that line — if you provision a different minor version, some output (flag names, default behavior) may differ slightly from what's shown here.
+
 ### 4. `kubeadm init` — the cluster is born
 
 This one command does the heavy lifting:
@@ -39,6 +41,17 @@ This one command does the heavy lifting:
 - Generates certificates and writes the **control-plane components as static Pods** (apiserver, etcd, scheduler, controller-manager) — kubelet starts them straight from manifest files in `/etc/kubernetes/manifests/`.
 - `--pod-network-cidr` reserves the IP range Pods will draw from (must match the CNI's expectation).
 - Writes the admin **kubeconfig** to `/etc/kubernetes/admin.conf` — the credentials `kubectl` uses to authenticate.
+
+`kubectl` doesn't read `admin.conf` automatically — it looks at `~/.kube/config`. Copy it over once, as the user who'll run `kubectl`:
+
+```bash
+mkdir -p ~/.kube
+sudo cp /etc/kubernetes/admin.conf ~/.kube/config
+sudo chown $(id -u):$(id -g) ~/.kube/config
+kubectl get nodes   # should now work without sudo
+```
+
+(The Ansible role does this for you — this is what it's doing under the hood, and the step to redo if you ever rebuild the cluster by hand.)
 
 ### 5. CNI (flannel) — give Pods a network
 

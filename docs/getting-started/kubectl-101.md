@@ -6,6 +6,8 @@
 
 `kubectl` is your remote control for the cluster. Every command is really an HTTP call to the [`kube-apiserver`](architecture.md) using the credentials in your **kubeconfig** (`~/.kube/config`). Learn a handful of verbs and flags and you can drive everything.
 
+> Getting `connection refused` or `the server doesn't have a resource type`? Your kubeconfig probably isn't in place yet — see the [copy-the-kubeconfig step](setup-kubeadm.md) (kubeadm) or the k3s `export KUBECONFIG=…` line in the [README](../../README.md#prerequisites).
+
 ### The verbs you'll use all day
 
 ```bash

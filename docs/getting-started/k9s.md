@@ -17,6 +17,8 @@ curl -sS https://webi.sh/k9s | sh
 k9s        # launch — it uses your current kubeconfig/context automatically
 ```
 
+> ⚠️ **Piping a remote script into `sh` is convenient but skips inspection.** Prefer your package manager (`brew install k9s`, `apt`/`dnf` if packaged) where available, or grab a binary directly from k9s' [GitHub releases](https://github.com/derailed/k9s/releases) if you'd rather not run an installer script unread.
+
 ### Getting around
 
 k9s is keyboard-driven. The essentials:
