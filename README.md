@@ -36,6 +36,8 @@ config:
     clusterBorder: '#94A3B8'
     lineColor: '#FFFFFF'
     edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
 flowchart TB
     you(["👩‍💻 you<br/>kubectl · k9s"])
