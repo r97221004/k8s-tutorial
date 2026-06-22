@@ -4,6 +4,8 @@
 
 ---
 
+You can read this chapter before creating any new objects. The next chapters use labels constantly, so this is the small idea that makes Deployments and Services feel much less mysterious.
+
 Kubernetes has no foreign keys. A [Service](service.md) doesn't store a list of "its" Pods; a [Deployment](deployment.md) doesn't hold pointers to Pods. Instead, objects carry **labels** (key/value tags), and other objects use a **selector** to *query* for them at runtime. That loose coupling is how almost everything connects.
 
 ## Labels
@@ -37,7 +39,7 @@ spec:
     app: web
 ```
 
-…it continuously matches **any** Pod labelled `app: web` — no list, no IDs. Create a new such Pod and it's instantly part of the Service; delete one and it drops out. The same mechanism is how a Deployment knows which Pods it owns (and why its `selector` must equal the Pod template's labels — the [gotcha from the Deployment chapter](deployment.md)).
+…it continuously matches **any** Pod labelled `app: web` — no list, no IDs. Create a new such Pod and it's instantly part of the Service; delete one and it drops out. The same mechanism is how a Deployment knows which Pods it owns: its `selector` must equal the Pod template's labels.
 
 ```
 Service (selector app=web)  ──matches──▶  every Pod labelled app=web
@@ -77,4 +79,4 @@ A Service or Deployment `selector` can match on just one or two of these (e.g. `
 
 ---
 
-[← Namespace](namespace.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)
+[← Pod](pod.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)

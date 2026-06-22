@@ -107,6 +107,8 @@ Every section is hands-on: a manifest you `kubectl apply`, then watch take effec
 
 A Linux host (or WSL2 / a VM), `kubectl` installed, and basic shell + container familiarity.
 
+For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu is the assumed happy path in the companion Ansible role). A single-node lab is comfortable with **2 vCPU, 4 GB RAM, and 20 GB disk**. Start from a clean host if you can; old container runtimes, stale kubeconfigs, or half-removed clusters make first-time Kubernetes debugging unnecessarily noisy.
+
 **You'll need a cluster to follow along. Two ways to get one:**
 
 1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial#kubeadm-role)**, then read [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
@@ -116,6 +118,17 @@ A Linux host (or WSL2 / a VM), `kubectl` installed, and basic shell + container 
    curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml   # so plain kubectl just works
    ```
+
+   k3s is great for running the manifests quickly, but its defaults are not identical to bare kubeadm: it may include built-in storage, ingress, and load-balancer helpers that vanilla kubeadm does not. When this guide calls that out, trust the kubeadm behavior as the main lesson.
+
+Before starting Part 1, verify your cluster is reachable and healthy:
+
+```bash
+kubectl get nodes                 # one node, STATUS Ready
+kubectl get pods -n kube-system   # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
+```
+
+If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) or fix your kubeconfig before continuing.
 
 ## Table of Contents
 
@@ -131,13 +144,13 @@ A Linux host (or WSL2 / a VM), `kubectl` installed, and basic shell + container 
 **Part 1 — Core Objects**
 
 - [**Pod**](docs/core-objects/pod.md) — the smallest thing Kubernetes runs.
+- [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 - [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
 - [**ReplicaSet**](docs/core-objects/replicaset.md) — what actually maintains the replica count.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
-- [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 
 **Part 2 — Configuration & Data**
 

@@ -137,10 +137,14 @@ Watch the new Pods schedule live in k9s. More on automatic scaling in [Scaling](
 
 ## Clean up
 
+If you're reading straight through, **leave this Deployment running** for the next few chapters. [ReplicaSet](replicaset.md), [DaemonSet](daemonset.md), [Job & CronJob](job-cronjob.md), and especially [Service](service.md) all build on or compare against it.
+
+If you're done experimenting and want to reset the lab, delete it:
+
 ```bash
 kubectl delete -f manifests/core-objects/web-deployment.yaml   # removes the Deployment, its ReplicaSet, and all Pods
 ```
 
 ---
 
-[← Pod](pod.md) · [↑ Contents](../../README.md) · [ReplicaSet →](replicaset.md)
+[← Labels & Selectors](labels-selectors.md) · [↑ Contents](../../README.md) · [ReplicaSet →](replicaset.md)

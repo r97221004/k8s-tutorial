@@ -39,6 +39,8 @@ Tired of typing `-n dev`? Pin it to your context:
 kubectl config set-context --current --namespace=dev
 ```
 
+That default sticks until you change it again. When a later command seems to "lose" an object, check your current namespace with `kubectl config get-contexts`.
+
 In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
 
 ## Capping usage with a ResourceQuota
@@ -96,6 +98,27 @@ kubectl scale deployment/web -n dev --replicas=3
 - **Add `ResourceQuota`/`LimitRange`** per namespace in shared clusters so one team can't starve others.
 - For real isolation between namespaces, add **NetworkPolicies** and **RBAC**.
 
+## Clean up
+
+If you set your default namespace to `dev`, switch back to `default` before continuing:
+
+```bash
+kubectl config set-context --current --namespace=default
+```
+
+Then delete the lab namespace. This removes the `web` Deployment and quota inside it:
+
+```bash
+kubectl delete namespace dev
+```
+
+To fully reset after Part 1, also remove the `web` Service and Deployment left in `default`:
+
+```bash
+kubectl delete -f manifests/core-objects/web-service.yaml --ignore-not-found
+kubectl delete -f manifests/core-objects/web-deployment.yaml --ignore-not-found
+```
+
 ---
 
-[← Service](service.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](labels-selectors.md)
+[← Service](service.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)

@@ -12,6 +12,13 @@ Pods are disposable: every time one is recreated it gets a **new IP**. So you ca
 
 A Service selects Pods by **label** — the same [labels & selectors](labels-selectors.md) mechanism as everywhere else. Any Pod matching the selector becomes an *endpoint*.
 
+This chapter expects the `web` Deployment from [Deployment](deployment.md) to be running. If you cleaned it up earlier, recreate it first:
+
+```bash
+kubectl apply -f manifests/core-objects/web-deployment.yaml
+kubectl rollout status deployment/web
+```
+
 ▶ **Runnable manifest:** [`manifests/core-objects/web-service.yaml`](../../manifests/core-objects/web-service.yaml) (pairs with the [Deployment](deployment.md)'s `app: web` Pods)
 
 ```yaml
@@ -75,6 +82,21 @@ For routing real HTTP traffic by host/path, you usually put an [Ingress](../netw
 - **Keep `selector` labels stable** and matching your Deployment's Pod labels.
 - **Name ports** when a Service has more than one, so other objects can refer to them by name.
 - **Reach Services by DNS name**, not IP — see [Service Discovery & DNS](../networking/dns.md).
+
+## Clean up or continue
+
+If you're moving on to [Namespace](namespace.md), you can leave the `web` Deployment running, but reset the Service back to the manifest's `ClusterIP` shape after the NodePort experiment:
+
+```bash
+kubectl apply -f manifests/core-objects/web-service.yaml
+```
+
+If you're done with the lab for now, delete both:
+
+```bash
+kubectl delete -f manifests/core-objects/web-service.yaml
+kubectl delete -f manifests/core-objects/web-deployment.yaml
+```
 
 ---
 

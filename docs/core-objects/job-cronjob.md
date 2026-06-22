@@ -81,6 +81,15 @@ In [k9s](../getting-started/k9s.md), `:cronjobs` and `:jobs` let you watch each 
 - **Set history limits** (`successfulJobsHistoryLimit`/`failedJobsHistoryLimit`) so old CronJob runs don't pile up.
 - **Make jobs idempotent** — a Job may retry, so running twice should be safe.
 
+## Clean up
+
+Delete the CronJob when you're done watching it; otherwise it keeps creating a new Job every minute. The one-off Job can be removed too once you've read its logs:
+
+```bash
+kubectl delete -f manifests/core-objects/hello-cronjob.yaml
+kubectl delete -f manifests/core-objects/pi-job.yaml
+```
+
 ---
 
 [← DaemonSet (intro)](daemonset.md) · [↑ Contents](../../README.md) · [Service →](service.md)

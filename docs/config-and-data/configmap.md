@@ -54,4 +54,4 @@ A ConfigMap does nothing until a Pod uses it — as **env vars** or **mounted fi
 
 ---
 
-[← Labels & Selectors](../core-objects/labels-selectors.md) · [↑ Contents](../../README.md) · [Secret →](secret.md)
+[← Namespace](../core-objects/namespace.md) · [↑ Contents](../../README.md) · [Secret →](secret.md)

@@ -60,6 +60,8 @@ If a Pod won't start, `describe` and `logs` almost always tell you why — see [
 
 ## Clean up
 
+This Pod was only for learning the shape of a Pod. Delete it before moving on so the next examples start clean:
+
 ```bash
 kubectl delete pod nginx
 ```
@@ -70,4 +72,4 @@ A standalone Pod has no safety net: delete it, or let its node fail, and it's si
 
 ---
 
-[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
+[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](labels-selectors.md)
