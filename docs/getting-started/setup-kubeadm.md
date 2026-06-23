@@ -8,6 +8,8 @@
 
 Unlike k3s (one install script), kubeadm wires the cluster up from parts. The Ansible role does it as a pipeline; this is what each step is **for**, so the cluster stops being a black box.
 
+If you're not using the Ansible role, use this page as the checklist for a manual kubeadm build. The short version is: prepare the kernel and swap settings, install/configure containerd, install matching `kubelet`/`kubeadm`/`kubectl` versions, run `kubeadm init` with the Pod CIDR your CNI expects, copy the admin kubeconfig, install flannel, remove the control-plane taint for a single-node lab, then verify the cluster.
+
 ### 1. Kernel prerequisites
 
 Before anything else, the OS must be ready to run containers networked together:

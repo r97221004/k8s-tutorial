@@ -10,14 +10,24 @@ Once you have more than a couple of objects, running `kubectl get … -w` over a
 
 ### Install
 
-```bash
-# Linux (or use your package manager: brew install k9s, etc.)
-curl -sS https://webi.sh/k9s | sh
+Prefer your package manager where available:
 
-k9s        # launch — it uses your current kubeconfig/context automatically
+```bash
+brew install k9s        # macOS / Linuxbrew
+# or apt/dnf if your distro packages it
 ```
 
-> ⚠️ **Piping a remote script into `sh` is convenient but skips inspection.** Prefer your package manager (`brew install k9s`, `apt`/`dnf` if packaged) where available, or grab a binary directly from k9s' [GitHub releases](https://github.com/derailed/k9s/releases) if you'd rather not run an installer script unread.
+No package available? Grab a binary directly from k9s' [GitHub releases](https://github.com/derailed/k9s/releases), or use the install script:
+
+```bash
+curl -sS https://webi.sh/k9s | sh
+```
+
+> ⚠️ **Piping a remote script into `sh` is convenient but skips inspection.** Only use it if a package manager or release binary isn't an option.
+
+```bash
+k9s        # launch — it uses your current kubeconfig/context automatically
+```
 
 ### Getting around
 

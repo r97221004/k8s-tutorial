@@ -126,7 +126,7 @@ You'll watch that Pod go `Terminating` and **a fresh one appear within seconds**
 Two equivalent ways — declarative (preferred, stays in Git) and imperative (quick):
 
 ```bash
-# Declarative: edit replicas in the manifest, then re-apply
+# Declarative: edit replicas: 3 -> replicas: 5 in the manifest, then re-apply
 kubectl apply -f manifests/core-objects/web-deployment.yaml
 
 # Imperative: one-off, handy for experiments

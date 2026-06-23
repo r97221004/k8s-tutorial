@@ -126,6 +126,8 @@ For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu
    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml   # so plain kubectl just works
    ```
 
+   This is convenient for a throwaway lab, but it still runs a remote install script as root. For anything beyond a local practice VM, inspect the script first or use your platform's normal package/install process.
+
    k3s is great for running the manifests quickly, but its defaults are not identical to bare kubeadm: it may include built-in storage, ingress, and load-balancer helpers that vanilla kubeadm does not. When this guide calls that out, trust the kubeadm behavior as the main lesson.
 
 Before starting Part 1, verify your cluster is reachable and healthy:

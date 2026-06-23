@@ -83,7 +83,8 @@ Once a quota exists, **every Pod in that namespace must declare `resources.reque
 ```bash
 kubectl scale deployment/web -n dev --replicas=5
 kubectl get pods -n dev                  # only 4 Running — quota caps at pods: "4"
-kubectl get events -n dev | grep quota   # "exceeded quota: dev-quota …" for the 5th Pod
+kubectl get events -n dev --sort-by=.lastTimestamp   # look for "exceeded quota: dev-quota …"
+kubectl describe deployment web -n dev   # also shows the failed scale-up event
 ```
 
 The 5th Pod never gets created — the apiserver rejects it at admission time, before the scheduler even sees it. Scale back down to clean up:
