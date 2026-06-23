@@ -1,6 +1,6 @@
 # Kubernetes in Practice
 
-> _Learn **real** Kubernetes by building it with `kubeadm` — every component in the open, no toy clusters._
+> _Learn Kubernetes by building a real cluster with `kubeadm`, one component at a time._
 
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.30%2B-326CE5?logo=kubernetes&logoColor=white)
 ![Cluster](https://img.shields.io/badge/Cluster-kubeadm-0F766E)
@@ -11,7 +11,7 @@
 >
 > **Solution**: Kubernetes lets you *declare* the desired state of your apps in YAML and continuously reconciles reality to match it — self-healing, scaling, rolling out new versions, and routing traffic, all repeatably.
 
-Most Kubernetes tutorials hand you a toy cluster (minikube, kind) that hides how things actually work. **This one is different.** You stand up a real, upstream Kubernetes cluster with **[kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)**, learn it by taking every component apart — `kube-apiserver`, `etcd`, `kubelet`, the CNI — and then put it to work, watching the cluster live in **[k9s](https://k9scli.io)**.
+Many tutorials start you off on minikube or kind — quick to set up, but the components are mostly hidden. Here you stand up a real, upstream Kubernetes cluster with **[kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)** instead, learn it by taking every component apart — `kube-apiserver`, `etcd`, `kubelet`, the CNI — and then put it to work, watching the cluster live in **[k9s](https://k9scli.io)**.
 
 Every concept is paired with a runnable `kubectl apply` example, all building toward one concrete outcome: **deploying a two-tier app (web + database)** — configured with ConfigMaps/Secrets, persisted on a PVC, exposed through a Service + Ingress — then rolling out an update and tearing it back down.
 
