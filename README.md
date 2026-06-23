@@ -1,5 +1,9 @@
 # Kubernetes in Practice
 
+<p align="center">
+  <img src="docs/images/kubernetes-logo.svg" width="120" alt="Kubernetes logo" />
+</p>
+
 > _Learn Kubernetes by building a real cluster with `kubeadm`, one component at a time._
 
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.30%2B-326CE5?logo=kubernetes&logoColor=white)
