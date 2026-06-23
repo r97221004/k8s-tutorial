@@ -18,7 +18,7 @@ const health = ref<Health | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
-const pendingIds = ref<Set<number>>(new Set())
+const pendingActions = ref<Map<number, 'toggle' | 'remove'>>(new Map())
 
 const totalCount = computed(() => todos.value.length)
 const completedCount = computed(() => todos.value.filter((todo) => todo.completed).length)
@@ -57,29 +57,29 @@ async function addTodo(title: string) {
 }
 
 async function toggleTodo(todo: Todo) {
-  if (pendingIds.value.has(todo.id)) return
+  if (pendingActions.value.has(todo.id)) return
   error.value = null
-  pendingIds.value.add(todo.id)
+  pendingActions.value.set(todo.id, 'toggle')
   try {
     const updated = await updateTodo(todo.id, { completed: !todo.completed })
     todos.value = todos.value.map((item) => (item.id === updated.id ? updated : item))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unable to update todo'
   } finally {
-    pendingIds.value.delete(todo.id)
+    pendingActions.value.delete(todo.id)
   }
 }
 
 async function removeTodo(todo: Todo) {
-  if (pendingIds.value.has(todo.id)) return
+  if (pendingActions.value.has(todo.id)) return
   error.value = null
-  pendingIds.value.add(todo.id)
+  pendingActions.value.set(todo.id, 'remove')
   try {
     await deleteTodo(todo.id)
     todos.value = todos.value.filter((item) => item.id !== todo.id)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unable to delete todo'
-    pendingIds.value.delete(todo.id)
+    pendingActions.value.delete(todo.id)
   }
 }
 
@@ -134,7 +134,7 @@ onMounted(load)
       <TodoList
         v-else
         :todos="todos"
-        :pending-ids="pendingIds"
+        :pending-actions="pendingActions"
         @toggle="toggleTodo"
         @remove="removeTodo"
       />

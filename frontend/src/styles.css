@@ -334,6 +334,11 @@ h1 em {
   font-size: 0.78rem;
 }
 
+.todo-age.busy,
+.balloon-button:disabled {
+  font-style: italic;
+}
+
 .balloon-button {
   flex: 0 0 auto;
   border: none;

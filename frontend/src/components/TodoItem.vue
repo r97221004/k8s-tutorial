@@ -5,7 +5,7 @@ import { formatAge } from '../utils/age'
 
 const props = defineProps<{
   todo: Todo
-  pending: boolean
+  pendingAction: 'toggle' | 'remove' | null
 }>()
 
 const emit = defineEmits<{
@@ -14,31 +14,38 @@ const emit = defineEmits<{
 }>()
 
 const age = computed(() => formatAge(props.todo.created_at))
+
+const ageLabel = computed(() => {
+  if (props.pendingAction === 'toggle') return 'updating…'
+  return props.todo.completed ? 'drifted away' : `carried for ${age.value}`
+})
+
+const removeLabel = computed(() => (props.pendingAction === 'remove' ? 'removing…' : 'remove'))
 </script>
 
 <template>
-  <li class="todo-item" :class="{ done: todo.completed, pending }">
+  <li class="todo-item" :class="{ done: todo.completed, pending: !!pendingAction }">
     <label>
       <input
         type="checkbox"
         :checked="todo.completed"
-        :disabled="pending"
+        :disabled="!!pendingAction"
         @change="emit('toggle', todo)"
       />
       <span class="balloon" aria-hidden="true"></span>
       <span class="todo-text">
         <span class="todo-title">{{ todo.title }}</span>
-        <span class="todo-age">{{ todo.completed ? 'drifted away' : `carried for ${age}` }}</span>
+        <span class="todo-age" :class="{ busy: pendingAction === 'toggle' }">{{ ageLabel }}</span>
       </span>
     </label>
     <button
       type="button"
       class="balloon-button"
       aria-label="Remove todo"
-      :disabled="pending"
+      :disabled="!!pendingAction"
       @click="emit('remove', todo)"
     >
-      remove
+      {{ removeLabel }}
     </button>
   </li>
 </template>
