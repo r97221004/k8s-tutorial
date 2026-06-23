@@ -21,7 +21,7 @@ function submit() {
       v-model="title"
       type="text"
       maxlength="200"
-      placeholder="Add a deployment task"
+      placeholder="Add something to carry…"
       aria-label="Todo title"
     />
     <button type="submit" :disabled="!title.trim()">Add</button>

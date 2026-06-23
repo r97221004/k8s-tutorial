@@ -14,8 +14,8 @@ const emit = defineEmits<{
 
 <template>
   <div v-if="todos.length === 0" class="empty">
-    <p class="empty-title">No todos yet</p>
-    <p>Add the first deployment task to test the Vue to FastAPI path.</p>
+    <p class="empty-title">The sky is empty</p>
+    <p class="empty-body">Add something above, and it'll wait here until you're ready to let it go.</p>
   </div>
   <ul v-else class="todo-list">
     <TodoItem

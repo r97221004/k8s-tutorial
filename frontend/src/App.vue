@@ -9,6 +9,7 @@ import {
   type Health,
   type Todo
 } from './api/todos'
+import MoonScene from './components/MoonScene.vue'
 import TodoForm from './components/TodoForm.vue'
 import TodoList from './components/TodoList.vue'
 
@@ -20,11 +21,11 @@ const error = ref<string | null>(null)
 
 const totalCount = computed(() => todos.value.length)
 const completedCount = computed(() => todos.value.filter((todo) => todo.completed).length)
-const openCount = computed(() => totalCount.value - completedCount.value)
+const pendingCount = computed(() => totalCount.value - completedCount.value)
 const statusLabel = computed(() => {
-  if (loading.value) return 'Syncing'
-  if (error.value) return 'Needs attention'
-  return health.value ? `API ${health.value.status} · v${health.value.version}` : 'Ready'
+  if (loading.value) return 'gathering your tasks…'
+  if (error.value) return 'lost the thread'
+  return 'all caught up'
 })
 
 async function load() {
@@ -80,43 +81,45 @@ onMounted(load)
 <template>
   <main class="shell">
     <section class="hero">
-      <div>
-        <p class="eyebrow">Kubernetes Capstone</p>
-        <h1>Todo Board</h1>
-        <p class="subtitle">Vue calls FastAPI, FastAPI persists todos in SQLite on a PVC.</p>
+      <div class="hero-text">
+        <h1>Todo <em>Board</em></h1>
+        <p class="subtitle">
+          A small list of things to carry. Tick one off, and let it drift away like a balloon.
+        </p>
       </div>
-      <div class="hero-status" aria-label="Application status">
-        <span class="status-dot" :class="{ warning: error }"></span>
-        <span>{{ statusLabel }}</span>
+      <MoonScene class="moon-scene" />
+
+      <div class="hero-foot">
+        <dl class="stats" aria-label="Todo summary">
+          <div>
+            <dt>Total</dt>
+            <dd>{{ totalCount }}</dd>
+          </div>
+          <div>
+            <dt>Pending</dt>
+            <dd>{{ pendingCount }}</dd>
+          </div>
+          <div>
+            <dt>Done</dt>
+            <dd>{{ completedCount }}</dd>
+          </div>
+        </dl>
+        <div class="hero-status" aria-label="Application status">
+          <span class="status-dot" :class="{ warning: error }"></span>
+          <span>{{ statusLabel }}</span>
+        </div>
       </div>
-      <dl class="stats" aria-label="Todo summary">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ totalCount }}</dd>
-        </div>
-        <div>
-          <dt>Open</dt>
-          <dd>{{ openCount }}</dd>
-        </div>
-        <div>
-          <dt>Done</dt>
-          <dd>{{ completedCount }}</dd>
-        </div>
-      </dl>
     </section>
 
     <section class="panel" aria-live="polite">
       <div class="panel-header">
-        <div>
-          <p class="section-label">Workspace</p>
-          <h2>Deployment tasks</h2>
-        </div>
-        <span class="pill">{{ openCount }} open</span>
+        <h2>Today's list</h2>
+        <span class="pill">{{ pendingCount }} still tied</span>
       </div>
       <TodoForm @submit="addTodo" />
-      <p v-if="saving" class="hint">Saving...</p>
+      <p v-if="saving" class="hint">Adding…</p>
       <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="loading" class="hint">Loading todos...</p>
+      <p v-if="loading" class="hint">Gathering your list…</p>
       <TodoList v-else :todos="todos" @toggle="toggleTodo" @remove="removeTodo" />
     </section>
   </main>
