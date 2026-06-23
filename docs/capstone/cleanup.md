@@ -45,7 +45,7 @@ To go all the way back to bare machines, tear the cluster down with the companio
 ## Best practices
 
 - **Namespace-per-environment makes cleanup trivial** — one `delete namespace` removes everything.
-- **Remember PVCs survive** their StatefulSet — clean them up deliberately when you mean to discard data.
+- **Remember PVCs survive** the Deployment (or StatefulSet) that used them — clean them up deliberately when you mean to discard data.
 - **Don't delete what you didn't create** — scope deletes with `-n`, labels, or `-f <your manifests>`, never a blanket delete in `kube-system`.
 
 ---
@@ -54,4 +54,4 @@ That's the whole guide — from a bare kubeadm cluster to a running, configured,
 
 ---
 
-[← Deploy a Two-Tier App](two-tier-app.md) · [↑ Contents](../../README.md) · [Cluster Lifecycle (kubeadm) →](../appendix/cluster-lifecycle.md)
+[← Deploy Todo Board](two-tier-app.md) · [↑ Contents](../../README.md) · [Cluster Lifecycle (kubeadm) →](../appendix/cluster-lifecycle.md)

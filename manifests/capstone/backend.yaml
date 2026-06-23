@@ -17,6 +17,8 @@ spec:
         app.kubernetes.io/name: todo-board
         app.kubernetes.io/component: backend
     spec:
+      securityContext:
+        fsGroup: 1000   # matches the backend image's non-root "app" group, so it can write to the PVC
       containers:
         - name: backend
           image: todo-backend:0.1.0
