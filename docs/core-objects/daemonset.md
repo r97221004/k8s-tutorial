@@ -48,4 +48,4 @@ kube-proxy        1         1         1       kubernetes.io/os=linux  1h
 
 ---
 
-[← ReplicaSet](replicaset.md) · [↑ Contents](../../README.md) · [Job & CronJob →](job-cronjob.md)
+[← Scheduling, Taints & Tolerations](scheduling.md) · [↑ Contents](../../README.md) · [Job & CronJob →](job-cronjob.md)

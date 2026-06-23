@@ -50,4 +50,4 @@ Knowing the ReplicaSet exists matters for **debugging**: when you `kubectl get r
 
 ---
 
-[← Deployment](deployment.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)
+[← Deployment](deployment.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](scheduling.md)

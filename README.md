@@ -156,6 +156,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 - [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 - [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
 - [**ReplicaSet**](docs/core-objects/replicaset.md) — what actually maintains the replica count.
+- [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
@@ -176,6 +177,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
 - [**Rolling Update & Rollback**](docs/running-and-operating/rolling-updates.md) — zero-downtime releases, instant undo.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
+- [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
 **Part 4 — Networking & Access**
 

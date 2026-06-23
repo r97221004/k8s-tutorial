@@ -17,6 +17,7 @@ kubectl get all -n demo                # most namespaced objects at once
 kubectl describe pod <name>            # full detail + events (start debugging here)
 kubectl get events --sort-by=.lastTimestamp
 kubectl explain deployment.spec.replicas   # discover any field
+kubectl describe node <name>           # labels, taints, capacity, conditions
 ```
 
 ### Create / change / delete
@@ -49,6 +50,16 @@ kubectl set image deploy/web web=nginx:1.28
 kubectl rollout status deploy/web
 kubectl rollout history deploy/web
 kubectl rollout undo deploy/web [--to-revision=N]
+```
+
+### Scheduling & security
+
+```bash
+kubectl label node <node> disk=ssd
+kubectl taint node <node> dedicated=lab:NoSchedule
+kubectl taint node <node> dedicated=lab:NoSchedule-   # remove the taint
+kubectl auth can-i list pods -n demo
+kubectl auth can-i get secrets --as=system:serviceaccount:demo:app -n demo
 ```
 
 ### Namespaces & contexts

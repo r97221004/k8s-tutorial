@@ -53,4 +53,4 @@ In [k9s](../getting-started/k9s.md), a red `crasher` row jumps out; press `l` fo
 
 ---
 
-[← Rolling Update & Rollback](rolling-updates.md) · [↑ Contents](../../README.md) · [Service Discovery & DNS →](../networking/dns.md)
+[← Rolling Update & Rollback](rolling-updates.md) · [↑ Contents](../../README.md) · [Security Basics →](security-basics.md)

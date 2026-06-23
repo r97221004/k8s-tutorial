@@ -45,4 +45,4 @@ wget -qO- http://web         # reaches the Service by name
 
 ---
 
-[← Debugging](../running-and-operating/debugging.md) · [↑ Contents](../../README.md) · [Ingress →](ingress.md)
+[← Security Basics](../running-and-operating/security-basics.md) · [↑ Contents](../../README.md) · [Ingress →](ingress.md)

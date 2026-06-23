@@ -11,9 +11,13 @@ Exposing every [Service](../core-objects/service.md) with its own NodePort or Lo
 An `Ingress` object is just *rules* — inert until something enforces them. That something is an **ingress controller** (ingress-nginx, Traefik, …) running in the cluster. k3s bundles Traefik; **vanilla kubeadm ships none**, so install one first:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.14.5/deploy/static/provider/baremetal/deploy.yaml
 kubectl get pods -n ingress-nginx        # wait for the controller to be Running
 ```
+
+The version in the URL is pinned so this lab does not follow whatever changed on the upstream branch. `controller-v1.14.5` supports Kubernetes 1.30 in the ingress-nginx supported versions table.
+
+> **Production note:** ingress-nginx has been retired and archived. It is still useful for this lab because the artifacts remain available, but for new production designs evaluate Gateway API or an actively maintained ingress/gateway controller.
 
 ## A routing rule
 
