@@ -105,6 +105,7 @@ By the end you'll be able to:
 - **Deploy and expose apps** with the core objects: Pods, Deployments, Services.
 - **Separate config from images** with ConfigMaps and Secrets, and **persist data** with PersistentVolumeClaims.
 - **Keep apps healthy and current** — health probes, resource limits, scaling, and rolling updates with rollback.
+- **Control where Pods run and who can touch them** — taints/tolerations for placement, RBAC and NetworkPolicy for access control.
 - **Route traffic in** with an Ingress, and **debug** confidently when things break.
 - **Tie it all together** in the [capstone](docs/capstone/two-tier-app.md): a two-tier web + database app — configured, persisted, and exposed — then updated and torn down.
 
