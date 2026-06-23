@@ -17,12 +17,6 @@ Every concept is paired with a runnable `kubectl apply` example, all building to
 
 > **No prior Kubernetes experience assumed.** New to k8s? Read top to bottom. Already know the basics? Jump straight to the [Table of Contents](#table-of-contents).
 
-<!-- HERO GIF — record once the capstone is built:
-     a short screen capture of k9s showing the two-tier app's Pods/Services going Ready,
-     plus a browser reaching the app through the Ingress.
-     Save it to docs/images/demo.gif and replace this comment with:
-     ![The two-tier app running, inspected live in k9s](docs/images/demo.gif) -->
-
 **The single-node cluster you'll build by hand — control plane _and_ your app on one machine:**
 
 ```mermaid

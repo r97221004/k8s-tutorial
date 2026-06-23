@@ -39,23 +39,61 @@ docker build -t todo-backend:0.1.0 backend
 docker build -t todo-frontend:0.1.0 frontend
 ```
 
-Your cluster nodes must be able to pull those images. In a single-node lab, common options are:
+Your cluster nodes must be able to pull those images. Pick the path that matches where you built them:
 
-- build directly on the node using the runtime it uses;
-- push the images to your registry and update the image names in `manifests/capstone/*.yaml`;
-- import the images into your lab runtime if your distro supports it.
+**If Docker is running on the same single node as kubeadm**, export each image and import it into containerd's Kubernetes namespace:
+
+```bash
+docker save todo-backend:0.1.0 | sudo ctr -n k8s.io images import -
+docker save todo-frontend:0.1.0 | sudo ctr -n k8s.io images import -
+sudo ctr -n k8s.io images list | grep todo-
+```
+
+**If you built on your laptop but the kubeadm node is a VM**, copy the tarballs to the node first:
+
+```bash
+docker save todo-backend:0.1.0 -o todo-backend-0.1.0.tar
+docker save todo-frontend:0.1.0 -o todo-frontend-0.1.0.tar
+scp todo-*-0.1.0.tar <user>@<node-ip>:/tmp/
+
+ssh <user>@<node-ip>
+sudo ctr -n k8s.io images import /tmp/todo-backend-0.1.0.tar
+sudo ctr -n k8s.io images import /tmp/todo-frontend-0.1.0.tar
+```
+
+**If you prefer a registry**, push both images and update the `image:` fields in `manifests/capstone/backend.yaml` and `manifests/capstone/frontend.yaml`:
+
+```bash
+docker tag todo-backend:0.1.0 registry.example.com/todo-backend:0.1.0
+docker tag todo-frontend:0.1.0 registry.example.com/todo-frontend:0.1.0
+docker push registry.example.com/todo-backend:0.1.0
+docker push registry.example.com/todo-frontend:0.1.0
+```
+
+On k3s, use its bundled containerd importer instead:
+
+```bash
+docker save todo-backend:0.1.0 -o todo-backend-0.1.0.tar
+docker save todo-frontend:0.1.0 -o todo-frontend-0.1.0.tar
+sudo k3s ctr images import todo-backend-0.1.0.tar
+sudo k3s ctr images import todo-frontend-0.1.0.tar
+```
 
 Keep the tags pinned. Avoid `latest`, so rollouts and rollbacks stay deliberate.
 
 ## Optional local checks
 
-Before building images, you can run the app checks from each source directory:
+Before building images, you can run the app checks locally. Install the backend dev dependencies once:
 
 ```bash
 cd backend
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements-dev.txt
 python -m pytest tests
 
 cd ../frontend
+npm ci
 npm run build
 ```
 
