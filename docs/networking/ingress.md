@@ -76,14 +76,14 @@ spec:
 
 In real clusters, cert-manager usually creates and renews that TLS Secret for you.
 
-## Ingress vs Gateway API
-
-Ingress is stable and widely understood, but it is intentionally small: host/path HTTP routing with controller-specific behavior around the edges. **Gateway API** is the newer direction for richer, more portable traffic management: separate Gateway infrastructure from app-owned routes, model more protocols, and reduce controller-specific annotations. You don't need Gateway API for this beginner lab, but expect to see it in modern production designs.
-
 ## Ingress vs LoadBalancer Service
 
 - A **LoadBalancer Service** exposes **one** Service at L4 (TCP) — one external IP per Service.
 - An **Ingress** is L7 (HTTP): **one** entry point routing to **many** Services by host/path, with shared TLS termination. You typically run *one* ingress controller (itself behind a LoadBalancer/NodePort) and many Ingress rules.
+
+## Ingress vs Gateway API
+
+Ingress is stable and widely understood, but it is intentionally small: host/path HTTP routing with controller-specific behavior around the edges. **Gateway API** is the newer direction for richer, more portable traffic management: separate Gateway infrastructure from app-owned routes, model more protocols, and reduce controller-specific annotations. You don't need Gateway API for this beginner lab, but expect to see it in modern production designs.
 
 ## Best practices
 

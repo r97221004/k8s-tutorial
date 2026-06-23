@@ -1,0 +1,21 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local agent/tooling config — keep these personal, not shared
+.claude/settings.local.json
+.agents/
+.codex/
+
+# Local kube/helm artifacts you might create while following the tutorial
+kubeconfig
+*.kubeconfig
+*.tgz
+charts/
+
+# TLS material generated for the Ingress TLS example — never commit real certs/keys
+*.crt
+*.key
+*.pem
