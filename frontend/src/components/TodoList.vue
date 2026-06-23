@@ -4,6 +4,7 @@ import TodoItem from './TodoItem.vue'
 
 defineProps<{
   todos: Todo[]
+  pendingIds: Set<number>
 }>()
 
 const emit = defineEmits<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
       v-for="todo in todos"
       :key="todo.id"
       :todo="todo"
+      :pending="pendingIds.has(todo.id)"
       @toggle="emit('toggle', $event)"
       @remove="emit('remove', $event)"
     />

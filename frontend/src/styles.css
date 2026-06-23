@@ -353,6 +353,10 @@ h1 em {
 /* ---- states ---- */
 
 .error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-left: 3px solid var(--blossom);
   border-radius: 4px;
   background: var(--blossom-bg);
@@ -360,6 +364,31 @@ h1 em {
   font-size: 0.9rem;
   margin: 14px 0 0;
   padding: 10px 12px;
+}
+
+.retry-button {
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-style: italic;
+  padding: 4px 10px;
+}
+
+.retry-button:hover {
+  background: rgb(138 58 50 / 10%);
+}
+
+.todo-item.pending {
+  opacity: 0.6;
+}
+
+.todo-item.pending label,
+.todo-item.pending .balloon-button {
+  cursor: not-allowed;
 }
 
 .hint {

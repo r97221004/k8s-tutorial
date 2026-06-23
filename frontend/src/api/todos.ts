@@ -22,8 +22,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   })
 
   if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `Request failed with ${response.status}`)
+    let message = ''
+    try {
+      const body = await response.json()
+      message = typeof body?.detail === 'string' ? body.detail : ''
+    } catch {
+      // response wasn't JSON; fall through to generic message
+    }
+    throw new Error(message || `Request failed with status ${response.status}`)
   }
 
   if (response.status === 204) {

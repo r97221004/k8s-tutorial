@@ -18,6 +18,7 @@ const health = ref<Health | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
+const pendingIds = ref<Set<number>>(new Set())
 
 const totalCount = computed(() => todos.value.length)
 const completedCount = computed(() => todos.value.filter((todo) => todo.completed).length)
@@ -56,22 +57,29 @@ async function addTodo(title: string) {
 }
 
 async function toggleTodo(todo: Todo) {
+  if (pendingIds.value.has(todo.id)) return
   error.value = null
+  pendingIds.value.add(todo.id)
   try {
     const updated = await updateTodo(todo.id, { completed: !todo.completed })
     todos.value = todos.value.map((item) => (item.id === updated.id ? updated : item))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unable to update todo'
+  } finally {
+    pendingIds.value.delete(todo.id)
   }
 }
 
 async function removeTodo(todo: Todo) {
+  if (pendingIds.value.has(todo.id)) return
   error.value = null
+  pendingIds.value.add(todo.id)
   try {
     await deleteTodo(todo.id)
     todos.value = todos.value.filter((item) => item.id !== todo.id)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unable to delete todo'
+    pendingIds.value.delete(todo.id)
   }
 }
 
@@ -118,9 +126,18 @@ onMounted(load)
       </div>
       <TodoForm @submit="addTodo" />
       <p v-if="saving" class="hint">Adding…</p>
-      <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="error" class="error">
+        {{ error }}
+        <button type="button" class="retry-button" @click="load">retry</button>
+      </p>
       <p v-if="loading" class="hint">Gathering your list…</p>
-      <TodoList v-else :todos="todos" @toggle="toggleTodo" @remove="removeTodo" />
+      <TodoList
+        v-else
+        :todos="todos"
+        :pending-ids="pendingIds"
+        @toggle="toggleTodo"
+        @remove="removeTodo"
+      />
     </section>
   </main>
 </template>
