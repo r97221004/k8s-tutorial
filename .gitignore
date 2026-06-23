@@ -19,3 +19,12 @@ charts/
 *.crt
 *.key
 *.pem
+
+# Python / frontend build artifacts
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+
+node_modules/
+dist/

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-backend-config
+  labels:
+    app.kubernetes.io/name: todo-board
+    app.kubernetes.io/component: backend
+data:
+  APP_NAME: "Todo Board API"
+  APP_VERSION: "0.1.0"
+  DATABASE_PATH: "/data/todo.db"

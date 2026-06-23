@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  labels:
+    app.kubernetes.io/name: todo-board
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: todo-board
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: todo-board
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: backend
+          image: todo-backend:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: todo-backend-config
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: todo-sqlite-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend
+  labels:
+    app.kubernetes.io/name: todo-board
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: todo-board
+    app.kubernetes.io/component: backend
+  ports:
+    - port: 8000
+      targetPort: 8000

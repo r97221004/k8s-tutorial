@@ -1,27 +1,65 @@
-# Deploy a Two-Tier App
+# Deploy Todo Board
 
-> Put it all together: a web front end + a database back end, configured, persisted, and exposed.
+> Put it all together: a Vue front end, a FastAPI back end, and SQLite data persisted on a PVC.
 
 ---
 
-Time to assemble everything into one realistic app: a **web front end** talking to a **PostgreSQL database**, configured with a [ConfigMap](../config-and-data/configmap.md) and [Secret](../config-and-data/secret.md), persisted on a [PVC](../config-and-data/volumes.md), discovered by [DNS](../networking/dns.md), and exposed through an [Ingress](../networking/ingress.md). Then we'll do a [rolling update](../running-and-operating/rolling-updates.md) and roll it back.
+Time to assemble the guide into one small but real app: **Todo Board**. The browser loads a Vue app, Vue calls a FastAPI API under `/api`, FastAPI stores todos in SQLite at `/data/todo.db`, and Kubernetes keeps the SQLite file on a [PVC](../config-and-data/volumes.md). Traffic enters through an [Ingress](../networking/ingress.md).
 
+▶ **App source:** [`backend/`](../../backend/) and [`frontend/`](../../frontend/)  
 ▶ **Runnable manifests:** [`manifests/capstone/`](../../manifests/capstone/)
 
-> **Prereqs:** a default StorageClass ([Volumes](../config-and-data/volumes.md)) and an ingress controller ([Ingress](../networking/ingress.md)). On k3s both exist already.
+> **Prereqs:** a default StorageClass ([Volumes](../config-and-data/volumes.md)), an ingress controller ([Ingress](../networking/ingress.md)), and container images that your cluster can pull. On k3s, storage and ingress may already exist; on kubeadm, install them from the earlier chapters.
 
 ## The pieces and how they connect
 
 ```
 Ingress (demo.localdev.me)
-   └─▶ Service web (ClusterIP) ─▶ Deployment web (2 replicas)
-                                     │ env from ConfigMap web-config (DB_HOST=db)
-                                     │ env from Secret db-credentials (user/password)
-                                     ▼  reaches the DB by DNS name "db"
-                                  Service db (headless) ─▶ StatefulSet db ─▶ PVC (Postgres data)
+  ├─ /api ─▶ Service todo-backend ─▶ Deployment todo-backend (FastAPI, 1 replica)
+  │                                      │ env from ConfigMap
+  │                                      └─ PVC mounted at /data (SQLite todo.db)
+  └─ /   ─▶ Service todo-frontend ─▶ Deployment todo-frontend (Vue static files)
 ```
 
-Every relationship you learned shows up here: labels wire Services to Pods, the web tier finds the DB via the `db` DNS name, secrets/config are injected as env, and the database's data lives on a PVC that survives restarts.
+Every relationship you learned shows up here: labels wire Services to Pods, config reaches the backend through a ConfigMap, data survives on a PVC, probes guard rollout health, and Ingress routes `/api` and `/` to different Services.
+
+> **SQLite lab note:** SQLite is intentionally used to keep the capstone small. The backend runs with `replicas: 1` because multiple writers sharing one SQLite file is not a production scaling pattern. For real multi-replica writes, use PostgreSQL, MySQL, or a managed database.
+
+## Build the images
+
+The manifests use local image names:
+
+- `todo-backend:0.1.0`
+- `todo-frontend:0.1.0`
+
+Build them from the repo root:
+
+```bash
+docker build -t todo-backend:0.1.0 backend
+docker build -t todo-frontend:0.1.0 frontend
+```
+
+Your cluster nodes must be able to pull those images. In a single-node lab, common options are:
+
+- build directly on the node using the runtime it uses;
+- push the images to your registry and update the image names in `manifests/capstone/*.yaml`;
+- import the images into your lab runtime if your distro supports it.
+
+Keep the tags pinned. Avoid `latest`, so rollouts and rollbacks stay deliberate.
+
+## Optional local checks
+
+Before building images, you can run the app checks from each source directory:
+
+```bash
+cd backend
+python -m pytest tests
+
+cd ../frontend
+npm run build
+```
+
+The backend test command is run from `backend/` so Python can import the local `app` package exactly like the container does.
 
 ## Deploy it
 
@@ -32,55 +70,89 @@ kubectl create namespace demo
 kubectl apply -f manifests/capstone/ -n demo
 ```
 
-Watch it come up — the database becomes ready first (its readiness probe runs `pg_isready`), then the web Pods:
+Watch both Deployments come up:
 
 ```bash
-kubectl get all,pvc,ingress -n demo
-kubectl rollout status deployment/web -n demo
+kubectl get deploy,pods,svc,pvc,ingress -n demo
+kubectl rollout status deployment/todo-backend -n demo
+kubectl rollout status deployment/todo-frontend -n demo
 ```
 
-Or open [k9s](../getting-started/k9s.md), press `:ns` → `demo`, and watch `db-0` and the two `web-…` Pods go green.
+Or open [k9s](../getting-started/k9s.md), press `:ns` → `demo`, and watch the backend, frontend, and PVC.
 
 ## Verify the wiring
 
 ```bash
-# Config + secret reached the web Pods:
-kubectl exec deploy/web -n demo -- printenv APP_TITLE DB_HOST DB_USER
+# Backend config reached the Pod:
+kubectl exec deploy/todo-backend -n demo -- printenv APP_NAME APP_VERSION DATABASE_PATH
 
-# The web tier can resolve the database by DNS:
-kubectl exec deploy/web -n demo -- getent hosts db        # resolves to the db Service
+# Backend can write to its mounted PVC:
+kubectl exec deploy/todo-backend -n demo -- ls -l /data
 
-# The database is actually serving:
-kubectl exec db-0 -n demo -- pg_isready -U appuser -d appdb
+# Backend health:
+kubectl exec deploy/todo-backend -n demo -- python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/api/healthz').read().decode())"
 
-# Reach the front end through the Ingress:
+# Reach through the Ingress:
+curl http://demo.localdev.me/api/healthz
 curl http://demo.localdev.me
 ```
 
-## Prove the database persists
+If your kubeadm node is remote, remember the [Ingress chapter](../networking/ingress.md) note: `demo.localdev.me` resolves to `127.0.0.1`, so run `curl` on the node, forward the ingress port, or map the hostname to the VM's IP.
+
+## Use the API directly
+
+Create, list, update, and delete a todo through the backend:
 
 ```bash
-kubectl exec -it db-0 -n demo -- psql -U appuser -d appdb -c "CREATE TABLE hello(id int); INSERT INTO hello VALUES (1);"
-kubectl delete pod db-0 -n demo            # StatefulSet recreates db-0, reattaching its PVC
-kubectl exec -it db-0 -n demo -- psql -U appuser -d appdb -c "SELECT * FROM hello;"   # row still there
+curl -s -X POST http://demo.localdev.me/api/todos \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Ship the capstone"}'
+
+curl -s http://demo.localdev.me/api/todos
+
+curl -s -X PATCH http://demo.localdev.me/api/todos/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"completed":true}'
+
+curl -i -X DELETE http://demo.localdev.me/api/todos/1
 ```
+
+The Vue UI does the same calls from the browser.
+
+## Prove SQLite persists
+
+Create a todo, delete the backend Pod, and list todos again:
+
+```bash
+curl -s -X POST http://demo.localdev.me/api/todos \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Survive a Pod restart"}'
+
+kubectl delete pod "$(kubectl get pod -n demo -l app.kubernetes.io/component=backend -o name | head -1)" -n demo
+kubectl rollout status deployment/todo-backend -n demo
+
+curl -s http://demo.localdev.me/api/todos
+```
+
+The todo should still be there because `/data/todo.db` lives on the PVC, not inside the container filesystem.
 
 ## Rolling update + rollback
 
-Ship a new front-end version, watch it roll, then undo it:
+After changing frontend code, build a new image tag, update the Deployment, and watch the rollout:
 
 ```bash
-kubectl set image deployment/web web=nginx:1.28 -n demo
-kubectl rollout status deployment/web -n demo      # Pods replaced gradually, zero downtime
-kubectl rollout history deployment/web -n demo
-kubectl rollout undo deployment/web -n demo        # back to nginx:1.27 instantly
+docker build -t todo-frontend:0.1.1 frontend
+kubectl set image deployment/todo-frontend frontend=todo-frontend:0.1.1 -n demo
+kubectl rollout status deployment/todo-frontend -n demo
+kubectl rollout history deployment/todo-frontend -n demo
+kubectl rollout undo deployment/todo-frontend -n demo
 ```
 
-In k9s you'll see new Pods appear and become ready before old ones leave — the readiness probes gating the rollout.
+Readiness probes gate the rollout so new frontend Pods must serve `/` before old Pods leave.
 
 ## What you just used
 
-Pod · Deployment · ReplicaSet · StatefulSet · Service (ClusterIP + headless) · Ingress · ConfigMap · Secret · PVC · DNS · probes · resources · rolling update + rollback — the whole guide, in one app. 🎉
+Pod · Deployment · Service · Ingress · ConfigMap · PVC · probes · resources · labels/selectors · DNS · rolling update + rollback — plus a real browser-to-API-to-database path.
 
 Next: [tear it down cleanly](cleanup.md).
 

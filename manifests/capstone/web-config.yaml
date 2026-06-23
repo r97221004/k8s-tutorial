@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: web-config
-data:
-  APP_TITLE: "Two-Tier Demo"
-  # the web tier reaches the database by its Service DNS name
-  DB_HOST: "db"
-  DB_PORT: "5432"

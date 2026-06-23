@@ -25,7 +25,7 @@ kubectl delete -f manifests/capstone/ -n demo
 This is the gotcha worth knowing:
 
 - Deleting the **namespace** *does* remove its PVCs (and, depending on the StorageClass reclaim policy, the underlying data).
-- Deleting a **StatefulSet** does **not** delete its PVCs — they're kept on purpose so you don't lose a database by accident. Check and remove them explicitly:
+- Deleting the backend Deployment does **not** automatically delete the PVC — the SQLite file is deliberately separate from the Pod. Check and remove it explicitly if you want the data gone:
 
 ```bash
 kubectl get pvc -n demo               # any left behind?
@@ -50,7 +50,7 @@ To go all the way back to bare machines, tear the cluster down with the companio
 
 ---
 
-That's the whole guide — from a bare kubeadm cluster to a running, configured, persistent, exposed two-tier app, and back to a clean slate. Revisit any topic from the [Contents](../../README.md), or go deeper with [Further Reading](../appendix/further-reading.md).
+That's the whole guide — from a bare kubeadm cluster to a running, configured, persistent, exposed Todo app, and back to a clean slate. Revisit any topic from the [Contents](../../README.md), or go deeper with [Further Reading](../appendix/further-reading.md).
 
 ---
 

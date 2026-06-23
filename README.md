@@ -107,7 +107,7 @@ By the end you'll be able to:
 - **Keep apps healthy and current** — health probes, resource limits, scaling, and rolling updates with rollback.
 - **Control where Pods run and who can touch them** — taints/tolerations for placement, RBAC and NetworkPolicy for access control.
 - **Route traffic in** with an Ingress, and **debug** confidently when things break.
-- **Tie it all together** in the [capstone](docs/capstone/two-tier-app.md): a two-tier web + database app — configured, persisted, and exposed — then updated and torn down.
+- **Tie it all together** in the [capstone](docs/capstone/two-tier-app.md): a Vue + FastAPI Todo app — configured, persisted with SQLite on a PVC, exposed, updated, and torn down.
 
 Every section is hands-on: a manifest you `kubectl apply`, then watch take effect.
 
@@ -193,7 +193,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 
 **Capstone**
 
-- [**Deploy a Two-Tier App**](docs/capstone/two-tier-app.md) — web + database, end to end.
+- [**Deploy Todo Board**](docs/capstone/two-tier-app.md) — Vue + FastAPI + SQLite, end to end.
 - [**Cleanup**](docs/capstone/cleanup.md) — tear it all back down.
 
 **Appendix**
