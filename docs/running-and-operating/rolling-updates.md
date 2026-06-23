@@ -78,4 +78,4 @@ Because each revision is its own ReplicaSet, rollback is instant — Kubernetes 
 
 ---
 
-[← Scaling](scaling.md) · [↑ Contents](../../README.md) · [Debugging →](debugging.md)
+[← Scaling](scaling.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)

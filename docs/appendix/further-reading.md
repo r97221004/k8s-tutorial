@@ -10,6 +10,7 @@
 - **Advanced scheduling** — affinity / anti-affinity and topology spread, beyond the [Scheduling, Taints & Tolerations](../core-objects/scheduling.md) intro. [Docs](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 - **Init containers & sidecars** — setup steps and helper containers within a Pod. [Docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
 - **Observability** — metrics, logs, and traces beyond `kubectl top`: Prometheus + Grafana for metrics, a log-shipping stack (e.g. Fluent Bit/Loki) for logs. [Docs](https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/)
+- **Disruptions** — deeper detail on eviction, drains, and PodDisruptionBudgets beyond [Graceful Shutdown & Disruptions](../running-and-operating/graceful-shutdown.md). [Docs](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
 - **Official tutorials** — [kubernetes.io/docs/tutorials](https://kubernetes.io/docs/tutorials/)
 
 ---

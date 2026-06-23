@@ -177,6 +177,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
 - [**Rolling Update & Rollback**](docs/running-and-operating/rolling-updates.md) — zero-downtime releases, instant undo.
+- [**Graceful Shutdown & Disruptions**](docs/running-and-operating/graceful-shutdown.md) — SIGTERM, preStop, drains, and PDBs.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
@@ -197,6 +198,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 
 **Appendix**
 
+- [**Cluster Lifecycle (kubeadm)**](docs/appendix/cluster-lifecycle.md) — upgrades, etcd backup, certs, and reset.
 - [**kubectl Cheat Sheet**](docs/appendix/cheatsheet.md) — one-page reference.
 - [**Troubleshooting**](docs/appendix/troubleshooting.md) — symptom → cause → fix.
 - [**Further Reading**](docs/appendix/further-reading.md) — advanced topics beyond this guide.

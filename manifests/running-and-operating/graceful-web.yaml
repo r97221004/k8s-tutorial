@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graceful-web
+  labels:
+    app: graceful-web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: graceful-web
+  template:
+    metadata:
+      labels:
+        app: graceful-web
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: web
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graceful-web
+spec:
+  type: ClusterIP
+  selector:
+    app: graceful-web
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: graceful-web
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: graceful-web

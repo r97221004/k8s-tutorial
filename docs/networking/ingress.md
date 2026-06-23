@@ -58,6 +58,12 @@ Add more `paths` (e.g. `/api` → an `api` Service) to fan one host out to sever
 TLS termination is just another part of the Ingress rule: put the certificate/key in a Secret, then reference it from `spec.tls`.
 
 ```bash
+openssl req -x509 -nodes -newkey rsa:2048 \
+  -keyout demo.key \
+  -out demo.crt \
+  -days 7 \
+  -subj "/CN=demo.localdev.me"
+
 kubectl create secret tls demo-tls \
   --cert=demo.crt \
   --key=demo.key \
@@ -75,6 +81,12 @@ spec:
 ```
 
 In real clusters, cert-manager usually creates and renews that TLS Secret for you.
+
+For a self-signed lab certificate, verify with:
+
+```bash
+curl -k https://demo.localdev.me
+```
 
 ## Ingress vs LoadBalancer Service
 

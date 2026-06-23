@@ -50,6 +50,15 @@ kubectl create rolebinding viewer-reads-pods \
   -n security-demo
 ```
 
+The commands above teach the shape. Prefer storing the same permissions as manifests once you know what they mean:
+
+▶ **Runnable manifest:** [`manifests/running-and-operating/security-demo.yaml`](../../manifests/running-and-operating/security-demo.yaml)
+
+```bash
+# If you already created security-demo with the commands above, this updates it declaratively.
+kubectl apply -f manifests/running-and-operating/security-demo.yaml
+```
+
 Ask the API what that ServiceAccount can do:
 
 ```bash
@@ -102,7 +111,7 @@ That policy selects every Pod in the namespace and denies inbound traffic unless
 ## Clean up
 
 ```bash
-kubectl delete namespace security-demo
+kubectl delete -f manifests/running-and-operating/security-demo.yaml --ignore-not-found
 ```
 
 ## Best practices

@@ -50,6 +50,9 @@ kubectl set image deploy/web web=nginx:1.28
 kubectl rollout status deploy/web
 kubectl rollout history deploy/web
 kubectl rollout undo deploy/web [--to-revision=N]
+kubectl get pdb
+kubectl drain <node> --ignore-daemonsets --delete-emptydir-data
+kubectl uncordon <node>
 ```
 
 ### Scheduling & security
@@ -70,8 +73,16 @@ kubectl config set-context --current --namespace=demo   # stop typing -n
 kubectl get namespaces
 ```
 
+### Cluster lifecycle
+
+```bash
+sudo kubeadm upgrade plan
+sudo kubeadm certs check-expiration
+sudo kubeadm certs renew all
+```
+
 > 💡 Prefer the live dashboard? [k9s](../getting-started/k9s.md) covers most of this with single keystrokes (`d` describe, `l` logs, `s` shell, `Ctrl-D` delete).
 
 ---
 
-[← Cleanup](../capstone/cleanup.md) · [↑ Contents](../../README.md) · [Troubleshooting →](troubleshooting.md)
+[← Cluster Lifecycle (kubeadm)](cluster-lifecycle.md) · [↑ Contents](../../README.md) · [Troubleshooting →](troubleshooting.md)

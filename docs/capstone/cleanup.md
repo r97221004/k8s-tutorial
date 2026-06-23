@@ -54,4 +54,4 @@ That's the whole guide — from a bare kubeadm cluster to a running, configured,
 
 ---
 
-[← Deploy a Two-Tier App](two-tier-app.md) · [↑ Contents](../../README.md) · [kubectl Cheat Sheet →](../appendix/cheatsheet.md)
+[← Deploy a Two-Tier App](two-tier-app.md) · [↑ Contents](../../README.md) · [Cluster Lifecycle (kubeadm) →](../appendix/cluster-lifecycle.md)

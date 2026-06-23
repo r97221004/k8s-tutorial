@@ -27,6 +27,7 @@ Then match the symptom below.
 | **Ingress 404 / not reachable** | no ingress controller, wrong host/path or `ingressClassName` | controller Running? host header matches a rule? ([Ingress](../networking/ingress.md)) |
 | **PVC `Pending`** | no (default) StorageClass | install/default a provisioner — [Volumes](../config-and-data/volumes.md) |
 | Rollout **hangs** | new Pods never become ready (bad image/probe) | `rollout status`; `rollout undo`; then [debug](../running-and-operating/debugging.md) |
+| Drain **blocked** | PDB would be violated, or a Pod is unmanaged | `kubectl get pdb`; check [Graceful Shutdown & Disruptions](../running-and-operating/graceful-shutdown.md) |
 | API says **`Forbidden`** | RBAC denies this user or ServiceAccount | `kubectl auth can-i ...`; check [Security Basics](../running-and-operating/security-basics.md) |
 
 > **Golden rule:** read `describe` Events and `logs --previous` *before* deleting or restarting anything — the cause is almost always written there. Full debugging workflow in [Debugging](../running-and-operating/debugging.md).
