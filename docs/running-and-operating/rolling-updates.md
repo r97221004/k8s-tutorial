@@ -6,17 +6,47 @@
 
 Change a [Deployment](../core-objects/deployment.md)'s Pod template — usually a new image — and Kubernetes rolls it out **gradually**: spin up new Pods, wait for them to be [ready](health-checks.md), then retire old ones, a few at a time. Done right, users never see downtime. And if the new version is bad, you roll back in one command.
 
+## Before you start
+
+Start from the known-good `nginx:1.27` Deployment:
+
+```bash
+kubectl apply -f manifests/running-and-operating/web-healthy.yaml
+kubectl rollout status deployment/web
+```
+
 ## Trigger a rollout
 
 ```bash
-# Change the image (records the change for rollout history):
+# Change the image. This creates a new rollout revision.
 kubectl set image deployment/web web=nginx:1.28
 # …or edit the image in the manifest and: kubectl apply -f manifests/running-and-operating/web-healthy.yaml
 
 kubectl rollout status deployment/web      # follow it to completion
 ```
 
+`kubectl rollout history` lists revision numbers. If you want human-readable notes there, annotate the Deployment with `kubernetes.io/change-cause` as part of your release process.
+
 Watch it in [k9s](../getting-started/k9s.md) (`:pods`): new `web-…` Pods appear and go `Ready` while old ones terminate — never all at once. Under the hood the Deployment is shifting Pods from the old [ReplicaSet](../core-objects/replicaset.md) to a new one.
+
+## Break one on purpose
+
+A broken image creates a new ReplicaSet, but those Pods never become ready. This is the failure mode `rollout status` is meant to catch:
+
+```bash
+kubectl set image deployment/web web=nginx:does-not-exist
+kubectl rollout status deployment/web --timeout=60s   # expected to time out
+kubectl get pods -l app=web
+kubectl describe pods -l app=web                      # Events show the image pull failure
+```
+
+The old ready Pods stay serving while the bad rollout stalls. Roll back, then wait for the Deployment to return to health:
+
+```bash
+kubectl rollout undo deployment/web
+kubectl rollout status deployment/web
+kubectl get deploy,rs,pods -l app=web
+```
 
 ## The two knobs
 

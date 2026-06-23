@@ -16,6 +16,15 @@
 
 The crucial distinction: **readiness controls traffic; liveness controls restarts.** Getting them backwards is a classic mistake — a too-aggressive liveness probe restart-loops a Pod that was merely busy.
 
+## Before you start
+
+Use the known-good `web` Deployment for Part 3:
+
+```bash
+kubectl apply -f manifests/running-and-operating/web-healthy.yaml
+kubectl rollout status deployment/web
+```
+
 ## A production-ready Deployment
 
 ▶ **Runnable manifest:** [`manifests/running-and-operating/web-healthy.yaml`](../../manifests/running-and-operating/web-healthy.yaml) (the `web` Deployment, now with probes + resources)
@@ -36,7 +45,6 @@ livenessProbe:       # restart if it stops answering
 Probes come in three flavours: **`httpGet`** (2xx/3xx = pass — most web apps), **`tcpSocket`** (port open = pass — for non-HTTP), and **`exec`** (a command exits 0 = pass — anything else).
 
 ```bash
-kubectl apply -f manifests/running-and-operating/web-healthy.yaml
 kubectl get pods -l app=web      # READY 1/1 only appears once readiness passes
 kubectl describe pod -l app=web  # see Liveness/Readiness lines and probe events
 ```

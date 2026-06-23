@@ -6,6 +6,8 @@
 
 A [Deployment](../core-objects/deployment.md) treats its Pods as **interchangeable** — random names, shared storage, any order. Perfect for stateless web apps. But a database replica is *not* interchangeable: it has its own data and its own identity. A **StatefulSet** is the controller for workloads where each Pod must be distinct and durable.
 
+The PostgreSQL example below is a lab for learning StatefulSet mechanics, not a production database recommendation. Real production databases need backup/restore, upgrade, failover, monitoring, and storage choices beyond this intro.
+
 ## What a StatefulSet adds
 
 - **Stable network identity** — Pods are named by ordinal (`postgres-0`, `postgres-1`), not random suffixes, and keep that name across restarts. Paired with a *headless* Service, each gets a stable DNS name.
@@ -64,6 +66,24 @@ Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:p
 - **Don't run production databases in-cluster casually** — managed DBs remove a lot of operational pain. Use a StatefulSet when you have a real reason to self-host.
 - **Always pair with a headless Service** (`clusterIP: None`) for stable per-Pod DNS.
 - **Size `volumeClaimTemplates` carefully** — they're created per replica and usually persist even after the StatefulSet is deleted (so data isn't lost by accident).
+
+## Reset after Part 2
+
+If you're moving on to Part 3 and want a clean default namespace, remove the config examples and the StatefulSet:
+
+```bash
+kubectl delete -f manifests/config-and-data/web-with-config.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/postgres-statefulset.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/data-pvc.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/app-config.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/app-secret.yaml --ignore-not-found
+```
+
+StatefulSet PVCs are deliberately kept when the StatefulSet is deleted. To remove the PostgreSQL lab data too:
+
+```bash
+kubectl delete pvc pgdata-postgres-0 --ignore-not-found
+```
 
 ---
 

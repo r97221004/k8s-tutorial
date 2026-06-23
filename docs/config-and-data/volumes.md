@@ -57,11 +57,13 @@ kubectl exec writer -- cat /data/log.txt   # still 'persisted!'
 If your PVC is stuck `Pending`, this is why: unlike k3s (which bundles `local-path`), bare kubeadm ships **no** storage provisioner, so there's nothing to create a PV for your claim. Fix it once:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
 kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ```
 
 Now PVCs bind automatically. (`kubectl get storageclass` should show `local-path (default)`.)
+
+The version in the URL is pinned on purpose: it keeps this lab reproducible instead of following whatever happens to be on the upstream `master` branch that day.
 
 > 📝 **Multi-node note:** local-path / hostPath volumes live on one node's disk. On a single node that's invisible — but on a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
 
@@ -71,6 +73,14 @@ Now PVCs bind automatically. (`kubectl get storageclass` should show `local-path
 - **Right-size `requests.storage`** and pick the `accessModes` your app truly needs (`ReadWriteOnce` is the common, widely-supported case).
 - **For databases, prefer a [StatefulSet](statefulset.md)** with a `volumeClaimTemplate` so each replica gets its own stable volume.
 - **Mind the reclaim policy** — know whether deleting a PVC deletes the data.
+
+## Clean up
+
+If you're done with the PVC exercise, delete the writer Pod and its claim:
+
+```bash
+kubectl delete -f manifests/config-and-data/data-pvc.yaml --ignore-not-found
+```
 
 ---
 
