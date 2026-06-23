@@ -23,14 +23,91 @@ The most common day-one use is installing someone else's chart:
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install my-nginx bitnami/nginx --set replicaCount=3
+helm install my-nginx bitnami/nginx --version 25.0.10 --set replicaCount=3
 helm list                              # your releases
-helm upgrade my-nginx bitnami/nginx --set replicaCount=5   # change values, new revision
+helm upgrade my-nginx bitnami/nginx --version 25.0.10 --set replicaCount=5   # change values, new revision
 helm rollback my-nginx 1               # back to revision 1 — instantly
 helm uninstall my-nginx
 ```
 
 `helm upgrade`/`rollback` track **revisions**, so changing config or recovering from a bad release is one command — Helm diffs and applies only what changed.
+
+## What a tiny chart looks like
+
+A chart is just a folder. This guide includes a runnable tiny chart at [`manifests/packaging/helm/my-app/`](../../manifests/packaging/helm/my-app/):
+
+```
+manifests/packaging/helm/my-app/
+├── Chart.yaml
+├── values.yaml
+└── templates/
+    ├── deployment.yaml
+    └── service.yaml
+```
+
+```yaml
+# Chart.yaml
+apiVersion: v2
+name: my-app
+description: A tiny Helm chart for the Kubernetes tutorial
+type: application
+version: 0.1.0
+appVersion: "1.27"
+```
+
+```yaml
+# values.yaml
+replicaCount: 2
+image:
+  repository: nginx
+  tag: "1.27"
+service:
+  port: 80
+```
+
+```yaml
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+```
+
+Render before applying so you can see the final YAML:
+
+```bash
+helm template demo manifests/packaging/helm/my-app
+```
+
+Install it as a release, change a value, then remove it:
+
+```bash
+helm install demo manifests/packaging/helm/my-app
+kubectl get deploy,svc -l app.kubernetes.io/instance=demo
+
+helm upgrade demo manifests/packaging/helm/my-app --set replicaCount=3
+helm history demo
+
+helm uninstall demo
+```
 
 ## When Helm earns its keep
 

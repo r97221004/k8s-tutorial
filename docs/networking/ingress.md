@@ -49,7 +49,36 @@ kubectl get ingress web                    # shows the host and the controller's
 curl http://demo.localdev.me               # reaches the web Service through the Ingress
 ```
 
+`demo.localdev.me` resolves to `127.0.0.1`, which is handy only when the request runs on the same machine that exposes the ingress controller. If your kubeadm node is a remote VM, run the `curl` from inside that VM, SSH-forward the ingress controller's NodePort to your laptop, or map a hostname to the VM's IP in your local `/etc/hosts`.
+
 Add more `paths` (e.g. `/api` → an `api` Service) to fan one host out to several backends — the whole point of an Ingress.
+
+## TLS shape
+
+TLS termination is just another part of the Ingress rule: put the certificate/key in a Secret, then reference it from `spec.tls`.
+
+```bash
+kubectl create secret tls demo-tls \
+  --cert=demo.crt \
+  --key=demo.key \
+  --dry-run=client -o yaml
+```
+
+```yaml
+spec:
+  tls:
+    - hosts:
+        - demo.localdev.me
+      secretName: demo-tls
+  rules:
+    - host: demo.localdev.me
+```
+
+In real clusters, cert-manager usually creates and renews that TLS Secret for you.
+
+## Ingress vs Gateway API
+
+Ingress is stable and widely understood, but it is intentionally small: host/path HTTP routing with controller-specific behavior around the edges. **Gateway API** is the newer direction for richer, more portable traffic management: separate Gateway infrastructure from app-owned routes, model more protocols, and reduce controller-specific annotations. You don't need Gateway API for this beginner lab, but expect to see it in modern production designs.
 
 ## Ingress vs LoadBalancer Service
 

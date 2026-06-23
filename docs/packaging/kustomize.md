@@ -49,6 +49,12 @@ kubectl apply -k manifests/packaging/kustomize/overlays/prod
 
 The base never changes; each environment is a thin overlay of differences. Common overlay moves: `namePrefix`/`nameSuffix`, `namespace`, `commonLabels`, `images:` (swap tags), `configMapGenerator`, and strategic/JSON patches.
 
+Clean up the overlay when you're done:
+
+```bash
+kubectl delete -k manifests/packaging/kustomize/overlays/prod
+```
+
 ## Kustomize vs Helm
 
 | | Kustomize | Helm |
