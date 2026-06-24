@@ -34,6 +34,10 @@ envFrom:
       name: app-config        # each key becomes an env var
 ```
 
+`web-with-config.yaml` actually uses both at once: an explicit `env` entry for `APP_GREETING`, *and* `envFrom` pulling in the whole `app-config` (which also contains an `APP_GREETING` key). When the same name comes from both, the explicit `env` entry wins — `envFrom` never overwrites a name already set in `env`.
+
+`envFrom` also skips any key that isn't a valid environment variable name. `app-config` has a key `app.properties` (the dot isn't legal in an env var name), so it's silently dropped from the env vars — you'll see an `InvalidVariableNames` warning in `kubectl describe pod` Events, which is expected, not a misconfiguration.
+
 ## 2. As files on disk
 
 Mount the whole ConfigMap/Secret as a directory — each key becomes a file:
@@ -73,7 +77,7 @@ kubectl exec deploy/web-config -- cat /etc/app-secret/DB_PASSWORD
 
 | | Environment variables | Mounted files |
 |---|---|---|
-| Updates without restart | ❌ frozen at start | ✅ files refresh automatically |
+| Updates without restart | ❌ frozen at start | ✅ files refresh automatically (except `subPath` mounts — those don't refresh) |
 | Good for | small scalar config | whole config files, certs, large values |
 | Sensitive data | riskier (leaks via dumps/child procs) | safer (esp. Secrets as `tmpfs`) |
 
