@@ -27,9 +27,9 @@ kubectl get daemonset -n kube-system
 ```
 
 ```
-NAME              DESIRED   CURRENT   READY   NODE SELECTOR            AGE
-kube-flannel-ds   1         1         1       <none>                  1h
-kube-proxy        1         1         1       kubernetes.io/os=linux  1h
+NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-flannel-ds   1         1         1       1            1           <none>                   1h
+kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   1h
 ```
 
 `DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../getting-started/k9s.md) and type `:ds` to watch them.
@@ -43,7 +43,7 @@ kube-proxy        1         1         1       kubernetes.io/os=linux  1h
 
 ## Scoping to specific nodes
 
-By default a DaemonSet's Pod tolerates the built-in control-plane taints, so it lands on *every* node, masters included — that's why `kube-flannel-ds` and `kube-proxy` show up even on a single control-plane node. To restrict an agent to a subset (say, only GPU nodes), add the same `nodeSelector` + `tolerations` pair from the [scheduling chapter](scheduling.md#taints-repel-tolerations-allow):
+A DaemonSet itself has no special power over taints — like any Pod, it's still blocked from a tainted node unless its template carries a matching toleration. `kube-flannel-ds` and `kube-proxy` show up even on this single control-plane node only because kubeadm's manifests for them explicitly include a toleration for the control-plane taint (and others) — it's not something the DaemonSet kind grants automatically. To restrict your own agent to a subset (say, only GPU nodes), add the same `nodeSelector` + `tolerations` pair from the [scheduling chapter](scheduling.md#taints-repel-tolerations-allow):
 
 ```yaml
 spec:
@@ -62,10 +62,10 @@ Without the `nodeSelector`, the DaemonSet still spreads to every node that doesn
 
 ## Update strategy
 
-Changing a DaemonSet's Pod template (e.g. bumping the image) doesn't recreate Pods by default the way you might expect — it depends on `spec.updateStrategy.type`:
+What happens when you change a DaemonSet's Pod template (e.g. bumping the image) depends on `spec.updateStrategy.type`:
 
-- **`RollingUpdate`** (the default) — old Pods are deleted and replaced node by node, same idea as a Deployment rollout.
-- **`OnDelete`** — the controller does nothing until you manually delete a Pod; the replacement then picks up the new template. Useful when you need to control exactly when each node's agent restarts.
+- **`RollingUpdate`** (the default) — old Pods are deleted and replaced node by node automatically, same idea as a Deployment rollout. This matches what you'd expect.
+- **`OnDelete`** — the controller does nothing until you manually delete a Pod; the replacement then picks up the new template. Switching to this is how you get the "template changed but nothing happened" behavior, useful when you need to control exactly when each node's agent restarts.
 
 ## Best practices
 
