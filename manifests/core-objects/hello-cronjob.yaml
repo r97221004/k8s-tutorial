@@ -4,6 +4,9 @@ metadata:
   name: hello
 spec:
   schedule: "*/1 * * * *"        # every minute (standard cron syntax)
+  timeZone: "Etc/UTC"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 30
   successfulJobsHistoryLimit: 3   # keep the last 3 completed Jobs
   failedJobsHistoryLimit: 1
   jobTemplate:

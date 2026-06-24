@@ -62,6 +62,9 @@ metadata:
   name: hello
 spec:
   schedule: "*/1 * * * *"        # every minute (standard cron syntax)
+  timeZone: "Etc/UTC"            # make the schedule's timezone explicit
+  concurrencyPolicy: Forbid      # skip a new run if the previous one is still running
+  startingDeadlineSeconds: 30    # skip a run if Kubernetes misses it by over 30 seconds
   successfulJobsHistoryLimit: 3   # keep the last 3 completed Jobs
   failedJobsHistoryLimit: 1       # keep the last 1 failed Job
   jobTemplate:
@@ -79,6 +82,7 @@ spec:
 kubectl apply -f manifests/core-objects/hello-cronjob.yaml
 kubectl get cronjob hello       # see LAST SCHEDULE tick over
 kubectl get jobs -w             # a new Job appears each minute
+kubectl logs job/<job-name>     # read the logs from one CronJob run
 ```
 
 In [k9s](../getting-started/k9s.md), `:cronjobs` and `:jobs` let you watch each run spawn — a satisfying way to *see* the schedule fire.
@@ -88,6 +92,9 @@ In [k9s](../getting-started/k9s.md), `:cronjobs` and `:jobs` let you watch each 
 - **Pick the right kind:** finishes once → **Job**; on a schedule → **CronJob**; runs forever → **Deployment**.
 - **Set `backoffLimit`** so a broken Job doesn't retry endlessly.
 - **Set history limits** (`successfulJobsHistoryLimit`/`failedJobsHistoryLimit`) so old CronJob runs don't pile up.
+- **Make the schedule explicit** with `timeZone`; otherwise the controller's default timezone is used.
+- **Choose a concurrency policy** (`Allow`, `Forbid`, or `Replace`) so slow runs behave the way you expect.
+- **Use `startingDeadlineSeconds`** when a late run is worse than a skipped run.
 - **Make jobs idempotent** — a Job may retry, so running twice should be safe.
 
 ## Clean up
