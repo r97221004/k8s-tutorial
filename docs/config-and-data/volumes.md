@@ -60,8 +60,10 @@ kubectl exec writer -- cat /data/log.txt   # the data is there
 # Prove it persists: delete the Pod, recreate, data survives
 kubectl delete pod writer
 kubectl apply -f manifests/config-and-data/data-pvc.yaml
-kubectl exec writer -- cat /data/log.txt   # still 'persisted!'
+kubectl exec writer -- cat /data/log.txt   # 'persisted!' appears again, appended below the first line
 ```
+
+The writer's command appends (`>>`) rather than overwrites, so the new Pod adds a *second* `persisted!` line instead of replacing the file. Seeing two lines (not one) is the actual proof: if the volume had been wiped along with the old Pod, you'd only see one.
 
 ## ⚠️ Vanilla kubeadm has no default StorageClass
 
@@ -74,7 +76,7 @@ kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storagecl
 
 Now PVCs bind automatically. (`kubectl get storageclass` should show `local-path (default)`.)
 
-The version in the URL is pinned on purpose: it keeps this lab reproducible instead of following whatever happens to be on the upstream `master` branch that day.
+The version in the URL is pinned on purpose: it keeps this lab reproducible instead of following whatever happens to be on the upstream `master` branch that day. If that tag ever gets removed upstream and the `apply` 404s, check the [local-path-provisioner releases page](https://github.com/rancher/local-path-provisioner/releases) for a current tag and swap it into the URL.
 
 > 📝 **Multi-node note:** local-path / hostPath volumes live on one node's disk. On a single node that's invisible — but on a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
 
