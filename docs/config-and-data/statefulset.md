@@ -8,6 +8,8 @@ A [Deployment](../core-objects/deployment.md) treats its Pods as **interchangeab
 
 The PostgreSQL example below is a lab for learning StatefulSet mechanics, not a production database recommendation. Real production databases need backup/restore, upgrade, failover, monitoring, and storage choices beyond this intro.
 
+It is also a **single-replica lab**, not high availability PostgreSQL. Scaling this example teaches StatefulSet identity and PVC behavior; it does not create a safe replicated database.
+
 ## What a StatefulSet adds
 
 - **Stable network identity** — Pods are named by ordinal (`postgres-0`, `postgres-1`), not random suffixes, and keep that name across restarts. Paired with a *headless* Service, each gets a stable DNS name.
@@ -17,6 +19,17 @@ The PostgreSQL example below is a lab for learning StatefulSet mechanics, not a 
 ▶ **Runnable manifest:** [`manifests/config-and-data/postgres-statefulset.yaml`](../../manifests/config-and-data/postgres-statefulset.yaml) (a headless Service + StatefulSet; needs `app-secret` and a default StorageClass — see [Volumes](volumes.md))
 
 ```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None          # headless: no single virtual IP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -58,7 +71,8 @@ spec:
 
 ```bash
 kubectl apply -f manifests/config-and-data/postgres-statefulset.yaml
-kubectl get statefulset,pods,pvc -l app=postgres
+kubectl get statefulset,pods -l app=postgres
+kubectl get pvc pgdata-postgres-0
 kubectl exec postgres-0 -- hostname
 ```
 
@@ -74,6 +88,23 @@ postgres-0.postgres.default.svc.cluster.local
 ```
 
 Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC** — its data is intact.
+
+```bash
+kubectl delete pod postgres-0
+kubectl get pods,pvc
+```
+
+Scale to two replicas and you will see the ordinal pattern repeat: `postgres-1` appears with its own `pgdata-postgres-1` PVC.
+
+```bash
+kubectl scale statefulset/postgres --replicas=2
+kubectl get pods,pvc
+kubectl scale statefulset/postgres --replicas=1
+```
+
+By default, StatefulSets use ordered lifecycle behavior: Kubernetes creates `postgres-0` before `postgres-1`, and deletes higher ordinals first when scaling down. The field behind that default is `podManagementPolicy: OrderedReady`.
+
+Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Pods from the highest ordinal down, so `postgres-1` updates before `postgres-0`.
 
 `PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
 
@@ -103,8 +134,10 @@ kubectl delete -f manifests/config-and-data/app-secret.yaml --ignore-not-found
 StatefulSet PVCs are deliberately kept when the StatefulSet is deleted. To remove the PostgreSQL lab data too:
 
 ```bash
-kubectl delete pvc pgdata-postgres-0 --ignore-not-found
+kubectl delete pvc pgdata-postgres-0 pgdata-postgres-1 --ignore-not-found
 ```
+
+`pgdata-postgres-1` exists only if you tried the scale-to-2 exercise above.
 
 ---
 
