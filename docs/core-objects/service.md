@@ -76,7 +76,15 @@ For a `ClusterIP` Service, you usually only care about `port` and `targetPort`. 
 outside client -> nodeIP:nodePort -> Service port -> Pod targetPort
 ```
 
-Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number. Update the Deployment's named container port, and the Service can stay the same.
+The name `http` isn't magic — it's defined on the Deployment's container, as an alias for whatever port number is there today:
+
+```yaml
+ports:
+  - name: http
+    containerPort: 80
+```
+
+`targetPort: http` just means "look up the container port named `http`, whatever number it currently is." Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number. Update the Deployment's named container port, and the Service can stay the same — the name is the indirection layer, the number is just today's value behind it.
 
 ## Debug an empty Service
 
