@@ -44,6 +44,16 @@ kubectl taint node "$NODE" gpu=true:NoSchedule   # repel: keeps non-GPU Pods off
 kubectl label node "$NODE" gpu=true              # tag: lets GPU Pods find this node
 ```
 
+The taint string is `key=value:effect`:
+
+```text
+gpu=true:NoSchedule
+^^^ ^^^^ ^^^^^^^^^^
+key value  effect
+```
+
+That sets a taint with key `gpu`, value `true`, effect `NoSchedule` on the node — any Pod without a toleration matching all three is blocked from scheduling there, though Pods already running there are left alone.
+
 ▶ **Runnable manifest:** [`manifests/core-objects/gpu-dedicated-pod.yaml`](../../manifests/core-objects/gpu-dedicated-pod.yaml)
 
 ```yaml
