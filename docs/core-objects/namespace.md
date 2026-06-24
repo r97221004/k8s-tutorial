@@ -81,6 +81,18 @@ spec:
     limits.memory: 640Mi
 ```
 
+Every key under `hard` is a cap on the *sum across the whole namespace*, not per Pod:
+
+| Key | Caps |
+|-----|------|
+| `pods` | Total number of Pods allowed in `dev`, regardless of their size. |
+| `requests.cpu` | Sum of every container's `resources.requests.cpu` in the namespace. `300m` = 0.3 CPU core. |
+| `requests.memory` | Sum of every container's `resources.requests.memory`. `320Mi` = 320 mebibytes. |
+| `limits.cpu` | Sum of every container's `resources.limits.cpu`. `"1"` = 1 full CPU core. |
+| `limits.memory` | Sum of every container's `resources.limits.memory`. `640Mi` = 640 mebibytes. |
+
+Numeric values are quoted (`"4"`, `"300m"`, `"1"`) because Kubernetes' quantity format (`300m`, `1`, `640Mi`) isn't a plain YAML number — quoting keeps it from being misparsed. So with this quota: at most 4 Pods total in `dev`, and across all of them combined, requests can't exceed 0.3 CPU / 320Mi memory, nor limits exceed 1 CPU / 640Mi memory.
+
 ▶ **Runnable manifest:** [`manifests/core-objects/dev-limitrange.yaml`](../../manifests/core-objects/dev-limitrange.yaml)
 
 ```yaml
@@ -99,6 +111,16 @@ spec:
         cpu: 200m
         memory: 128Mi
 ```
+
+Unlike `ResourceQuota`, this applies *per container*, not as a namespace-wide sum:
+
+| Key | Meaning |
+|-----|---------|
+| `type: Container` | These defaults apply to each container individually (LimitRange can also target `Pod` or `PersistentVolumeClaim`). |
+| `defaultRequest` | If a container omits `resources.requests`, it gets `cpu: 50m` (0.05 core) / `memory: 64Mi` here. |
+| `default` | If a container omits `resources.limits`, it gets `cpu: 200m` (0.2 core) / `memory: 128Mi` here. |
+
+So a Pod that declares no `resources` at all isn't actually "unbounded" — the apiserver silently fills in these values at creation time, and *those* filled-in values are what count against the `ResourceQuota` above. This is also why a quota-tracked namespace doesn't reject bare Pods outright: as long as a `LimitRange` default exists, there's something to count.
 
 ```bash
 kubectl apply -f manifests/core-objects/dev-resourcequota.yaml
