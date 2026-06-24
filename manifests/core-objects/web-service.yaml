@@ -8,4 +8,4 @@ spec:
     app: web             # send traffic to Pods with this label
   ports:
     - port: 80           # the Service's port
-      targetPort: 80     # the container port to forward to
+      targetPort: http   # the container port name to forward to

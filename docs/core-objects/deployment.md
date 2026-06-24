@@ -57,7 +57,8 @@ spec:
         - name: web
           image: nginx:1.27   # pin a version — never rely on :latest
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80
           resources:           # best practice: always set requests/limits
             requests:
               cpu: 50m

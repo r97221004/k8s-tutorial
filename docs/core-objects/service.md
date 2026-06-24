@@ -34,16 +34,44 @@ spec:
     app: web             # send traffic to Pods with this label
   ports:
     - port: 80           # the Service's port
-      targetPort: 80     # the container port to forward to
+      targetPort: http   # the container port name to forward to
 ```
 
 ```bash
 kubectl apply -f manifests/core-objects/web-service.yaml
 kubectl get svc web
 kubectl get endpoints web      # the Pod IPs it's actually fronting — should list 3
+kubectl get endpointslice -l kubernetes.io/service-name=web
 ```
 
 > If `endpoints` is empty, your Service `selector` doesn't match any Pod's labels — the #1 Service bug. Check with `kubectl get pods -l app=web`.
+
+## Ports decoded
+
+Service ports have three names that are easy to mix up:
+
+| Field | Meaning |
+|-------|---------|
+| `port` | The port clients use on the Service, like `http://web:80`. |
+| `targetPort` | The container port the Service forwards to. It can be a number (`80`) or a named container port (`http`). |
+| `nodePort` | The port opened on every node when `type: NodePort`; Kubernetes picks one unless you set it. |
+
+Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number.
+
+## Debug an empty Service
+
+Use this quick path when a Service has no backends:
+
+```bash
+kubectl get svc web
+kubectl get pods --show-labels
+kubectl get pods -l app=web
+kubectl describe svc web
+kubectl get endpoints web
+kubectl get endpointslice -l kubernetes.io/service-name=web
+```
+
+If `kubectl get pods -l app=web` returns nothing, fix the Service `selector` or the Pod labels. If Pods match but endpoints are still empty, check whether the Pods are `Ready`; Services normally route only to ready endpoints.
 
 ## The three types you'll meet
 
@@ -62,10 +90,11 @@ kubectl run tmp --rm -it --image=busybox:1.36 -- wget -qO- http://web
 # Expose it on a node port instead:
 kubectl patch svc web -p '{"spec":{"type":"NodePort"}}'
 kubectl get svc web            # note the PORT(S) like 80:31234/TCP
-curl localhost:31234
+NODE_PORT=$(kubectl get svc web -o jsonpath='{.spec.ports[0].nodePort}')
+curl http://localhost:$NODE_PORT
 ```
 
-> 💡 **Running on a remote node?** `localhost` only works if you're on the node itself. SSH'd in from elsewhere? Use the node's IP instead: `kubectl get nodes -o wide` shows it under `INTERNAL-IP`, then `curl <node-ip>:31234`.
+> 💡 **Where should you curl from?** `localhost:$NODE_PORT` only works on the node itself. From your laptop, use a reachable node IP instead: `kubectl get nodes -o wide` shows it under `INTERNAL-IP`, then `curl http://<node-ip>:$NODE_PORT`.
 
 > 📝 **Multi-node note:** all your Pod endpoints sit on one node here, so kube-proxy has nothing to balance across machines. On a multi-node cluster a Service load-balances traffic to Pods wherever they run.
 
