@@ -34,7 +34,43 @@ kubectl taint node <node-name> dedicated=lab:NoSchedule
 
 That does not evict Pods already running there, but new Pods without a matching toleration will not be scheduled onto that node.
 
-> **Important:** a toleration does not force a Pod onto a node. It only removes the repelling effect. To strongly target special nodes, combine a taint with labels plus `nodeSelector` or node affinity.
+> **Important:** a toleration does not force a Pod onto a node. It only removes the repelling effect. A GPU Pod with a toleration for `gpu=true:NoSchedule` can still be scheduled onto any ordinary, untainted node — the toleration just means the GPU node is no longer off-limits, not that the Pod prefers it.
+
+To get true node dedication — only GPU Pods run on the GPU node, *and* GPU Pods always land there — combine the taint with a label and `nodeSelector`. Try it on the lab's single node:
+
+```bash
+NODE=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+kubectl taint node "$NODE" gpu=true:NoSchedule   # repel: keeps non-GPU Pods off
+kubectl label node "$NODE" gpu=true              # tag: lets GPU Pods find this node
+```
+
+▶ **Runnable manifest:** [`manifests/core-objects/gpu-dedicated-pod.yaml`](../../manifests/core-objects/gpu-dedicated-pod.yaml)
+
+```yaml
+spec:
+  tolerations:        # cancels the repelling effect of the taint (permission)
+    - key: gpu
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  nodeSelector:        # pulls the Pod toward the labeled node (placement)
+    gpu: "true"
+```
+
+```bash
+kubectl apply -f manifests/core-objects/gpu-dedicated-pod.yaml
+kubectl get pod gpu-dedicated-demo -o wide   # scheduled onto $NODE
+```
+
+Toleration without `nodeSelector` only grants permission; `nodeSelector` without the toleration is rejected outright by the taint. You need both for the node to be reserved exclusively for GPU workloads.
+
+Clean up before moving on, so the `gpu` taint doesn't block later Pods:
+
+```bash
+kubectl delete -f manifests/core-objects/gpu-dedicated-pod.yaml --ignore-not-found
+kubectl taint node "$NODE" gpu=true:NoSchedule-
+kubectl label node "$NODE" gpu-
+```
 
 ## Why kubeadm control planes are tainted
 
@@ -67,7 +103,40 @@ It should stay `Pending` because the only node repels it.
 
 ## Add a toleration
 
-Apply a Pod that tolerates the taint:
+A taint is a `key=value:effect` triple. The toleration matches it field by field:
+
+```text
+kubectl taint node "$NODE" dedicated=lab:NoSchedule
+                            ^^^^^^^^^ ^^^   ^^^^^^^^^
+                            key       value effect
+```
+
+```yaml
+tolerations:
+  - key: dedicated      # must equal the taint's key
+    operator: Equal      # "Equal" means value must also match exactly
+    value: lab           # must equal the taint's value
+    effect: NoSchedule   # must equal the taint's effect
+```
+
+All four fields must line up for the toleration to cancel that specific taint — a toleration with the right `key` but wrong `value` (or a missing `effect`, which then matches *any* effect) behaves differently, so check each field individually when something doesn't schedule as expected:
+
+- **`operator: Equal`** (the default) requires `key`, `value`, and `effect` to all match exactly, as above.
+- **`operator: Exists`** ignores `value` entirely — it only checks that the node has a taint with that `key` (and `effect`, if set), no matter what the value is. Use this when you don't care about the taint's value, only that the key is present. With `Exists`, omit `value` in the YAML (setting one is a validation error).
+- **`effect` omitted** means the toleration matches the key/value pair under *any* effect (`NoSchedule`, `PreferNoSchedule`, or `NoExecute`).
+- **`key` omitted** (with `operator: Exists`) tolerates *every* taint on the node — this is how `kube-system` Pods like `kube-proxy` tolerate the control-plane taint without listing it explicitly.
+
+The `effect` itself also changes what an untolerated taint does to a Pod:
+
+| Effect | Untolerated Pod that's not yet scheduled | Untolerated Pod already running there |
+| --- | --- | --- |
+| `NoSchedule` | Stays `Pending`, like `no-toleration` above | Keeps running, unaffected |
+| `PreferNoSchedule` | Scheduler tries to avoid the node, but will place it there if no other node fits | Keeps running, unaffected |
+| `NoExecute` | Stays `Pending` | **Evicted** — removed from the node |
+
+This lab only exercises `NoSchedule`, since `NoExecute` would evict the very Pods you're using to test, but it's worth knowing `NoExecute` is the effect used for things like `node.kubernetes.io/unreachable` — it actively kicks Pods off a node that's gone bad, not just blocking new ones.
+
+Apply a Pod that tolerates the lab taint from above:
 
 ▶ **Runnable manifest:** [`manifests/core-objects/toleration-pod.yaml`](../../manifests/core-objects/toleration-pod.yaml)
 
@@ -108,7 +177,7 @@ kubectl taint node "$NODE" dedicated=lab:NoSchedule-
 ## Best practices
 
 - **Use taints for special-purpose nodes**: infra, GPU, storage, or dedicated team nodes.
-- **Pair taints with labels** when you want placement, not just permission.
+- **Pair taints with labels and `nodeSelector`** when you want placement, not just permission — see the GPU example above.
 - **Check `describe pod` Events** when a Pod is `Pending`; untolerated taints are reported there.
 - **Be careful in single-node labs**: one `NoSchedule` taint can block every new app Pod.
 
