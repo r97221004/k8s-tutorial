@@ -86,6 +86,20 @@ ports:
 
 `targetPort: http` just means "look up the container port named `http`, whatever number it currently is." Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number. Update the Deployment's named container port, and the Service can stay the same — the name is the indirection layer, the number is just today's value behind it.
 
+Naming pays off most once a Service exposes more than one port — each entry needs its own `name` so other objects (and you, reading the manifest) can tell them apart:
+
+```yaml
+ports:
+  - name: http     # port 80, e.g. for client traffic
+    port: 80
+    targetPort: http
+  - name: metrics  # port 9090, e.g. for a /metrics scrape endpoint
+    port: 9090
+    targetPort: metrics
+```
+
+A single-port Service like `web` above doesn't strictly need `name`, but it's free insurance for the day you add a second port.
+
 ## Debug an empty Service
 
 Use this quick path when a Service has no backends:
@@ -120,6 +134,17 @@ kubectl patch svc web -p '{"spec":{"type":"NodePort"}}'
 kubectl get svc web            # note the PORT(S) like 80:31234/TCP
 NODE_PORT=$(kubectl get svc web -o jsonpath='{.spec.ports[0].nodePort}')
 curl http://localhost:$NODE_PORT
+```
+
+The `kubectl patch` above is just a shortcut — the equivalent manifest change is:
+
+```yaml
+spec:
+  type: NodePort
+  ports:
+    - port: 80          # still the Service-facing port
+      targetPort: http  # still forwards to the Pod's "http" container port
+      nodePort: 31234   # optional: pin a specific port in the 30000-32767 range; omit to let Kubernetes pick one
 ```
 
 > 💡 **Where should you curl from?** `localhost:$NODE_PORT` only works on the node itself. From your laptop, use a reachable node IP instead: `kubectl get nodes -o wide` shows it under `INTERNAL-IP`, then `curl http://<node-ip>:$NODE_PORT`.
