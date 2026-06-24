@@ -71,6 +71,8 @@ kubectl exec deploy/web-config -- cat /etc/app/app.properties
 kubectl exec deploy/web-config -- cat /etc/app-secret/DB_PASSWORD
 ```
 
+Printing `DB_PASSWORD` is only a lab verification step. In real clusters, avoid echoing secret values into terminals, screenshots, or logs.
+
 (In [k9s](../getting-started/k9s.md), press `s` on the Pod for a shell and poke around `/etc/app`.)
 
 ## env vars vs files — which to use

@@ -23,6 +23,8 @@ stringData:
   DB_PASSWORD: s3cr3t-change-me
 ```
 
+`s3cr3t-change-me` is a lab placeholder so the manifest is runnable. Do not commit real passwords, tokens, or certificates to Git.
+
 `type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes, such as `kubernetes.io/tls` for TLS certificates and `kubernetes.io/dockerconfigjson` for private registry credentials.
 
 `stringData` is a write-friendly convenience field: you send plain text, and Kubernetes stores it under `.data` as base64. If you read the Secret back, you will see `.data`, not `stringData`.

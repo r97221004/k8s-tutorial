@@ -95,6 +95,8 @@ If you're done with the PVC exercise, delete the writer Pod and its claim:
 kubectl delete -f manifests/config-and-data/data-pvc.yaml --ignore-not-found
 ```
 
+Most dynamic lab StorageClasses delete the backing PV when the PVC is deleted, but a StorageClass with reclaim policy `Retain` can leave the PV and underlying data behind. Check with `kubectl get pv` if you need to verify nothing remains.
+
 ---
 
 [← Environment Variables & Mounts](env-and-mounts.md) · [↑ Contents](../../README.md) · [StatefulSet (intro) →](statefulset.md)

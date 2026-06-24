@@ -102,6 +102,8 @@ kubectl get pods,pvc
 kubectl scale statefulset/postgres --replicas=1
 ```
 
+That second Pod is another independent PostgreSQL instance with its own volume. This lab does not configure PostgreSQL replication.
+
 By default, StatefulSets use ordered lifecycle behavior: Kubernetes creates `postgres-0` before `postgres-1`, and deletes higher ordinals first when scaling down. The field behind that default is `podManagementPolicy: OrderedReady`.
 
 Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Pods from the highest ordinal down, so `postgres-1` updates before `postgres-0`.
