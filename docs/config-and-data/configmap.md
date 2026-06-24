@@ -45,11 +45,19 @@ kubectl create configmap app-config \
 
 A ConfigMap does nothing until a Pod uses it — as **env vars** or **mounted files**. That's the next chapter: [Environment Variables & Mounts](env-and-mounts.md).
 
+## Updates
+
+How updates behave depends on how the Pod consumes the ConfigMap:
+
+- **Environment variables are fixed at container start.** Update the ConfigMap, then restart the Pod or roll out the Deployment to pick up new env values.
+- **Mounted ConfigMap files refresh automatically** after a short delay.
+- **`subPath` mounts do not refresh automatically.** If you mount one ConfigMap key into one exact file path with `subPath`, restart the Pod after changes.
+
 ## Best practices
 
 - **Only non-sensitive data** — ConfigMaps are stored and shown in plain text. Passwords/keys go in a [Secret](secret.md).
 - **One ConfigMap per app/concern**, named clearly.
-- **Mounted ConfigMaps update automatically** (after a short delay); **env vars do not** — a Pod must be restarted to pick up env changes. Choose accordingly.
+- **Choose env vars or files based on update behavior** — env vars are simple but need restarts; mounted files can refresh.
 - **Keep ConfigMaps in Git** alongside the Deployment that uses them.
 
 ---

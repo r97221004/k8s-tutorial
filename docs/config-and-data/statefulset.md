@@ -33,7 +33,19 @@ spec:
       containers:
         - name: postgres
           image: postgres:16
-          # ...env from app-secret...
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
@@ -47,6 +59,7 @@ spec:
 ```bash
 kubectl apply -f manifests/config-and-data/postgres-statefulset.yaml
 kubectl get statefulset,pods,pvc -l app=postgres
+kubectl exec postgres-0 -- hostname
 ```
 
 ```
@@ -54,7 +67,15 @@ pod/postgres-0   1/1   Running          ← ordinal name, not a random suffix
 persistentvolumeclaim/pgdata-postgres-0  Bound   ← its own dedicated volume
 ```
 
+With the headless Service, that same Pod also gets a stable DNS name:
+
+```text
+postgres-0.postgres.default.svc.cluster.local
+```
+
 Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC** — its data is intact.
+
+`PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
 
 ## When (not) to use one
 

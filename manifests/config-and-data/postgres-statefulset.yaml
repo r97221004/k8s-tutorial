@@ -29,17 +29,19 @@ spec:
           image: postgres:16
           ports:
             - containerPort: 5432
-          envFrom:
-            - secretRef:
-                name: app-secret      # supplies DB_USER / DB_PASSWORD
           env:
             - name: POSTGRES_USER
-              value: appuser
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: app-secret
                   key: DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data

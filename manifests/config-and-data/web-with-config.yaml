@@ -38,7 +38,13 @@ spec:
             - name: config-volume
               mountPath: /etc/app
               readOnly: true
+            - name: secret-volume
+              mountPath: /etc/app-secret
+              readOnly: true
       volumes:
         - name: config-volume
           configMap:
             name: app-config
+        - name: secret-volume
+          secret:
+            secretName: app-secret

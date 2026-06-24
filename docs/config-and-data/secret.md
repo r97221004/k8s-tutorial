@@ -23,6 +23,8 @@ stringData:
   DB_PASSWORD: s3cr3t-change-me
 ```
 
+`type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes, such as `kubernetes.io/tls` for TLS certificates and `kubernetes.io/dockerconfigjson` for private registry credentials.
+
 ```bash
 kubectl apply -f manifests/config-and-data/app-secret.yaml
 kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d   # reads back the value
@@ -48,6 +50,8 @@ To make Secrets genuinely safe:
 ## Consuming it
 
 Same as a ConfigMap — as env vars or mounted files — covered next in [Environment Variables & Mounts](env-and-mounts.md). Mounting as files is slightly safer than env vars (env can leak via crash dumps / child processes).
+
+Secret update behavior matches ConfigMaps: env vars are frozen until restart, mounted Secret files refresh after a short delay, and `subPath` mounts do not refresh automatically.
 
 ## Best practices
 

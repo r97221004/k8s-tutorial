@@ -27,6 +27,14 @@ Two roles, deliberately separated:
 
 > **Analogy:** a PVC is a *ticket* ("I want 1Gi"); the PV is the *seat* you're given. Your Pod holds the ticket and doesn't care which physical disk backs it.
 
+The usual flow looks like this:
+
+```text
+Pod volume -> PVC request -> StorageClass provisions PV -> real storage
+```
+
+The Pod names a PVC, the PVC describes the storage it needs, and the StorageClass decides how to create or find a matching PV. Once the PVC is `Bound`, the Pod can mount it.
+
 ▶ **Runnable manifest:** [`manifests/config-and-data/data-pvc.yaml`](../../manifests/config-and-data/data-pvc.yaml) (a PVC + a Pod that writes to it)
 
 ```yaml
@@ -41,9 +49,12 @@ spec:
       storage: 1Gi
 ```
 
+`ReadWriteOnce` means the volume can be mounted read-write by **one node at a time**. It does not strictly mean "one Pod only": multiple Pods on the same node may be able to use the same RWO volume, but for app design you should usually treat one writer as the safe default.
+
 ```bash
 kubectl apply -f manifests/config-and-data/data-pvc.yaml
 kubectl get pvc data               # STATUS should become Bound
+kubectl get pv                     # the cluster-side volume backing the claim
 kubectl exec writer -- cat /data/log.txt   # the data is there
 
 # Prove it persists: delete the Pod, recreate, data survives

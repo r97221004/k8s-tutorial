@@ -43,10 +43,16 @@ volumeMounts:
   - name: config-volume
     mountPath: /etc/app       # app.properties shows up at /etc/app/app.properties
     readOnly: true
+  - name: secret-volume
+    mountPath: /etc/app-secret # DB_PASSWORD shows up at /etc/app-secret/DB_PASSWORD
+    readOnly: true
 volumes:
   - name: config-volume
     configMap:
       name: app-config
+  - name: secret-volume
+    secret:
+      secretName: app-secret
 ```
 
 Apply and verify both paths land inside the container:
@@ -58,6 +64,7 @@ kubectl apply -f manifests/config-and-data/web-with-config.yaml
 
 kubectl exec deploy/web-config -- printenv APP_GREETING DB_PASSWORD
 kubectl exec deploy/web-config -- cat /etc/app/app.properties
+kubectl exec deploy/web-config -- cat /etc/app-secret/DB_PASSWORD
 ```
 
 (In [k9s](../getting-started/k9s.md), press `s` on the Pod for a shell and poke around `/etc/app`.)
