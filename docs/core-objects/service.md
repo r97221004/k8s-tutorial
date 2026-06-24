@@ -44,19 +44,39 @@ kubectl get endpoints web      # the Pod IPs it's actually fronting — should l
 kubectl get endpointslice -l kubernetes.io/service-name=web
 ```
 
+`Endpoints` is the older, simpler view of a Service's backends. `EndpointSlice` is the newer, more scalable version Kubernetes uses to split large backend lists into smaller chunks; in this lab, both are useful ways to confirm which Pods the Service can reach.
+
 > If `endpoints` is empty, your Service `selector` doesn't match any Pod's labels — the #1 Service bug. Check with `kubectl get pods -l app=web`.
 
 ## Ports decoded
 
-Service ports have three names that are easy to mix up:
+Service ports have three names that are easy to mix up. Read them as one traffic path:
+
+```text
+client -> Service port -> Pod targetPort
+```
+
+In this chapter, `http://web:80` means "connect to the Service named `web` on port `80`." The Service then forwards that traffic to the selected Pods' container port named `http`:
+
+```yaml
+ports:
+  - port: 80          # clients connect here: http://web:80
+    targetPort: http  # forward to the Pod's container port named "http"
+```
 
 | Field | Meaning |
 |-------|---------|
-| `port` | The port clients use on the Service, like `http://web:80`. |
-| `targetPort` | The container port the Service forwards to. It can be a number (`80`) or a named container port (`http`). |
-| `nodePort` | The port opened on every node when `type: NodePort`; Kubernetes picks one unless you set it. |
+| `port` | The Service-facing port. Other Pods use this when they call `http://web:80`. |
+| `targetPort` | The Pod-facing port. This is where traffic lands inside each selected Pod. It can be a number (`80`) or a named container port (`http`). |
+| `nodePort` | The node-facing port added only for `type: NodePort`. It opens a high port like `31234` on every node, forwarding into the Service's `port`. |
 
-Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number.
+For a `ClusterIP` Service, you usually only care about `port` and `targetPort`. For a `NodePort` Service, traffic takes one extra hop:
+
+```text
+outside client -> nodeIP:nodePort -> Service port -> Pod targetPort
+```
+
+Named ports are useful because the Service can keep saying `targetPort: http` even if the container later moves from port `80` to another number. Update the Deployment's named container port, and the Service can stay the same.
 
 ## Debug an empty Service
 
