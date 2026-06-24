@@ -38,7 +38,11 @@ Everything you've created so far landed in `default`. The control plane you saw 
 ```bash
 kubectl create namespace dev
 kubectl apply -f manifests/core-objects/web-deployment.yaml -n dev   # create in dev
+kubectl apply -f manifests/core-objects/web-service.yaml -n dev       # create a same-named Service in dev
 kubectl get pods -n dev                                              # view dev only
+kubectl get svc -n dev                                               # view Services in dev
+kubectl get deploy web -n default
+kubectl get deploy web -n dev                                        # same name, different namespace
 kubectl get pods -A                                                  # every namespace
 ```
 
@@ -50,11 +54,15 @@ kubectl config set-context --current --namespace=dev
 
 That default sticks until you change it again. When a later command seems to "lose" an object, check your current namespace with `kubectl config get-contexts`.
 
+For namespaced objects, `kubectl -n dev` decides where an object goes when the manifest does **not** set `metadata.namespace`. If the manifest already says `metadata.namespace: dev`, `kubectl apply -f file.yaml` uses that namespace. Cluster-scoped objects ignore `-n` entirely.
+
 In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
 
 ## Capping usage with a ResourceQuota
 
-A namespace by itself doesn't stop one team from eating all the cluster's CPU/memory. A **ResourceQuota** sets hard caps on a namespace — total Pod count, total requested/limited CPU and memory.
+A namespace by itself doesn't stop one team from eating all the cluster's CPU/memory. A **ResourceQuota** sets hard caps on a namespace — total Pod count, total requested/limited CPU and memory. A **LimitRange** can set default requests/limits for Pods that forget to declare them.
+
+Short version: **ResourceQuota is the ceiling** for the namespace; **LimitRange is the default or per-object rule** inside that namespace.
 
 ▶ **Runnable manifest:** [`manifests/core-objects/dev-resourcequota.yaml`](../../manifests/core-objects/dev-resourcequota.yaml)
 
@@ -73,12 +81,35 @@ spec:
     limits.memory: 640Mi
 ```
 
-```bash
-kubectl apply -f manifests/core-objects/dev-resourcequota.yaml
-kubectl describe resourcequota dev-quota -n dev   # USED vs HARD for each resource
+▶ **Runnable manifest:** [`manifests/core-objects/dev-limitrange.yaml`](../../manifests/core-objects/dev-limitrange.yaml)
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: dev-defaults
+  namespace: dev
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 50m
+        memory: 64Mi
+      default:
+        cpu: 200m
+        memory: 128Mi
 ```
 
-Once a quota exists, **every Pod in that namespace must declare `resources.requests`/`limits`** — the [Deployment](deployment.md) example already does, which is why it works here unmodified. Try pushing past the cap:
+```bash
+kubectl apply -f manifests/core-objects/dev-resourcequota.yaml
+kubectl apply -f manifests/core-objects/dev-limitrange.yaml
+kubectl describe resourcequota dev-quota -n dev   # USED vs HARD for each resource
+kubectl describe limitrange dev-defaults -n dev    # default requests/limits
+```
+
+Once a quota tracks CPU/memory, every Pod in that namespace needs `resources.requests`/`limits`. The [Deployment](deployment.md) example declares them directly; the LimitRange provides defaults for simpler Pods that do not. Without either one, the apiserver rejects the Pod because it cannot count it against the quota.
+
+Try pushing past the cap:
 
 ```bash
 kubectl scale deployment/web -n dev --replicas=5
@@ -93,11 +124,18 @@ The 5th Pod never gets created — the apiserver rejects it at admission time, b
 kubectl scale deployment/web -n dev --replicas=3
 ```
 
+To see namespaced vs cluster-scoped resources directly:
+
+```bash
+kubectl api-resources --namespaced=true
+kubectl api-resources --namespaced=false
+```
+
 ## What a namespace does and doesn't isolate
 
 - ✅ **Names** — `web` in `dev` and `web` in `prod` are different objects.
 - ✅ **A scope for `ResourceQuota`, `LimitRange`, and RBAC** — cap resources or restrict access per namespace.
-- ✅ **DNS** — a Service is reachable cross-namespace as `web.dev.svc.cluster.local` (see [Service Discovery & DNS](../networking/dns.md)).
+- ✅ **DNS** — the `web` Service you created in `dev` is reachable cross-namespace as `web.dev.svc.cluster.local` (see [Service Discovery & DNS](../networking/dns.md)).
 - ❌ **Not a security boundary by default** — without a [NetworkPolicy](../appendix/further-reading.md), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
 - ❌ **Not for every little thing** — cluster-wide objects (Nodes, PersistentVolumes, Namespaces themselves) aren't namespaced.
 
@@ -116,7 +154,7 @@ If you set your default namespace to `dev`, switch back to `default` before cont
 kubectl config set-context --current --namespace=default
 ```
 
-Then delete the lab namespace. This removes the `web` Deployment and quota inside it:
+Then delete the lab namespace. This removes the `web` Deployment, Service, ResourceQuota, and LimitRange inside it:
 
 ```bash
 kubectl delete namespace dev
