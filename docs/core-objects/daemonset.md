@@ -41,6 +41,32 @@ kube-proxy        1         1         1       kubernetes.io/os=linux  1h
 - ✅ A per-node agent (logs, metrics, networking, storage).
 - ❌ A regular app — use a [Deployment](deployment.md). You want "N replicas for capacity/availability", not "one per machine".
 
+## Scoping to specific nodes
+
+By default a DaemonSet's Pod tolerates the built-in control-plane taints, so it lands on *every* node, masters included — that's why `kube-flannel-ds` and `kube-proxy` show up even on a single control-plane node. To restrict an agent to a subset (say, only GPU nodes), add the same `nodeSelector` + `tolerations` pair from the [scheduling chapter](scheduling.md#taints-repel-tolerations-allow):
+
+```yaml
+spec:
+  template:
+    spec:
+      nodeSelector:
+        gpu: "true"
+      tolerations:
+        - key: gpu
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+```
+
+Without the `nodeSelector`, the DaemonSet still spreads to every node that doesn't repel it; without the matching `tolerations`, it gets repelled by any node carrying that taint, GPU or not.
+
+## Update strategy
+
+Changing a DaemonSet's Pod template (e.g. bumping the image) doesn't recreate Pods by default the way you might expect — it depends on `spec.updateStrategy.type`:
+
+- **`RollingUpdate`** (the default) — old Pods are deleted and replaced node by node, same idea as a Deployment rollout.
+- **`OnDelete`** — the controller does nothing until you manually delete a Pod; the replacement then picks up the new template. Useful when you need to control exactly when each node's agent restarts.
+
 ## Best practices
 
 - **Set `resources` requests/limits** — DaemonSet Pods run on *every* node, so a leak is multiplied across the fleet.
