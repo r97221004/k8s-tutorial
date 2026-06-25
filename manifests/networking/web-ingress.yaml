@@ -8,6 +8,13 @@ spec:
     - host: demo.localdev.me     # resolves to 127.0.0.1 — handy for local testing
       http:
         paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api        # the echo backend from the api-echo.yaml lab
+                port:
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
