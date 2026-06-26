@@ -40,15 +40,23 @@ kubectl get configmap app-config -o yaml    # inspect it
 kubectl get configmap app-config -o jsonpath='{.data.APP_GREETING}'
 ```
 
-You can also make one straight from the CLI. The `--dry-run=client -o yaml` flag prints the YAML without actually creating anything — useful for previewing or pasting into a manifest file:
+You can also build a ConfigMap straight from the CLI without writing a YAML file first:
 
 ```bash
+# Step 1: create a local file whose content will become one ConfigMap key
 printf 'color=blue\nlog.level=info\n' > app.properties
+
+# Step 2: generate the ConfigMap (--dry-run=client means "don't actually create it,
+#          just print the YAML so I can review or save it")
 kubectl create configmap app-config \
   --from-literal=APP_TIER=frontend \
   --from-file=app.properties \
   --dry-run=client -o yaml
 ```
+
+- `--from-literal=APP_TIER=frontend` — adds a single key/value pair inline, no file needed
+- `--from-file=app.properties` — reads the file and stores its entire content as one key; the key name is the filename (`app.properties`), the value is the file content
+- `--dry-run=client -o yaml` — prints the resulting YAML to your terminal without creating anything in the cluster; copy it into a manifest file and commit it to Git
 
 ## Consuming it
 
