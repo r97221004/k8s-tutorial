@@ -231,7 +231,22 @@ kubectl exec deploy/web-config -- cat /etc/app/app.properties
 ```
 
 **`subPath` mounts are the exception — they do not refresh.**
-Normally a volume mount exposes the entire ConfigMap as a directory. `subPath` lets you mount a single key to a specific file path (e.g. mount only `app.properties` directly to `/etc/app.properties` instead of `/etc/app/app.properties`). The trade-off is that `subPath` mounts bypass the auto-refresh mechanism, so you must restart the Pod after changes.
+Normally a volume mount exposes the entire ConfigMap as a directory. `subPath` lets you mount a single key to a specific file path instead. Compare the two:
+
+```yaml
+# Regular mount — all keys land under /etc/app/ as separate files
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/app          # app.properties → /etc/app/app.properties
+
+# subPath mount — only one key, placed at an exact path
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/app.properties   # the exact file path
+    subPath: app.properties          # which key from the ConfigMap
+```
+
+The trade-off: `subPath` gives you a cleaner file path, but the file no longer updates automatically when the ConfigMap changes — you must restart the Pod after changes.
 
 **`immutable: true` locks the ConfigMap permanently.**
 Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This protects against accidental changes and also improves cluster performance (the kubelet stops watching it for changes). To roll out new config, create a new ConfigMap with a different name and update the Deployment to reference it.
