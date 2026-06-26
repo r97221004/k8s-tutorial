@@ -102,7 +102,15 @@ spec:
 
 There are three connection points to notice:
 
-**env var injection** — `configMapKeyRef.name` points at the ConfigMap (`app-config`), and `configMapKeyRef.key` picks the exact key (`APP_GREETING`). The container sees it as the env var named in `env[].name`.
+**env var injection** — Kubernetes does a three-step lookup at Pod startup:
+
+1. Open the ConfigMap named **`app-config`** (matched by `configMapKeyRef.name`)
+2. Read the value of the key **`APP_GREETING`** (matched by `configMapKeyRef.key`)
+3. Hand it to the container as an env var called **`APP_GREETING`** (the name in `env[].name`)
+
+End result inside the container: `APP_GREETING=Hello from a ConfigMap`
+
+The env var name in step 3 does not have to match the ConfigMap key in step 2 — you can rename it. For example, `env[].name: WELCOME_MSG` with `key: APP_GREETING` would expose the same value as `WELCOME_MSG` instead.
 
 **volume declaration** — `volumes` is a sibling of `containers` under `spec` (not nested inside it). You give the volume a local name (`config-volume`) and tell it to source its content from the `app-config` ConfigMap.
 
