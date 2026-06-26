@@ -237,14 +237,18 @@ Normally a volume mount exposes the entire ConfigMap as a directory. `subPath` l
 # Regular mount — all keys land under /etc/app/ as separate files
 volumeMounts:
   - name: config-volume
-    mountPath: /etc/app          # app.properties → /etc/app/app.properties
+    mountPath: /etc/app
+# Result: /etc/app/app.properties, /etc/app/APP_GREETING, /etc/app/APP_TIER
 
-# subPath mount — only one key, placed at an exact path
+# subPath mount — pick one key and decide exactly where it lands
 volumeMounts:
   - name: config-volume
-    mountPath: /etc/app.properties   # the exact file path
-    subPath: app.properties          # which key from the ConfigMap
+    mountPath: /etc/app.properties   # ← this becomes the file path inside the container
+    subPath: app.properties          # ← which key from the ConfigMap to use
+# Result: /etc/app.properties  (just this one file, nothing else)
 ```
+
+Think of it this way: `subPath` decides **which key's value to use**; `mountPath` decides **where to put it** inside the container.
 
 The trade-off: `subPath` gives you a cleaner file path, but the file no longer updates automatically when the ConfigMap changes — you must restart the Pod after changes.
 
