@@ -112,6 +112,20 @@ End result inside the container: `APP_GREETING=Hello from a ConfigMap`
 
 The env var name in step 3 does not have to match the ConfigMap key in step 2 — you can rename it. For example, `env[].name: WELCOME_MSG` with `key: APP_GREETING` would expose the same value as `WELCOME_MSG` instead.
 
+This `env` + `configMapKeyRef` approach picks keys one at a time — no matter how many keys the ConfigMap has, the container only receives the ones you explicitly list. If you want every key in the ConfigMap to become an env var without listing them individually, use `envFrom` instead:
+
+```yaml
+envFrom:
+  - configMapRef:
+      name: app-config   # every key in app-config becomes an env var
+```
+
+| | `env` + `configMapKeyRef` | `envFrom` + `configMapRef` |
+|---|---|---|
+| Keys injected | only the ones you list | all keys at once |
+| Can rename the env var | yes | no |
+| Safe with keys like `app.properties` | yes (you skip them) | no (invalid names are silently dropped) |
+
 **volume declaration** — `volumes` is a sibling of `containers` under `spec` (not nested inside it). You give the volume a local name (`config-volume`) and tell it to source its content from the `app-config` ConfigMap.
 
 **volume mount** — `volumeMounts` is inside the container and references the volume by that same local name. Every key in the ConfigMap becomes a file at `mountPath`, so `app.properties` appears at `/etc/app/app.properties`.
