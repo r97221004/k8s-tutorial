@@ -10,7 +10,7 @@ Your container image should be **the same everywhere** — dev, staging, prod. W
 
 ## Create a ConfigMap
 
-It's just key/value data — individual values *and* whole files:
+It's just key/value data — individual values *and* multi-line content:
 
 ▶ **Runnable manifest:** [`manifests/config-and-data/app-config.yaml`](../../manifests/config-and-data/app-config.yaml)
 
@@ -126,13 +126,35 @@ envFrom:
 | Can rename the env var | yes | no |
 | Safe with keys like `app.properties` | yes (you skip them) | no (invalid names are silently dropped) |
 
-**volume declaration** — `volumes` is a sibling of `containers` under `spec` (not nested inside it). You give the volume a local name (`config-volume`) and tell it to source its content from the `app-config` ConfigMap.
+**file mount** — some apps don't read env vars; they read a config file from disk (e.g. nginx reads `/etc/nginx/nginx.conf`, a Java app reads `app.properties`). A ConfigMap is a Kubernetes object stored in the cluster, not a file itself — but when you mount it, Kubernetes takes each key/value pair and generates real files inside the container at runtime. Your app then reads those files as if they were always there.
 
-**volume mount** — `volumeMounts` is inside the container and references the volume by that same local name. Every key in the ConfigMap becomes a file at `mountPath`, so `app.properties` appears at `/etc/app/app.properties`.
+This takes two steps that work together:
 
-Keys used as environment variables must be valid env var names (`APP_GREETING` works; `app.properties` does not — the dot is illegal). Keys mounted as files become filenames, which is why `app.properties` is better suited for file mounts.
+Step 1 — `volumes` gives the ConfigMap a short nickname (`config-volume`) so the container can refer to it:
+```yaml
+volumes:
+  - name: config-volume      # nickname, used only inside this Deployment
+    configMap:
+      name: app-config       # the actual ConfigMap to read from
+```
 
-If you later use `envFrom` to pull every key into environment variables, invalid env var names are skipped. In this example, `app.properties` mounts cleanly as a file but cannot become an environment variable.
+Step 2 — `volumeMounts` tells the container "put that volume at this path":
+```yaml
+volumeMounts:
+  - name: config-volume      # same nickname as above
+    mountPath: /etc/app      # where it appears inside the container
+    readOnly: true
+```
+
+End result: every key in the ConfigMap becomes a file at that path.
+
+| ConfigMap key | File path inside container |
+|---|---|
+| `APP_GREETING` | `/etc/app/APP_GREETING` |
+| `APP_TIER` | `/etc/app/APP_TIER` |
+| `app.properties` | `/etc/app/app.properties` |
+
+This is why the key is named `app.properties` — it becomes a real config file on disk that the app can read directly.
 
 > **Watch out:** if the ConfigMap does not exist when the Pod starts, the container will not start successfully. Check `kubectl describe pod` Events for the missing ConfigMap message, then apply the ConfigMap before recreating or restarting the Pod.
 
