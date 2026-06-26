@@ -255,24 +255,32 @@ The trade-off: `subPath` gives you a cleaner file path, but the file no longer u
 **`immutable: true` locks the ConfigMap permanently.**
 Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This protects against accidental changes and also improves cluster performance (the kubelet stops watching it for changes). To roll out new config, create a new ConfigMap with a different name and update the Deployment to reference it.
 
-Try changing both values:
+Try it — add `immutable: true` to the ConfigMap and then attempt an edit:
 
 ```bash
+# Lock the ConfigMap
+kubectl patch configmap app-config --type merge -p '{"immutable": true}'
+
+# Try to change a value — this will be rejected
 kubectl patch configmap app-config --type merge \
-  -p '{"data":{"APP_GREETING":"Hello after an update","app.properties":"color=green\nlog.level=debug\n"}}'
+  -p '{"data":{"APP_GREETING":"new value"}}'
+# Error: the ConfigMap "app-config" is invalid:
+#   data: Forbidden: field is immutable when `immutable` is set
+```
 
-# Mounted files refresh on their own after a short delay.
-sleep 30
-kubectl exec deploy/web-config -- cat /etc/app/app.properties
+To roll out new config, create a new ConfigMap with a different name and point the Deployment at it:
 
-# Env vars are still frozen in the running container.
-kubectl exec deploy/web-config -- printenv APP_GREETING
+```bash
+# Create a new version of the ConfigMap
+kubectl create configmap app-config-v2 \
+  --from-literal=APP_GREETING="Hello from v2" \
+  --from-literal=APP_TIER=frontend
 
-# Restart the Deployment to pick up the new env var value.
-kubectl rollout restart deployment/web-config
-kubectl rollout status deployment/web-config
+# Update the Deployment to use the new ConfigMap
+kubectl set env deployment/web-config \
+  --from=configmap/app-config-v2
 
-kubectl exec deploy/web-config -- printenv APP_GREETING
+# The old app-config-v1 stays untouched — safe to keep as a rollback reference
 ```
 
 ## Best practices
