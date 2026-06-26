@@ -100,7 +100,7 @@ spec:
             name: app-config
 ```
 
-There are three connection points to notice:
+Here is how each part of the YAML connects to the ConfigMap:
 
 **env var injection** — Kubernetes does a three-step lookup at Pod startup:
 
@@ -117,7 +117,7 @@ This `env` + `configMapKeyRef` approach picks keys one at a time — no matter h
 ```yaml
 envFrom:
   - configMapRef:
-      name: app-config   # every key in app-config becomes an env var
+      name: app-config   # keys with valid env var names become env vars; others are silently dropped
 ```
 
 | | `env` + `configMapKeyRef` | `envFrom` + `configMapRef` |
@@ -268,19 +268,23 @@ kubectl patch configmap app-config --type merge \
 #   data: Forbidden: field is immutable when `immutable` is set
 ```
 
-To roll out new config, create a new ConfigMap with a different name and point the Deployment at it:
+To roll out new config, create a new ConfigMap with a different name and update the Deployment manifest to reference it:
 
 ```bash
-# Create a new version of the ConfigMap
+# Create a new version of the ConfigMap — include all keys the Deployment needs
+printf 'color=red\nlog.level=warn\n' > app.properties
 kubectl create configmap app-config-v2 \
   --from-literal=APP_GREETING="Hello from v2" \
-  --from-literal=APP_TIER=frontend
+  --from-literal=APP_TIER=frontend \
+  --from-file=app.properties
+```
 
-# Update the Deployment to use the new ConfigMap
-kubectl set env deployment/web-config \
-  --from=configmap/app-config-v2
+Then edit the Deployment manifest — update every place that references `app-config` to `app-config-v2` (both the `env.valueFrom.configMapKeyRef.name` and the `volumes.configMap.name`), then apply:
 
-# The old app-config-v1 stays untouched — safe to keep as a rollback reference
+```bash
+kubectl apply -f manifests/config-and-data/web-configmap.yaml
+
+# The old app-config stays untouched — safe to keep as a rollback reference
 ```
 
 ## Best practices
