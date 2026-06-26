@@ -199,7 +199,7 @@ containers:
 
 That gives the container `APP_NAME`, `APP_VERSION`, and `DATABASE_PATH` environment variables. The app code reads those variables at startup, so the same backend image can run with different config in dev, staging, and prod.
 
-Verify it in the capstone namespace:
+Verify it in the capstone namespace (only if you have already deployed the capstone app):
 
 ```bash
 kubectl exec deploy/todo-backend -n demo -- printenv APP_NAME APP_VERSION DATABASE_PATH
@@ -211,10 +211,30 @@ The full chapter on all injection options (including `envFrom` to pull in every 
 
 How updates behave depends on how the Pod consumes the ConfigMap:
 
-- **Environment variables are fixed at container start.** Update the ConfigMap, then restart the Pod or roll out the Deployment to pick up new env values.
-- **Mounted ConfigMap files refresh automatically** after a short delay.
-- **`subPath` mounts do not refresh automatically.** If you mount one ConfigMap key into one exact file path with `subPath`, restart the Pod after changes.
-- **`immutable: true` locks a ConfigMap after creation.** Use it for config you never want changed in place; create a new ConfigMap name when you need a new version.
+**Environment variables are frozen at container start.**
+Kubernetes reads env vars once when the container starts and never checks again. If you update the ConfigMap, the running container still sees the old values. To pick up the new values, you need to recreate the container:
+
+```bash
+kubectl rollout restart deployment/web-config
+```
+
+**Mounted ConfigMap files refresh automatically.**
+The kubelet periodically syncs mounted ConfigMap content (roughly every 1 minute by default). After you update the ConfigMap, the files inside the container update on their own — no restart needed. You can watch it happen:
+
+```bash
+# update the ConfigMap
+kubectl patch configmap app-config --type merge \
+  -p '{"data":{"app.properties":"color=green\nlog.level=debug\n"}}'
+
+# wait ~60 seconds, then check the file inside the container
+kubectl exec deploy/web-config -- cat /etc/app/app.properties
+```
+
+**`subPath` mounts are the exception — they do not refresh.**
+Normally a volume mount exposes the entire ConfigMap as a directory. `subPath` lets you mount a single key to a specific file path (e.g. mount only `app.properties` directly to `/etc/app.properties` instead of `/etc/app/app.properties`). The trade-off is that `subPath` mounts bypass the auto-refresh mechanism, so you must restart the Pod after changes.
+
+**`immutable: true` locks the ConfigMap permanently.**
+Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This protects against accidental changes and also improves cluster performance (the kubelet stops watching it for changes). To roll out new config, create a new ConfigMap with a different name and update the Deployment to reference it.
 
 Try changing both values:
 
