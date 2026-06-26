@@ -253,7 +253,7 @@ Think of it this way: `subPath` decides **which key's value to use**; `mountPath
 The trade-off: `subPath` gives you a cleaner file path, but the file no longer updates automatically when the ConfigMap changes — you must restart the Pod after changes.
 
 **`immutable: true` locks the ConfigMap permanently.**
-Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This protects against accidental changes and also improves cluster performance (the kubelet stops watching it for changes). To roll out new config, create a new ConfigMap with a different name and update the Deployment to reference it.
+Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This is intentional: the only way to update config is to create a new ConfigMap with a different name. The benefit is that each named version is guaranteed to never change, so you always know exactly what config a given Deployment version is running. Rolling back is just a matter of pointing the Deployment back at the previous ConfigMap name — no guessing what the old values were.
 
 Try it — add `immutable: true` to the ConfigMap and then attempt an edit:
 
