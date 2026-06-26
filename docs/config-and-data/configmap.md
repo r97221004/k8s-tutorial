@@ -146,15 +146,15 @@ volumeMounts:
     readOnly: true
 ```
 
-End result: every key in the ConfigMap becomes a file at that path.
+End result: every key becomes a file at that path, and the file's content is the key's value.
 
-| ConfigMap key | File path inside container |
-|---|---|
-| `APP_GREETING` | `/etc/app/APP_GREETING` |
-| `APP_TIER` | `/etc/app/APP_TIER` |
-| `app.properties` | `/etc/app/app.properties` |
+| ConfigMap key | File path | File content |
+|---|---|---|
+| `APP_GREETING` | `/etc/app/APP_GREETING` | `Hello from a ConfigMap` |
+| `APP_TIER` | `/etc/app/APP_TIER` | `frontend` |
+| `app.properties` | `/etc/app/app.properties` | `color=blue`<br>`log.level=info` |
 
-This is why the key is named `app.properties` — it becomes a real config file on disk that the app can read directly.
+This is why the key is named `app.properties` — the file at `/etc/app/app.properties` contains exactly the lines you wrote under that key, and your app reads it like any other config file on disk.
 
 > **Watch out:** if the ConfigMap does not exist when the Pod starts, the container will not start successfully. Check `kubectl describe pod` Events for the missing ConfigMap message, then apply the ConfigMap before recreating or restarting the Pod.
 
