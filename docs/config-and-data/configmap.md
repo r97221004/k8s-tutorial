@@ -268,10 +268,11 @@ kubectl patch configmap app-config --type merge \
 #   data: Forbidden: field is immutable when `immutable` is set
 ```
 
-To roll out new config, create a new ConfigMap with a different name and update the Deployment manifest to reference it:
+Since the locked ConfigMap can no longer be edited, the only way to roll out new config is to create a new ConfigMap under a different name, then point the Deployment at it.
+
+Step 1 — create the new version:
 
 ```bash
-# Create a new version of the ConfigMap — include all keys the Deployment needs
 printf 'color=red\nlog.level=warn\n' > app.properties
 kubectl create configmap app-config-v2 \
   --from-literal=APP_GREETING="Hello from v2" \
@@ -279,13 +280,29 @@ kubectl create configmap app-config-v2 \
   --from-file=app.properties
 ```
 
-Then edit the Deployment manifest — update every place that references `app-config` to `app-config-v2` (both the `env.valueFrom.configMapKeyRef.name` and the `volumes.configMap.name`), then apply:
+Step 2 — update the Deployment manifest to reference `app-config-v2` instead of `app-config`. There are two places to change:
+
+```yaml
+env:
+  - name: APP_GREETING
+    valueFrom:
+      configMapKeyRef:
+        name: app-config-v2   # ← changed from app-config
+        key: APP_GREETING
+...
+volumes:
+  - name: config-volume
+    configMap:
+      name: app-config-v2    # ← changed from app-config
+```
+
+Step 3 — apply the updated manifest:
 
 ```bash
 kubectl apply -f manifests/config-and-data/web-configmap.yaml
-
-# The old app-config stays untouched — safe to keep as a rollback reference
 ```
+
+The old `app-config` stays untouched — you can roll back by switching the Deployment back to it.
 
 ## Best practices
 
