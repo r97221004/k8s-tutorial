@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-config
+  labels:
+    app: web-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-config
+  template:
+    metadata:
+      labels:
+        app: web-config
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          env:
+            - name: APP_GREETING
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_GREETING
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/app
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-config
