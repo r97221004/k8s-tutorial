@@ -112,7 +112,49 @@ kubectl auth can-i get secrets \
 
 In a normal namespace this should be `no`. If it says `yes`, something granted that ServiceAccount broader permissions than most application Pods need.
 
-Common Git-safe flows: **External Secrets** syncs from a secret manager, **Sealed Secrets** stores encrypted Secret YAML that only the cluster can decrypt, and **SOPS** encrypts values in Git for your deployment tooling to decrypt.
+All three tools below solve the same problem: real Secret values cannot be committed to Git, but deployments need them — so where do they live?
+
+**External Secrets** — values never touch Git; they live in an external secret manager.
+
+```
+Git holds only a declaration:
+  "go fetch prod/db-password from AWS Secrets Manager"
+
+The External Secrets Operator in the cluster reads that declaration,
+fetches the value from AWS, and creates a real Secret object automatically.
+```
+
+You commit only "where to fetch from," never the value itself. The value stays in AWS / GCP Secret Manager / Vault at all times.
+
+**Sealed Secrets** — values are encrypted before being committed to Git; only the cluster can decrypt them.
+
+```
+You encrypt locally:
+  kubeseal < secret.yaml > sealed-secret.yaml
+
+sealed-secret.yaml contains ciphertext — safe to commit to Git.
+
+The Sealed Secrets controller in the cluster holds the private key,
+decrypts the file, and creates a real Secret object automatically.
+```
+
+Someone who steals the Git repo gets ciphertext — useless without the cluster's private key.
+
+**SOPS** — values are encrypted before being committed to Git; your deployment tooling decrypts them.
+
+```
+You encrypt secret.yaml with SOPS and commit the ciphertext to Git.
+CI/CD (e.g. ArgoCD, Helm) holds a key (usually in AWS KMS / GCP KMS),
+decrypts the file at deploy time, and applies it to the cluster.
+```
+
+The difference from Sealed Secrets: decryption happens on the **CI/CD side**, not inside the cluster controller.
+
+| | Values stored | Who decrypts | Best fit |
+|---|---|---|---|
+| External Secrets | External service (AWS / GCP / Vault) | Cluster operator | Already have a secret manager |
+| Sealed Secrets | Git (ciphertext) | Cluster controller | Want Git as the single source of truth |
+| SOPS | Git (ciphertext) | CI/CD tooling | Deploying with Helm or ArgoCD |
 
 ## Consuming it
 
