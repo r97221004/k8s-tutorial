@@ -83,6 +83,8 @@ kubectl auth can-i get secrets
 kubectl auth can-i get secret app-secret
 ```
 
+This checks whether *you* can read Secret objects through the Kubernetes API. A normal application Pod usually should **not** need permission to `get secrets` at all. Kubernetes resolves the referenced Secret and injects it into the Pod as an environment variable or mounted file; the app reads its local env/file, not the Secret API.
+
 Common Git-safe flows: **External Secrets** syncs from a secret manager, **Sealed Secrets** stores encrypted Secret YAML that only the cluster can decrypt, and **SOPS** encrypts values in Git for your deployment tooling to decrypt.
 
 ## Consuming it
@@ -135,7 +137,7 @@ kubectl rollout restart deployment/web-app
 
 Mounted Secret files refresh automatically within ~60 seconds even without a restart. Env-var consumers need the restart.
 
-**`immutable: true`** — once set, the Secret cannot be edited; any patch on `.data` is rejected. This is safer for long-lived credentials because it guarantees the value never drifts unexpectedly. To rotate, create a new Secret under a versioned name and point the Deployment at it:
+**`immutable: true`** — once set, the Secret cannot be edited; any patch on `.data` is rejected. This does not make the credential harder to read; RBAC and encryption at rest still do that. What it gives you is operational safety: the value cannot drift unexpectedly, and rotation becomes an explicit "create a new version, then update consumers" workflow. To rotate, create a new Secret under a versioned name and point the Deployment at it:
 
 Step 1 — create the new version:
 
@@ -212,6 +214,8 @@ kubectl patch secret app-secret --type merge \
 # Error: the Secret "app-secret" is invalid:
 #   data: Forbidden: field is immutable when `immutable` is set
 ```
+
+After this step, `app-secret` cannot be patched anymore. Delete and re-apply it before continuing to later chapters that expect the original mutable lab Secret.
 
 **6. Clean up:**
 
