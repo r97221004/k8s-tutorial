@@ -87,20 +87,32 @@ Common Git-safe flows: **External Secrets** syncs from a secret manager, **Seale
 
 ## Consuming it
 
-Same as a ConfigMap — as env vars or mounted files:
+Same as a ConfigMap — as env vars or mounted files. Here is where each piece fits inside a Deployment:
 
 ```yaml
-env:
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: app-secret
-        key: DB_PASSWORD
-volumes:
-  - name: secret-volume
-    secret:
-      secretName: app-secret
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: my-app:1.0
+          env:
+            - name: DB_PASSWORD        # env var name inside the container
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret     # Secret name
+                  key: DB_PASSWORD     # key inside the Secret
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /etc/secrets  # directory inside the container
+              readOnly: true
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: app-secret
 ```
+
+`env` + `secretKeyRef` injects one key at a time as an environment variable. `volumes` + `volumeMounts` mounts every key as a file under `/etc/secrets/` — for example, `/etc/secrets/DB_PASSWORD` contains the raw value.
 
 The full runnable example is in [Environment Variables & Mounts](env-and-mounts.md).
 
@@ -148,10 +160,10 @@ volumes:
       secretName: db-creds-v2   # ← changed from db-creds-v1
 ```
 
-Step 3 — apply and verify:
+Step 3 — apply your updated Deployment manifest and verify:
 
 ```bash
-kubectl apply -f manifests/config-and-data/web-secret.yaml
+kubectl apply -f manifests/<your-deployment>.yaml
 kubectl rollout status deployment/web-app
 ```
 
