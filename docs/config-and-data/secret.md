@@ -114,41 +114,17 @@ In a normal namespace this should be `no`. If it says `yes`, something granted t
 
 All three tools below solve the same problem: real Secret values cannot be committed to Git, but deployments need them — so where do they live?
 
-**External Secrets** — values never touch Git; they live in an external secret manager.
+**External Secrets** — values never touch Git; they live in an external secret manager. You commit only a declaration of *where to fetch from*, and the External Secrets Operator in the cluster reads it, fetches the value from AWS / GCP Secret Manager / Vault, and creates a real Secret object automatically.
 
-```
-Git holds only a declaration:
-  "go fetch prod/db-password from AWS Secrets Manager"
+**Sealed Secrets** — values are encrypted before being committed to Git; only the cluster can decrypt them. You encrypt locally:
 
-The External Secrets Operator in the cluster reads that declaration,
-fetches the value from AWS, and creates a real Secret object automatically.
+```bash
+kubeseal < secret.yaml > sealed-secret.yaml
 ```
 
-You commit only "where to fetch from," never the value itself. The value stays in AWS / GCP Secret Manager / Vault at all times.
+`sealed-secret.yaml` contains ciphertext — safe to commit. The Sealed Secrets controller in the cluster holds the private key, decrypts it, and creates a real Secret object automatically. Someone who steals the Git repo gets ciphertext that is useless without the cluster's private key.
 
-**Sealed Secrets** — values are encrypted before being committed to Git; only the cluster can decrypt them.
-
-```
-You encrypt locally:
-  kubeseal < secret.yaml > sealed-secret.yaml
-
-sealed-secret.yaml contains ciphertext — safe to commit to Git.
-
-The Sealed Secrets controller in the cluster holds the private key,
-decrypts the file, and creates a real Secret object automatically.
-```
-
-Someone who steals the Git repo gets ciphertext — useless without the cluster's private key.
-
-**SOPS** — values are encrypted before being committed to Git; your deployment tooling decrypts them.
-
-```
-You encrypt secret.yaml with SOPS and commit the ciphertext to Git.
-CI/CD (e.g. ArgoCD, Helm) holds a key (usually in AWS KMS / GCP KMS),
-decrypts the file at deploy time, and applies it to the cluster.
-```
-
-The difference from Sealed Secrets: decryption happens on the **CI/CD side**, not inside the cluster controller.
+**SOPS** — values are also encrypted in Git, but decryption happens on the **CI/CD side**, not inside a cluster controller. Your pipeline (ArgoCD, Helm, etc.) holds a key stored in AWS KMS or GCP KMS, decrypts the file at deploy time, and applies it to the cluster.
 
 | | Values stored | Who decrypts | Best fit |
 |---|---|---|---|
