@@ -25,7 +25,29 @@ stringData:
 
 `s3cr3t-change-me` is a lab placeholder so the manifest is runnable. Do not commit real passwords, tokens, or certificates to Git.
 
-`type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes, such as `kubernetes.io/tls` for TLS certificates and `kubernetes.io/dockerconfigjson` for private registry credentials.
+`type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes:
+
+| Type | Use case |
+|---|---|
+| `Opaque` | Generic key/value — most app credentials |
+| `kubernetes.io/tls` | TLS certificate + private key pair |
+| `kubernetes.io/dockerconfigjson` | Private container registry credentials |
+| `kubernetes.io/service-account-token` | Auto-generated token for a ServiceAccount |
+
+Each special type enforces that the expected keys are present. For example, a `kubernetes.io/tls` Secret must contain `tls.crt` and `tls.key`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-tls
+type: kubernetes.io/tls
+data:
+  tls.crt: <base64-encoded cert>
+  tls.key: <base64-encoded private key>
+```
+
+In practice you generate TLS Secrets with `kubectl create secret tls` rather than writing the YAML by hand, since base64-encoding a cert manually is error-prone.
 
 `stringData` is a write-friendly convenience field: you send plain text, and Kubernetes stores it under `.data` as base64. If you read the Secret back, you will see `.data`, not `stringData`.
 
@@ -80,11 +102,110 @@ volumes:
       secretName: app-secret
 ```
 
-The full runnable example is in [Environment Variables & Mounts](env-and-mounts.md). Mounting as files is slightly safer than env vars (env can leak via crash dumps / child processes).
+The full runnable example is in [Environment Variables & Mounts](env-and-mounts.md).
+
+**Prefer file mounts over env vars for sensitive values.** Environment variables are accessible to every process in the container, are inherited by all child processes, and can appear in crash dumps, debug output, or process inspection (`/proc/<pid>/environ`). A mounted Secret file is only read by the code that explicitly opens it — nothing else sees it automatically.
 
 Secret update behavior matches ConfigMaps: env vars are frozen until restart, mounted Secret files refresh after a short delay, and `subPath` mounts do not refresh automatically.
 
-`immutable: true` also works on Secrets. Use it for credentials that should never be changed in place; create a new Secret name when rotating.
+## Rotation
+
+Credentials should be rotated periodically. How you rotate depends on whether the Secret is mutable or immutable.
+
+**Mutable Secret (default)** — edit the value in place, then restart Pods to pick it up:
+
+```bash
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"new-password-here"}}'
+
+kubectl rollout restart deployment/web-app
+```
+
+Mounted Secret files refresh automatically within ~60 seconds even without a restart. Env-var consumers need the restart.
+
+**`immutable: true`** — once set, the Secret cannot be edited; any patch on `.data` is rejected. This is safer for long-lived credentials because it guarantees the value never drifts unexpectedly. To rotate, create a new Secret under a versioned name and point the Deployment at it:
+
+Step 1 — create the new version:
+
+```bash
+kubectl create secret generic db-creds-v2 \
+  --from-literal=DB_USER=appuser \
+  --from-literal=DB_PASSWORD=new-password-here
+```
+
+Step 2 — update the Deployment manifest to reference `db-creds-v2`:
+
+```yaml
+env:
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-creds-v2   # ← changed from db-creds-v1
+        key: DB_PASSWORD
+volumes:
+  - name: secret-volume
+    secret:
+      secretName: db-creds-v2   # ← changed from db-creds-v1
+```
+
+Step 3 — apply and verify:
+
+```bash
+kubectl apply -f manifests/config-and-data/web-secret.yaml
+kubectl rollout status deployment/web-app
+```
+
+The old `db-creds-v1` stays untouched — rolling back is just switching the Deployment back to it.
+
+## Hands-on
+
+Work through these steps to experience the full Secret lifecycle:
+
+**1. Apply the Secret and inspect it:**
+
+```bash
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl describe secret app-secret       # keys and sizes — no values shown
+kubectl get secret app-secret -o yaml    # base64-encoded values in .data
+```
+
+**2. Decode a value and confirm base64 is not encryption:**
+
+```bash
+kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d
+```
+
+**3. Check your own permission to read Secrets:**
+
+```bash
+kubectl auth can-i get secret app-secret
+```
+
+**4. Simulate rotation — patch the password and observe:**
+
+```bash
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"rotated-password"}}'
+
+kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d
+```
+
+**5. Lock the Secret and confirm edits are rejected:**
+
+```bash
+kubectl patch secret app-secret --type merge -p '{"immutable": true}'
+
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"another-change"}}'
+# Error: the Secret "app-secret" is invalid:
+#   data: Forbidden: field is immutable when `immutable` is set
+```
+
+**6. Clean up:**
+
+```bash
+kubectl delete secret app-secret
+```
 
 ## Best practices
 
@@ -92,7 +213,7 @@ Secret update behavior matches ConfigMaps: env vars are frozen until restart, mo
 - **Prefer file mounts over env vars** for the most sensitive values.
 - **Use `describe` for routine checks** so you can confirm keys exist without printing values.
 - **Never bake secrets into images or commit them to Git** — keep real values out of version control.
-- **Rotate** secrets periodically; with Secrets mounted as files, updates propagate without rebuilding the Pod.
+- **Rotate** secrets periodically; use versioned names (`db-creds-v2`) with `immutable: true` for auditability, or patch in place for simpler setups.
 
 ---
 
