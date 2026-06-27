@@ -57,6 +57,24 @@ kubectl describe secret app-secret          # shows keys and sizes, not values
 kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d   # reads back the value
 ```
 
+`describe` output looks like this — values are never shown, only key names and byte counts:
+
+```
+Name:         app-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+DB_PASSWORD:  16 bytes
+DB_USER:      7 bytes
+```
+
+The byte count lets you confirm a key exists and roughly validate its length without exposing the value.
+
 The decode command is only for learning. Avoid printing real secret values in shared terminals, screenshots, CI logs, or shell history.
 
 ## ⚠️ base64 is encoding, not encryption
