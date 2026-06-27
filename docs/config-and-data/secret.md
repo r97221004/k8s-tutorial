@@ -32,7 +32,7 @@ stringData:
 | `Opaque` | Generic key/value — most app credentials |
 | `kubernetes.io/tls` | TLS certificate + private key pair |
 | `kubernetes.io/dockerconfigjson` | Private container registry credentials |
-| `kubernetes.io/service-account-token` | Auto-generated token for a ServiceAccount |
+| `kubernetes.io/service-account-token` | Legacy long-lived token for a ServiceAccount |
 
 Each special type enforces that the expected keys are present. For example, a `kubernetes.io/tls` Secret must contain `tls.crt` and `tls.key`:
 
@@ -64,7 +64,7 @@ The decode command is only for learning. Avoid printing real secret values in sh
 This is the single most misunderstood thing about Secrets:
 
 ```bash
-echo 's3cr3t-change-me' | base64        # czNjcjN0LWNoYW5nZS1tZQ==
+printf 's3cr3t-change-me' | base64      # czNjcjN0LWNoYW5nZS1tZQ==
 echo 'czNjcjN0LWNoYW5nZS1tZQ==' | base64 -d   # s3cr3t-change-me  ← trivially reversed
 ```
 
@@ -84,6 +84,15 @@ kubectl auth can-i get secret app-secret
 ```
 
 This checks whether *you* can read Secret objects through the Kubernetes API. A normal application Pod usually should **not** need permission to `get secrets` at all. Kubernetes resolves the referenced Secret and injects it into the Pod as an environment variable or mounted file; the app reads its local env/file, not the Secret API.
+
+You can also check the default ServiceAccount identity that a Pod would use:
+
+```bash
+kubectl auth can-i get secrets \
+  --as=system:serviceaccount:default:default
+```
+
+In a normal namespace this should be `no`. If it says `yes`, something granted that ServiceAccount broader permissions than most application Pods need.
 
 Common Git-safe flows: **External Secrets** syncs from a secret manager, **Sealed Secrets** stores encrypted Secret YAML that only the cluster can decrypt, and **SOPS** encrypts values in Git for your deployment tooling to decrypt.
 
@@ -132,7 +141,7 @@ Credentials should be rotated periodically. How you rotate depends on whether th
 kubectl patch secret app-secret --type merge \
   -p '{"stringData":{"DB_PASSWORD":"new-password-here"}}'
 
-kubectl rollout restart deployment/web-app
+kubectl rollout restart deployment/<your-deployment>
 ```
 
 Mounted Secret files refresh automatically within ~60 seconds even without a restart. Env-var consumers need the restart.
@@ -166,7 +175,7 @@ Step 3 — apply your updated Deployment manifest and verify:
 
 ```bash
 kubectl apply -f manifests/<your-deployment>.yaml
-kubectl rollout status deployment/web-app
+kubectl rollout status deployment/<your-deployment>
 ```
 
 The old `db-creds-v1` stays untouched — rolling back is just switching the Deployment back to it.
