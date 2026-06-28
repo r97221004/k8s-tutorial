@@ -210,13 +210,19 @@ Then in k9s:
 
 3. Type `:secrets`, describe `app-secret`, and notice `DB_PASSWORD` has a new byte count.
 4. Go back to `:pods`: the existing `web-config` Pod is still the same Pod, so its env vars have not been recreated.
-5. Restart the Deployment:
+5. Restart the Deployment — pick one approach:
+
+   **Option A — rollout restart (recommended):** Kubernetes replaces Pods one at a time, waiting for each new Pod to be Ready before terminating the old one. No service interruption.
 
    ```bash
    kubectl rollout restart deployment/web-config
    ```
 
-   Or stay in k9s: highlight the `web-config-...` Pod and press `Ctrl-D` to delete it. Because the Pod is owned by a Deployment, Kubernetes immediately creates a replacement Pod.
+   In k9s: go to `:deployments`, highlight `web-config`, and press `Ctrl-R`.
+
+   **Option B — delete the Pod:** The Deployment notices the Pod is gone and immediately creates a replacement. There is a brief gap while the new Pod starts.
+
+   In k9s: go to `:pods`, highlight the `web-config-...` Pod, and press `Ctrl-D`.
 
 6. Watch k9s: the old Pod terminates, a new `web-config-...` Pod appears, and that new Pod receives the updated environment variable.
 
