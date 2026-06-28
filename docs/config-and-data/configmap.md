@@ -40,6 +40,15 @@ kubectl get configmap app-config -o yaml    # inspect it
 kubectl get configmap app-config -o jsonpath='{.data.APP_GREETING}'
 ```
 
+In [k9s](../getting-started/k9s.md), inspect the same object without printing every command:
+
+1. Launch `k9s`.
+2. Type `:configmaps` and press Enter.
+3. Press `/`, search for `app-config`, then highlight it.
+4. Press `d` to describe it, or `y` to view its YAML.
+
+k9s is useful here for quick checks: confirm the ConfigMap exists, see which keys it contains, and spot typos before a Pod tries to consume it.
+
 You can also build a ConfigMap straight from the CLI without writing a YAML file first:
 
 ```bash
@@ -169,6 +178,11 @@ kubectl exec deploy/web-config -- printenv APP_GREETING
 kubectl exec deploy/web-config -- cat /etc/app/app.properties
 ```
 
+In k9s, type `:pods`, filter for `web-config`, and highlight the Pod:
+
+- Press `d` to describe it. The Events section is where missing ConfigMap or missing key errors show up.
+- Press `s` to open a shell, then run `printenv APP_GREETING` or `cat /etc/app/app.properties` from inside the container.
+
 ## Real backend example
 
 A backend service usually consumes several scalar settings at once: app name, version, database path, feature flags, upstream URLs. In the capstone app, the backend ConfigMap looks like this:
@@ -218,17 +232,23 @@ Kubernetes reads env vars once when the container starts and never checks again.
 kubectl rollout restart deployment/web-config
 ```
 
+In k9s, you can watch that restart happen: type `:pods`, filter for `web-config`, then run the rollout restart from another terminal. The old Pod terminates and a new `web-config-...` Pod appears; that new container reads the updated env var at startup.
+
+For a quick k9s-only demo, highlight the `web-config-...` Pod and press `Ctrl-D` to delete it. Because the Pod is owned by a Deployment, Kubernetes immediately creates a replacement Pod, which also re-reads the ConfigMap-backed env var. For normal rollouts, prefer `kubectl rollout restart deployment/web-config` so the restart is explicit and visible in rollout history.
+
 **Mounted ConfigMap files refresh automatically.**
-The kubelet periodically syncs mounted ConfigMap content (roughly every 1 minute by default). After you update the ConfigMap, the files inside the container update on their own — no restart needed. You can watch it happen:
+The kubelet periodically syncs mounted ConfigMap content. After you update the ConfigMap, the files inside the container update on their own after the next sync — no restart needed. You can watch it happen:
 
 ```bash
 # update the ConfigMap
 kubectl patch configmap app-config --type merge \
   -p '{"data":{"app.properties":"color=green\nlog.level=debug\n"}}'
 
-# wait ~60 seconds, then check the file inside the container
+# wait for the kubelet to sync the mounted volume, then check the file
 kubectl exec deploy/web-config -- cat /etc/app/app.properties
 ```
+
+In k9s, keep the same `web-config` Pod highlighted and press `s` for a shell. After the kubelet syncs the mounted volume, run `cat /etc/app/app.properties` again; the file content changes inside the existing Pod, without a new Pod being created.
 
 **`subPath` mounts are the exception — they do not refresh.**
 Normally a volume mount exposes the entire ConfigMap as a directory. `subPath` lets you mount a single key to a specific file path instead. Compare the two:
@@ -252,8 +272,8 @@ Think of it this way: `subPath` decides **which key's value to use**; `mountPath
 
 The trade-off: `subPath` gives you a cleaner file path, but the file no longer updates automatically when the ConfigMap changes — you must restart the Pod after changes.
 
-**`immutable: true` locks the ConfigMap permanently.**
-Once set, the ConfigMap cannot be edited — any `kubectl apply` or `kubectl patch` on its `data` will be rejected. This is intentional: the only way to update config is to create a new ConfigMap with a different name. The benefit is that each named version is guaranteed to never change, so you always know exactly what config a given Deployment version is running. Rolling back is just a matter of pointing the Deployment back at the previous ConfigMap name — no guessing what the old values were.
+**`immutable: true` locks the ConfigMap's data.**
+Once set, the values under `data` cannot be changed — any `kubectl apply` or `kubectl patch` that changes them will be rejected. This is intentional: config rotation becomes a replacement workflow. Create a new ConfigMap with a different name, then point the Deployment at it. The benefit is that each named version is guaranteed to keep the same values, so you always know exactly what config a given Deployment version is running. Rolling back is just switching the Deployment back to the previous ConfigMap name.
 
 Try it — add `immutable: true` to the ConfigMap and then attempt an edit:
 
@@ -268,7 +288,7 @@ kubectl patch configmap app-config --type merge \
 #   data: Forbidden: field is immutable when `immutable` is set
 ```
 
-Since the locked ConfigMap can no longer be edited, the only way to roll out new config is to create a new ConfigMap under a different name, then point the Deployment at it.
+Since the locked ConfigMap's data can no longer be changed in place, roll out new config by creating a new ConfigMap under a different name, then pointing the Deployment at it.
 
 Step 1 — create the new version:
 
