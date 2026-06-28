@@ -75,6 +75,15 @@ DB_USER:      7 bytes
 
 The byte count lets you confirm a key exists and roughly validate its length without exposing the value.
 
+In [k9s](../getting-started/k9s.md), use the same habit:
+
+1. Launch `k9s`.
+2. Type `:secrets` and press Enter.
+3. Press `/`, search for `app-secret`, then highlight it.
+4. Press `d` to describe it.
+
+k9s is best used here for inspection: confirm the Secret exists, check its type, and verify which keys are present. Keep value decoding as an explicit lab step with `kubectl` so you do not casually expose real credentials while browsing.
+
 The decode command is only for learning. Avoid printing real secret values in shared terminals, screenshots, CI logs, or shell history.
 
 ## ⚠️ base64 is encoding, not encryption
@@ -181,6 +190,38 @@ The full runnable example is in [Environment Variables & Mounts](env-and-mounts.
 
 Secret update behavior matches ConfigMaps: env vars are frozen until restart, mounted Secret files refresh after a short delay, and `subPath` mounts do not refresh automatically.
 
+To see that restart boundary in k9s, use the runnable `web-config` Deployment from [Environment Variables & Mounts](env-and-mounts.md):
+
+```bash
+kubectl apply -f manifests/config-and-data/app-config.yaml
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl apply -f manifests/config-and-data/web-with-config.yaml
+```
+
+Then in k9s:
+
+1. Type `:pods`, press `/`, and filter for `web-config`.
+2. In another terminal, patch the Secret:
+
+   ```bash
+   kubectl patch secret app-secret --type merge \
+     -p '{"stringData":{"DB_PASSWORD":"changed-for-restart-demo"}}'
+   ```
+
+3. Type `:secrets`, describe `app-secret`, and notice `DB_PASSWORD` has a new byte count.
+4. Go back to `:pods`: the existing `web-config` Pod is still the same Pod, so its env vars have not been recreated.
+5. Restart the Deployment:
+
+   ```bash
+   kubectl rollout restart deployment/web-config
+   ```
+
+   Or stay in k9s: highlight the `web-config-...` Pod and press `Ctrl-D` to delete it. Because the Pod is owned by a Deployment, Kubernetes immediately creates a replacement Pod.
+
+6. Watch k9s: the old Pod terminates, a new `web-config-...` Pod appears, and that new Pod receives the updated environment variable.
+
+Mounted Secret files behave differently: they refresh inside the existing Pod after the kubelet syncs the volume. Env vars do not; they are fixed when the container starts.
+
 ## Rotation
 
 Credentials should be rotated periodically. How you rotate depends on whether the Secret is mutable or immutable.
@@ -258,10 +299,12 @@ kubectl auth can-i get secret app-secret
 
 ```bash
 kubectl patch secret app-secret --type merge \
-  -p '{"stringData":{"DB_PASSWORD":"rotated-password"}}'
+  -p '{"stringData":{"DB_PASSWORD":"rotated-password-v2"}}'
 
 kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d
 ```
+
+In k9s, describe `app-secret` again; `DB_PASSWORD` now has a different byte count, but the value still is not shown.
 
 **5. Lock the Secret and confirm edits are rejected:**
 
