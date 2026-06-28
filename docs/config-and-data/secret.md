@@ -182,7 +182,7 @@ kubectl rollout restart deployment/<your-deployment>
 
 Mounted Secret files refresh automatically within ~60 seconds even without a restart. Env-var consumers need the restart.
 
-**`immutable: true`** — once set, the Secret cannot be edited; any patch on `.data` is rejected. This does not make the credential harder to read; RBAC and encryption at rest still do that. What it gives you is operational safety: the value cannot drift unexpectedly, and rotation becomes an explicit "create a new version, then update consumers" workflow. To rotate, create a new Secret under a versioned name and point the Deployment at it:
+**`immutable: true`** — locks the Secret's values after creation. It does not make the password harder to read; RBAC and encryption at rest handle that. Instead, it prevents the value from being changed in place. Rotation becomes a replacement workflow:
 
 Step 1 — create the new version:
 
