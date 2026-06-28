@@ -25,7 +25,29 @@ stringData:
 
 `s3cr3t-change-me` is a lab placeholder so the manifest is runnable. Do not commit real passwords, tokens, or certificates to Git.
 
-`type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes, such as `kubernetes.io/tls` for TLS certificates and `kubernetes.io/dockerconfigjson` for private registry credentials.
+`type: Opaque` means "generic key/value Secret," which is what most app credentials use. Kubernetes also has special Secret types for common shapes:
+
+| Type | Use case |
+|---|---|
+| `Opaque` | Generic key/value — most app credentials |
+| `kubernetes.io/tls` | TLS certificate + private key pair |
+| `kubernetes.io/dockerconfigjson` | Private container registry credentials |
+| `kubernetes.io/service-account-token` | Legacy long-lived token for a ServiceAccount |
+
+Each special type enforces that the expected keys are present. For example, a `kubernetes.io/tls` Secret must contain `tls.crt` and `tls.key`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-tls
+type: kubernetes.io/tls
+data:
+  tls.crt: <base64-encoded cert>
+  tls.key: <base64-encoded private key>
+```
+
+In practice you generate TLS Secrets with `kubectl create secret tls` rather than writing the YAML by hand, since base64-encoding a cert manually is error-prone.
 
 `stringData` is a write-friendly convenience field: you send plain text, and Kubernetes stores it under `.data` as base64. If you read the Secret back, you will see `.data`, not `stringData`.
 
@@ -35,6 +57,33 @@ kubectl describe secret app-secret          # shows keys and sizes, not values
 kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d   # reads back the value
 ```
 
+`describe` output looks like this — values are never shown, only key names and byte counts:
+
+```
+Name:         app-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+DB_PASSWORD:  16 bytes
+DB_USER:      7 bytes
+```
+
+The byte count lets you confirm a key exists and roughly validate its length without exposing the value.
+
+In [k9s](../getting-started/k9s.md), use the same habit:
+
+1. Launch `k9s`.
+2. Type `:secrets` and press Enter.
+3. Press `/`, search for `app-secret`, then highlight it.
+4. Press `d` to describe it.
+
+k9s is best used here for inspection: confirm the Secret exists, check its type, and verify which keys are present. Keep value decoding as an explicit lab step with `kubectl` so you do not casually expose real credentials while browsing.
+
 The decode command is only for learning. Avoid printing real secret values in shared terminals, screenshots, CI logs, or shell history.
 
 ## ⚠️ base64 is encoding, not encryption
@@ -42,7 +91,7 @@ The decode command is only for learning. Avoid printing real secret values in sh
 This is the single most misunderstood thing about Secrets:
 
 ```bash
-echo 's3cr3t-change-me' | base64        # czNjcjN0LWNoYW5nZS1tZQ==
+printf 's3cr3t-change-me' | base64      # czNjcjN0LWNoYW5nZS1tZQ==
 echo 'czNjcjN0LWNoYW5nZS1tZQ==' | base64 -d   # s3cr3t-change-me  ← trivially reversed
 ```
 
@@ -61,30 +110,226 @@ kubectl auth can-i get secrets
 kubectl auth can-i get secret app-secret
 ```
 
-Common Git-safe flows: **External Secrets** syncs from a secret manager, **Sealed Secrets** stores encrypted Secret YAML that only the cluster can decrypt, and **SOPS** encrypts values in Git for your deployment tooling to decrypt.
+This checks whether *you* can read Secret objects through the Kubernetes API. A normal application Pod usually should **not** need permission to `get secrets` at all. Kubernetes resolves the referenced Secret and injects it into the Pod as an environment variable or mounted file; the app reads its local env/file, not the Secret API.
+
+You can also check the default ServiceAccount identity that a Pod would use:
+
+```bash
+kubectl auth can-i get secrets \
+  --as=system:serviceaccount:default:default
+```
+
+In a normal namespace this should be `no`. If it says `yes`, something granted that ServiceAccount broader permissions than most application Pods need.
+
+## Git-safe Secret workflows
+
+Real Secret values should not be committed to Git, but deployments still need a repeatable way to create them. These tools answer the same question: **where does the real value live, and who turns it into a Kubernetes Secret?**
+
+### External Secrets
+
+The value lives in an external secret manager, not in Git.
+
+You commit only a declaration of *where to fetch from*. The External Secrets Operator runs in the cluster, reads that declaration, fetches the value from a provider such as AWS Secrets Manager, GCP Secret Manager, or Vault, then creates a normal Kubernetes Secret.
+
+### Sealed Secrets
+
+The value is encrypted before it goes into Git.
+
+You encrypt a Secret locally:
+
+```bash
+kubeseal < secret.yaml > sealed-secret.yaml
+```
+
+`sealed-secret.yaml` contains ciphertext, so it is safe to commit. The Sealed Secrets controller in the cluster holds the private key, decrypts it, and creates a normal Kubernetes Secret. Someone who steals the Git repo gets ciphertext that is useless without the cluster's private key.
+
+### SOPS
+
+The value is also encrypted in Git, but decryption happens before or during deployment.
+
+Your pipeline or deployment tool, such as ArgoCD or Helm, uses a key stored in AWS KMS, GCP KMS, age, or PGP. It decrypts the file at deploy time, then applies the resulting Secret to the cluster.
+
+| | Values stored | Who decrypts | Best fit |
+|---|---|---|---|
+| External Secrets | External service (AWS / GCP / Vault) | Cluster operator | Already have a secret manager |
+| Sealed Secrets | Git (ciphertext) | Cluster controller | Want Git as the single source of truth |
+| SOPS | Git (ciphertext) | CI/CD tooling | Deploying with Helm or ArgoCD |
 
 ## Consuming it
 
-Same as a ConfigMap — as env vars or mounted files:
+Same as a ConfigMap — as env vars or mounted files. Here is where each piece fits inside a Deployment:
+
+```yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: my-app:1.0
+          env:
+            - name: DB_PASSWORD        # env var name inside the container
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret     # Secret name
+                  key: DB_PASSWORD     # key inside the Secret
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /etc/secrets  # directory inside the container
+              readOnly: true
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: app-secret
+```
+
+`env` + `secretKeyRef` injects one key at a time as an environment variable. `volumes` + `volumeMounts` mounts every key as a file under `/etc/secrets/` — for example, `/etc/secrets/DB_PASSWORD` contains the raw value.
+
+The full runnable example is in [Environment Variables & Mounts](env-and-mounts.md).
+
+**Prefer file mounts over env vars for sensitive values.** Environment variables are accessible to every process in the container, are inherited by all child processes, and can appear in crash dumps, debug output, or process inspection (`/proc/<pid>/environ`). A mounted Secret file is only read by the code that explicitly opens it — nothing else sees it automatically.
+
+Secret update behavior matches ConfigMaps: env vars are frozen until restart, mounted Secret files refresh after a short delay, and `subPath` mounts do not refresh automatically.
+
+To see that restart boundary in k9s, use the runnable `web-config` Deployment from [Environment Variables & Mounts](env-and-mounts.md):
+
+```bash
+kubectl apply -f manifests/config-and-data/app-config.yaml
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl apply -f manifests/config-and-data/web-with-config.yaml
+```
+
+Then in k9s:
+
+1. Type `:pods`, press `/`, and filter for `web-config`.
+2. In another terminal, patch the Secret:
+
+   ```bash
+   kubectl patch secret app-secret --type merge \
+     -p '{"stringData":{"DB_PASSWORD":"changed-for-restart-demo"}}'
+   ```
+
+3. Type `:secrets`, describe `app-secret`, and notice `DB_PASSWORD` has a new byte count.
+4. Go back to `:pods`: the existing `web-config` Pod is still the same Pod, so its env vars have not been recreated.
+5. Restart the Deployment — pick one approach:
+
+   **Option A — rollout restart (recommended):** Kubernetes replaces Pods one at a time, waiting for each new Pod to be Ready before terminating the old one. No service interruption.
+
+   ```bash
+   kubectl rollout restart deployment/web-config
+   ```
+
+   In k9s: go to `:deployments`, highlight `web-config`, and press `Ctrl-R`.
+
+   **Option B — delete the Pod:** The Deployment notices the Pod is gone and immediately creates a replacement. There is a brief gap while the new Pod starts.
+
+   In k9s: go to `:pods`, highlight the `web-config-...` Pod, and press `Ctrl-D`.
+
+6. Watch k9s: the old Pod terminates, a new `web-config-...` Pod appears, and that new Pod receives the updated environment variable.
+
+Mounted Secret files behave differently: they refresh inside the existing Pod after the kubelet syncs the volume. Env vars do not; they are fixed when the container starts.
+
+## Rotation
+
+Credentials should be rotated periodically. How you rotate depends on whether the Secret is mutable or immutable.
+
+**Mutable Secret (default)** — edit the value in place, then restart Pods to pick it up:
+
+```bash
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"new-password-here"}}'
+
+kubectl rollout restart deployment/<your-deployment>
+```
+
+Mounted Secret files refresh automatically within ~60 seconds even without a restart. Env-var consumers need the restart.
+
+**`immutable: true`** — locks the Secret's values after creation. It does not make the password harder to read; RBAC and encryption at rest handle that. Instead, it prevents the value from being changed in place. Rotation becomes a replacement workflow:
+
+Step 1 — create the new version:
+
+```bash
+kubectl create secret generic db-creds-v2 \
+  --from-literal=DB_USER=appuser \
+  --from-literal=DB_PASSWORD=new-password-here
+```
+
+Step 2 — update the Deployment manifest to reference `db-creds-v2`:
 
 ```yaml
 env:
   - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: app-secret
+        name: db-creds-v2   # ← changed from db-creds-v1
         key: DB_PASSWORD
 volumes:
   - name: secret-volume
     secret:
-      secretName: app-secret
+      secretName: db-creds-v2   # ← changed from db-creds-v1
 ```
 
-The full runnable example is in [Environment Variables & Mounts](env-and-mounts.md). Mounting as files is slightly safer than env vars (env can leak via crash dumps / child processes).
+Step 3 — apply your updated Deployment manifest and verify:
 
-Secret update behavior matches ConfigMaps: env vars are frozen until restart, mounted Secret files refresh after a short delay, and `subPath` mounts do not refresh automatically.
+```bash
+kubectl apply -f manifests/<your-deployment>.yaml
+kubectl rollout status deployment/<your-deployment>
+```
 
-`immutable: true` also works on Secrets. Use it for credentials that should never be changed in place; create a new Secret name when rotating.
+The old `db-creds-v1` stays untouched — rolling back is just switching the Deployment back to it.
+
+## Hands-on
+
+Work through these steps to experience the full Secret lifecycle:
+
+**1. Apply the Secret and inspect it:**
+
+```bash
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl describe secret app-secret       # keys and sizes — no values shown
+kubectl get secret app-secret -o yaml    # base64-encoded values in .data
+```
+
+**2. Decode a value and confirm base64 is not encryption:**
+
+```bash
+kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d
+```
+
+**3. Check your own permission to read Secrets:**
+
+```bash
+kubectl auth can-i get secret app-secret
+```
+
+**4. Simulate rotation — patch the password and observe:**
+
+```bash
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"rotated-password-v2"}}'
+
+kubectl get secret app-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d
+```
+
+In k9s, describe `app-secret` again; `DB_PASSWORD` now has a different byte count, but the value still is not shown.
+
+**5. Lock the Secret and confirm edits are rejected:**
+
+```bash
+kubectl patch secret app-secret --type merge -p '{"immutable": true}'
+
+kubectl patch secret app-secret --type merge \
+  -p '{"stringData":{"DB_PASSWORD":"another-change"}}'
+# Error: the Secret "app-secret" is invalid:
+#   data: Forbidden: field is immutable when `immutable` is set
+```
+
+After this step, `app-secret` cannot be patched anymore. Delete and re-apply it before continuing to later chapters that expect the original mutable lab Secret.
+
+**6. Clean up:**
+
+```bash
+kubectl delete secret app-secret
+```
 
 ## Best practices
 
@@ -92,7 +337,7 @@ Secret update behavior matches ConfigMaps: env vars are frozen until restart, mo
 - **Prefer file mounts over env vars** for the most sensitive values.
 - **Use `describe` for routine checks** so you can confirm keys exist without printing values.
 - **Never bake secrets into images or commit them to Git** — keep real values out of version control.
-- **Rotate** secrets periodically; with Secrets mounted as files, updates propagate without rebuilding the Pod.
+- **Rotate** secrets periodically; use versioned names (`db-creds-v2`) with `immutable: true` for auditability, or patch in place for simpler setups.
 
 ---
 
