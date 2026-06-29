@@ -18,6 +18,18 @@ volumes:
 
 Good for caches and scratch files shared between containers in a Pod. **Not** for data you can't lose.
 
+Pass `medium: Memory` to back the volume with `tmpfs` instead of disk — faster, never written to disk, but counts against the container's memory limit:
+
+```yaml
+volumes:
+  - name: fast-scratch
+    emptyDir:
+      medium: Memory
+      sizeLimit: 128Mi   # prevents unbounded memory growth
+```
+
+This is the same backing store Kubernetes uses for Secret volumes, which is why Secret files don't appear in `df` output and are gone the moment the Pod exits.
+
 ## Durable: PersistentVolume & PersistentVolumeClaim
 
 Two roles, deliberately separated:
@@ -51,6 +63,16 @@ spec:
 
 `ReadWriteOnce` means the volume can be mounted read-write by **one node at a time**. It does not strictly mean "one Pod only": multiple Pods on the same node may be able to use the same RWO volume, but for app design you should usually treat one writer as the safe default.
 
+The three access modes cover different multi-node patterns:
+
+| Mode | Short | Meaning |
+|---|---|---|
+| `ReadWriteOnce` | RWO | Read-write by one node at a time — supported by most block storage |
+| `ReadOnlyMany` | ROX | Read-only by many nodes simultaneously |
+| `ReadWriteMany` | RWX | Read-write by many nodes simultaneously — requires networked storage (NFS, EFS, Ceph) |
+
+Most cloud block disks and local-path only support RWO. If your app needs RWX (e.g. multiple Pods writing to a shared directory), you need a networked storage backend.
+
 ```bash
 kubectl apply -f manifests/config-and-data/data-pvc.yaml
 kubectl get pvc data               # STATUS should become Bound
@@ -64,6 +86,25 @@ kubectl exec writer -- cat /data/log.txt   # 'persisted!' appears again, appende
 ```
 
 The writer's command appends (`>>`) rather than overwrites, so the new Pod adds a *second* `persisted!` line instead of replacing the file. Seeing two lines (not one) is the actual proof: if the volume had been wiped along with the old Pod, you'd only see one.
+
+In [k9s](../getting-started/k9s.md):
+
+1. Type `:pvc` — confirm `data` shows `Bound` and note the `STORAGECLASS`.
+2. Type `:pv` — see the backing PersistentVolume and its `RECLAIM POLICY`.
+3. Type `:pods`, highlight `writer`, press `s` for a shell, and run `cat /data/log.txt`.
+4. Press `Ctrl-D` to delete the Pod. Unlike a Deployment, this is a bare Pod — it won't restart on its own. Run `kubectl apply -f manifests/config-and-data/data-pvc.yaml` from another terminal to recreate it.
+5. Once the new Pod appears, press `s` and run `cat /data/log.txt` again — two lines confirm data persisted across the Pod deletion.
+
+## Reclaim policy
+
+The reclaim policy controls what happens to the PV — and the data — when its PVC is deleted:
+
+| Policy | Behavior |
+|---|---|
+| `Delete` | PV and backing storage are deleted automatically — the default for most dynamic provisioners |
+| `Retain` | PV is kept and data preserved, but the PV enters `Released` state and cannot be rebound until manually reclaimed |
+
+Check what your StorageClass uses: `kubectl get storageclass -o yaml | grep reclaimPolicy`. `Delete` is convenient in a lab; `Retain` gives you a safety net in production against accidental data loss from a stray `kubectl delete pvc`.
 
 ## ⚠️ Vanilla kubeadm has no default StorageClass
 
@@ -84,7 +125,7 @@ The version in the URL is pinned on purpose: it keeps this lab reproducible inst
 
 - **Use PVCs, never `hostPath`,** for app data — `hostPath` ties a Pod to one node and is a security risk.
 - **Right-size `requests.storage`** and pick the `accessModes` your app truly needs (`ReadWriteOnce` is the common, widely-supported case).
-- **For databases, prefer a [StatefulSet](statefulset.md)** with a `volumeClaimTemplate` so each replica gets its own stable volume.
+- **For databases, prefer a [StatefulSet](statefulset.md)** with a `volumeClaimTemplate` — unlike a Deployment where all replicas share one PVC, a `volumeClaimTemplate` creates one PVC per replica automatically, giving each its own stable, named volume that survives rescheduling and scales correctly when you add replicas.
 - **Mind the reclaim policy** — know whether deleting a PVC deletes the data.
 
 ## Clean up
