@@ -32,6 +32,21 @@ env:
 envFrom:
   - configMapRef:
       name: app-config        # each key becomes an env var
+  - configMapRef:
+      name: other-config
+      prefix: OTHER_          # avoids name collisions across maps
+```
+
+Both `configMapKeyRef` and `secretKeyRef` accept `optional: true` — the Pod starts even if the referenced ConfigMap or Secret doesn't exist yet, instead of failing at scheduling. Useful for optional feature flags or config that may not be present in all environments:
+
+```yaml
+env:
+  - name: FEATURE_FLAG
+    valueFrom:
+      configMapKeyRef:
+        name: optional-config
+        key: FEATURE_FLAG
+        optional: true      # Pod starts even if optional-config doesn't exist
 ```
 
 `web-with-config.yaml` actually uses both at once: an explicit `env` entry for `APP_GREETING`, *and* `envFrom` pulling in the whole `app-config` (which also contains an `APP_GREETING` key). When the same name comes from both, the explicit `env` entry wins — `envFrom` never overwrites a name already set in `env`.
@@ -59,6 +74,37 @@ volumes:
       secretName: app-secret
 ```
 
+When the ConfigMap or Secret changes, the kubelet refreshes the mounted files automatically — no Pod restart needed. The delay is up to the kubelet sync period (default ~1 minute). **Exception: `subPath` mounts** are frozen at Pod start and never live-update. `subPath` lets you drop a single key into an existing directory without replacing the whole directory:
+
+```yaml
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/nginx/nginx.conf
+    subPath: nginx.conf    # mounts only this key; live-update does NOT apply
+```
+
+**Mounting only specific keys** — use `items` to select which keys appear as files and rename them:
+
+```yaml
+volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+      items:
+        - key: app.properties
+          path: config.properties   # mounted as /etc/app/config.properties
+```
+
+**File permissions** — use `defaultMode` (octal) to restrict access. Useful for TLS private keys or SSH keys that must not be world-readable:
+
+```yaml
+volumes:
+  - name: secret-volume
+    secret:
+      secretName: app-secret
+      defaultMode: 0400   # owner read-only
+```
+
 Apply and verify both paths land inside the container:
 
 ```bash
@@ -79,16 +125,17 @@ Printing `DB_PASSWORD` is only a lab verification step. In real clusters, avoid 
 
 | | Environment variables | Mounted files |
 |---|---|---|
-| Updates without restart | ❌ frozen at start | ✅ files refresh automatically (except `subPath` mounts — those don't refresh) |
+| Updates without restart | ❌ frozen at start | ✅ files refresh automatically (except `subPath` mounts — see above) |
 | Good for | small scalar config | whole config files, certs, large values |
 | Sensitive data | riskier (leaks via dumps/child procs) | safer (esp. Secrets as `tmpfs`) |
 
 ## Best practices
 
-- **Reference keys explicitly** for the values your app needs; use `envFrom` only when you really want the whole map.
-- **Mount sensitive data as files**, not env vars, where you can.
-- **Mount config files** (rather than env) when you want live updates without recreating Pods.
-- **Mark config mounts `readOnly: true`.**
+- **Reference keys explicitly** for the values your app needs; `envFrom` is convenient but imports everything, making dependencies invisible and causing surprises when keys are added or removed.
+- **Mount sensitive data as files, not env vars** — environment variables leak into crash dumps, child processes, and `kubectl describe pod` output; mounted Secret files (backed by `tmpfs`) stay in memory only.
+- **Mount config files when you need live updates** — env vars are frozen at Pod start; mounted files refresh automatically when the ConfigMap or Secret changes (no restart needed).
+- **Mark all config mounts `readOnly: true`** — a container that can write to its own config volume is a misconfiguration waiting to cause confusion.
+- **Set `defaultMode: 0400`** on Secret volumes that hold private keys or certs — restricts read access to the owner process and avoids accidental exposure.
 
 ---
 
