@@ -37,7 +37,7 @@ envFrom:
       prefix: OTHER_          # avoids name collisions across maps
 ```
 
-Both `configMapKeyRef` and `secretKeyRef` accept `optional: true` — the Pod starts even if the referenced ConfigMap or Secret doesn't exist yet, instead of failing at scheduling. Useful for optional feature flags or config that may not be present in all environments:
+Both `configMapKeyRef` and `secretKeyRef` accept `optional: true` — Kubernetes can still start the container even if the referenced ConfigMap, Secret, or key is missing. Without it, the Pod object can be created, but the container will not start successfully until the reference exists. Useful for optional feature flags or config that may not be present in all environments:
 
 ```yaml
 env:
@@ -46,12 +46,12 @@ env:
       configMapKeyRef:
         name: optional-config
         key: FEATURE_FLAG
-        optional: true      # Pod starts even if optional-config doesn't exist
+        optional: true      # container starts even if optional-config doesn't exist
 ```
 
 `web-with-config.yaml` actually uses both at once: an explicit `env` entry for `APP_GREETING`, *and* `envFrom` pulling in the whole `app-config` (which also contains an `APP_GREETING` key). When the same name comes from both, the explicit `env` entry wins — `envFrom` never overwrites a name already set in `env`.
 
-`envFrom` also skips any key that isn't a valid environment variable name. `app-config` has a key `app.properties` (the dot isn't legal in an env var name), so it's silently dropped from the env vars — you'll see an `InvalidVariableNames` warning in `kubectl describe pod` Events, which is expected, not a misconfiguration.
+`envFrom` also skips any key that isn't a valid environment variable name. `app-config` has a key `app.properties` (the dot isn't legal in an env var name), so it's silently dropped from the env vars — you'll see an `InvalidVariableNames` warning in `kubectl describe pod` Events. The Pod still starts; Kubernetes is only warning that this one key could not become an env var.
 
 ## 2. As files on disk
 
@@ -74,7 +74,7 @@ volumes:
       secretName: app-secret
 ```
 
-When the ConfigMap or Secret changes, the kubelet refreshes the mounted files automatically — no Pod restart needed. The delay is up to the kubelet sync period (default ~1 minute). **Exception: `subPath` mounts** are frozen at Pod start and never live-update. `subPath` lets you drop a single key into an existing directory without replacing the whole directory:
+When the ConfigMap or Secret changes, the kubelet refreshes the mounted files automatically — no Pod restart needed. The update is not instant; it can take roughly the kubelet sync period plus cache delay. **Exception: `subPath` mounts** are frozen at Pod start and never live-update. `subPath` lets you drop a single key into an existing directory without replacing the whole directory:
 
 ```yaml
 volumeMounts:
@@ -105,6 +105,8 @@ volumes:
       defaultMode: 0400   # owner read-only
 ```
 
+If your container runs as a non-root user, test this carefully: a strict mode like `0400` can make the file unreadable unless the file ownership/group settings match your `securityContext`.
+
 Apply and verify both paths land inside the container:
 
 ```bash
@@ -119,7 +121,47 @@ kubectl exec deploy/web-config -- cat /etc/app-secret/DB_PASSWORD
 
 Printing `DB_PASSWORD` is only a lab verification step. In real clusters, avoid echoing secret values into terminals, screenshots, or logs.
 
-(In [k9s](../getting-started/k9s.md), press `s` on the Pod for a shell and poke around `/etc/app`.)
+In [k9s](../getting-started/k9s.md), inspect the same Deployment from a few angles:
+
+1. Type `:pods`, press `/`, and filter for `web-config`.
+2. Highlight the Pod and press `d` to describe it. The Events section shows warnings like `InvalidVariableNames` from `envFrom`, plus missing ConfigMap/Secret errors if a reference is wrong.
+3. Press `s` to open a shell, then run:
+
+   ```bash
+   printenv APP_GREETING DB_PASSWORD
+   cat /etc/app/app.properties
+   cat /etc/app-secret/DB_PASSWORD   # lab only: avoid printing real secrets
+   ```
+
+4. Type `:configmaps`, highlight `app-config`, and press `d` to confirm the keys exist. Press `y` if you want to inspect the YAML.
+5. Type `:secrets`, highlight `app-secret`, and press `d` to confirm the Secret keys exist. k9s shows key names and sizes, not the raw values.
+
+To watch ConfigMap file updates in k9s:
+
+1. Keep `:pods` filtered to `web-config`.
+2. Patch the ConfigMap from another terminal:
+
+   ```bash
+   kubectl patch configmap app-config --type merge \
+     -p '{"data":{"APP_GREETING":"Hello after update","app.properties":"color=green\nlog.level=debug\n"}}'
+   ```
+
+3. Press `s` on the existing Pod and run `cat /etc/app/app.properties` again. The mounted file refreshes inside the same Pod after the kubelet syncs the volume.
+4. Check `printenv APP_GREETING` in that same shell: the env var is still the old value.
+
+To watch Secret/env-var restart behavior in k9s:
+
+1. Patch the Secret from another terminal:
+
+   ```bash
+   kubectl patch secret app-secret --type merge \
+     -p '{"stringData":{"DB_PASSWORD":"changed-for-restart-demo"}}'
+   ```
+
+2. Type `:secrets`, describe `app-secret`, and notice `DB_PASSWORD` has a new byte count.
+3. Go back to `:pods` and press `s` on the existing Pod. The mounted Secret file refreshes after the kubelet syncs the volume; checking `/etc/app-secret/DB_PASSWORD` is a lab-only verification step.
+4. Check `printenv DB_PASSWORD` in that same shell: the env var is still the old value.
+5. Restart the Deployment so env vars are re-read. In k9s, type `:deployments`, highlight `web-config`, and press `Ctrl-R`. For a quick lab-only replacement, go back to `:pods`, highlight the `web-config-...` Pod, and press `Ctrl-D`.
 
 ## env vars vs files — which to use
 
@@ -127,15 +169,16 @@ Printing `DB_PASSWORD` is only a lab verification step. In real clusters, avoid 
 |---|---|---|
 | Updates without restart | ❌ frozen at start | ✅ files refresh automatically (except `subPath` mounts — see above) |
 | Good for | small scalar config | whole config files, certs, large values |
+| Typical consumer | apps that read settings at startup | apps that read files, cert libraries, reloadable config |
 | Sensitive data | riskier (leaks via dumps/child procs) | safer (esp. Secrets as `tmpfs`) |
 
 ## Best practices
 
 - **Reference keys explicitly** for the values your app needs; `envFrom` is convenient but imports everything, making dependencies invisible and causing surprises when keys are added or removed.
-- **Mount sensitive data as files, not env vars** — environment variables leak into crash dumps, child processes, and `kubectl describe pod` output; mounted Secret files (backed by `tmpfs`) stay in memory only.
+- **Mount sensitive data as files, not env vars** — environment variables are inherited by child processes and can leak through crash dumps, debug output, or `/proc/<pid>/environ`; mounted Secret files (backed by `tmpfs`) are only read by code that opens the file.
 - **Mount config files when you need live updates** — env vars are frozen at Pod start; mounted files refresh automatically when the ConfigMap or Secret changes (no restart needed).
 - **Mark all config mounts `readOnly: true`** — a container that can write to its own config volume is a misconfiguration waiting to cause confusion.
-- **Set `defaultMode: 0400`** on Secret volumes that hold private keys or certs — restricts read access to the owner process and avoids accidental exposure.
+- **Set restrictive file modes** on Secret volumes that hold private keys or certs — `defaultMode: 0400` is a good target when the container user can read it; otherwise adjust ownership/group access with your `securityContext`.
 
 ---
 
