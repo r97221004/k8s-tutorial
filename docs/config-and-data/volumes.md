@@ -124,6 +124,24 @@ Also check `VOLUMEBINDINGMODE`:
 
 If a PVC looks `Pending`, describe both the PVC and the Pod Events before assuming storage is broken. With `WaitForFirstConsumer`, a PVC may wait until a consumer Pod exists; with no default StorageClass, it may wait forever.
 
+## Volume expansion
+
+If a PVC runs out of space, you can resize it — but only if the StorageClass has `allowVolumeExpansion: true`. Check first:
+
+```bash
+kubectl get storageclass -o custom-columns="NAME:.metadata.name,EXPANSION:.allowVolumeExpansion"
+```
+
+If expansion is allowed, patch the PVC with a larger size:
+
+```bash
+kubectl patch pvc data -p '{"spec":{"resources":{"requests":{"storage":"5Gi"}}}}'
+```
+
+Kubernetes resizes the underlying volume and, for filesystem volumes, expands the filesystem when the Pod restarts (or immediately for online expansion if the driver supports it). The PVC's `STATUS` stays `Bound` throughout — watch `kubectl get pvc data` until `CAPACITY` reflects the new size.
+
+Shrinking a PVC is not supported — you can only increase `requests.storage`.
+
 ## ⚠️ Vanilla kubeadm has no default StorageClass
 
 If your PVC is stuck `Pending`, this is why: unlike k3s (which bundles `local-path`), bare kubeadm ships **no** storage provisioner, so there's nothing to create a PV for your claim. Fix it once:
