@@ -92,8 +92,10 @@ volumes:
       name: app-config
       items:
         - key: app.properties
-          path: config.properties   # mounted as /etc/app/config.properties
+          path: config.properties   # filename inside the mounted directory
 ```
+
+`path` is relative to the volume's `mountPath`. With `mountPath: /etc/app`, the key `app.properties` appears at `/etc/app/config.properties` — both selecting the key and renaming it. Any key not listed in `items` is excluded from the mount entirely.
 
 **File permissions** — use `defaultMode` (octal) to restrict access. Useful for TLS private keys or SSH keys that must not be world-readable:
 
