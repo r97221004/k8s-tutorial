@@ -107,6 +107,29 @@ volumes:
 
 If your container runs as a non-root user, test this carefully: a strict mode like `0400` can make the file unreadable unless the file ownership/group settings match your `securityContext`.
 
+**Merging multiple sources into one directory** — two separate `volumeMounts` targeting the same `mountPath` conflict: the second mount replaces the first entirely. Use a `projected` volume to combine ConfigMaps and Secrets into a single directory:
+
+```yaml
+volumes:
+  - name: combined
+    projected:
+      sources:
+        - configMap:
+            name: app-config
+        - secret:
+            name: app-secret
+            items:
+              - key: DB_PASSWORD
+                path: db-password
+                mode: 0400
+volumeMounts:
+  - name: combined
+    mountPath: /etc/app
+    readOnly: true
+```
+
+Every key from `app-config` and the selected key from `app-secret` all land in `/etc/app` as siblings. `projected` volumes also support `serviceAccountToken` and `downwardAPI` sources, making them the standard way to assemble mixed-source config directories.
+
 Apply and verify both paths land inside the container:
 
 ```bash
