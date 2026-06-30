@@ -4,7 +4,14 @@
 
 ---
 
-A container's writable filesystem is **ephemeral**: when the container is recreated, anything written inside the image layer is gone. That's fine for a stateless web server, fatal for a database. **Volumes** give a Pod storage that outlives an individual container restart; **PersistentVolumes** give it storage that outlives the Pod entirely.
+Storage in Kubernetes survives in layers — and knowing which layer you're on tells you exactly when data disappears:
+
+| What got deleted | Container filesystem | Volume (e.g. `emptyDir`) | PersistentVolume |
+|---|---|---|---|
+| Container crashed & restarted | ❌ wiped | ✅ survives | ✅ survives |
+| Pod deleted | ❌ wiped | ❌ wiped | ✅ survives |
+
+Think of it this way: a **Volume** is the Pod's local scratch drive — it outlives individual container restarts but is gone the moment the Pod is deleted. A **PersistentVolume** is an external drive plugged into the Pod — no matter how many times the Pod comes and goes, plugging it back in gives you the same data. That's fine for a stateless web server, fatal for a database without one.
 
 ## Ephemeral: `emptyDir`
 
@@ -16,7 +23,7 @@ volumes:
     emptyDir: {}
 ```
 
-Good for caches, scratch files, and handoff files shared between containers in one Pod. **Not** for data you can't lose: `emptyDir` survives a container restart, but it is deleted when the Pod is deleted.
+Good for caches, scratch files, and handoff files shared between containers in one Pod — not for anything you can't afford to lose when the Pod goes away.
 
 Pass `medium: Memory` to back the volume with `tmpfs` instead of disk — faster, never written to disk, but still counted as memory usage:
 
@@ -138,7 +145,12 @@ If expansion is allowed, patch the PVC with a larger size:
 kubectl patch pvc data -p '{"spec":{"resources":{"requests":{"storage":"5Gi"}}}}'
 ```
 
-Kubernetes resizes the underlying volume and, for filesystem volumes, expands the filesystem when the Pod restarts (or immediately for online expansion if the driver supports it). The PVC's `STATUS` stays `Bound` throughout — watch `kubectl get pvc data` until `CAPACITY` reflects the new size.
+Kubernetes resizes the underlying volume automatically. Whether the filesystem inside expands immediately depends on the driver:
+
+- **Online expansion supported** (most CSI drivers): the filesystem grows without restarting the Pod.
+- **Online expansion not supported**: the filesystem expands the next time the Pod restarts and remounts the volume.
+
+Check `kubectl describe pvc data` — if you see a `FileSystemResizePending` condition, a Pod restart is needed. The PVC's `STATUS` stays `Bound` throughout; watch `kubectl get pvc data` until `CAPACITY` reflects the new size.
 
 Shrinking a PVC is not supported — you can only increase `requests.storage`.
 
