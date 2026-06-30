@@ -37,6 +37,10 @@ volumes:
 
 This is the same backing store Kubernetes uses for Secret volumes, which is why Secret files don't appear in `df` output and are gone the moment the Pod exits.
 
+**ConfigMap and Secret volumes** follow the same `volumes:` / `volumeMounts:` pattern — they mount cluster objects as files inside the Pod. Secret volumes use the same `tmpfs` backing described above. See the [ConfigMap](configmap.md) and [Secret](secret.md) chapters for details on file layout and live-update behavior.
+
+One common trap: `subPath` mounts a single file or subdirectory from a volume, but it does **not** receive live updates from ConfigMaps or Secrets. Use a normal directory mount when you want Kubernetes to refresh projected config files; use `subPath` only when you deliberately want a fixed file path inside an existing directory.
+
 ## Durable: PersistentVolume & PersistentVolumeClaim
 
 Two roles, deliberately separated:
@@ -53,6 +57,28 @@ Pod volume -> PVC request -> StorageClass provisions PV -> real storage
 ```
 
 The Pod names a PVC, the PVC describes the storage it needs, and the StorageClass decides how to create or find a matching PV. Once the PVC is `Bound`, the Pod can mount it.
+
+There are two ways a PVC gets a PV:
+
+| Provisioning style | How it works | Common in |
+|---|---|---|
+| Dynamic provisioning | A StorageClass creates the PV after the PVC is requested | Labs, cloud clusters, most day-to-day app work |
+| Static provisioning | An admin creates a PV first; the PVC binds to a matching one | Pre-existing NFS shares, manually managed disks, special storage policies |
+
+Most tutorials use dynamic provisioning because it keeps the app manifest focused on the claim, not the storage backend. Static PVs are useful when the storage already exists or needs hand-tuned settings.
+
+> **⚠️ Vanilla kubeadm has no default StorageClass.** Unlike k3s (which bundles `local-path`), bare kubeadm ships no storage provisioner — PVCs stay `Pending` indefinitely without one. Fix it once before running the exercise below:
+>
+> ```bash
+> kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
+> kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+> ```
+>
+> `kubectl get storageclass` should show `local-path (default)`. The version is pinned so the lab stays reproducible; if the tag is ever removed, check the [local-path-provisioner releases page](https://github.com/rancher/local-path-provisioner/releases) for a current tag.
+>
+> In k9s, type `:sc` or `:storageclasses` and confirm `local-path` is marked as the default before proceeding.
+>
+> **Multi-node note:** local-path volumes live on one node's disk. On a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
 
 ▶ **Runnable manifest:** [`manifests/config-and-data/data-pvc.yaml`](../../manifests/config-and-data/data-pvc.yaml) (a PVC + a Pod that writes to it)
 
@@ -106,6 +132,17 @@ In [k9s](../getting-started/k9s.md):
 5. Press `Ctrl-D` to delete the Pod. Unlike a Deployment, this is a bare Pod — it won't restart on its own. Run `kubectl apply -f manifests/config-and-data/data-pvc.yaml` from another terminal to recreate it.
 6. Once the new Pod appears and becomes Running, press `s` and run `cat /data/log.txt` again — two lines confirm data persisted across the Pod deletion.
 
+If the Pod stays `Pending` on a multi-node cluster with `local-path`, check where the PV was created:
+
+```bash
+kubectl get pod writer -o wide
+kubectl describe pod writer
+kubectl describe pvc data
+kubectl describe pv <pv-name>
+```
+
+Look for Events like volume node affinity conflicts or attach/mount failures. They usually mean the data lives on one node's disk but the scheduler is trying to run the Pod somewhere else.
+
 ## Reclaim policy
 
 The reclaim policy controls what happens to the PV — and the data — when its PVC is deleted. Deleting only the Pod does not trigger reclaim behavior; the PVC is the object that owns the claim on durable storage.
@@ -154,28 +191,12 @@ Check `kubectl describe pvc data` — if you see a `FileSystemResizePending` con
 
 Shrinking a PVC is not supported — you can only increase `requests.storage`.
 
-## ⚠️ Vanilla kubeadm has no default StorageClass
-
-If your PVC is stuck `Pending`, this is why: unlike k3s (which bundles `local-path`), bare kubeadm ships **no** storage provisioner, so there's nothing to create a PV for your claim. Fix it once:
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
-kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-```
-
-Now PVCs bind automatically. (`kubectl get storageclass` should show `local-path (default)`.)
-
-In k9s, type `:sc` or `:storageclasses` and confirm `local-path` is marked as the default StorageClass. Then go back to `:pvc`; a previously pending PVC should move to `Bound` once the provisioner can satisfy it.
-
-The version in the URL is pinned on purpose: it keeps this lab reproducible instead of following whatever happens to be on the upstream `master` branch that day. If that tag ever gets removed upstream and the `apply` 404s, check the [local-path-provisioner releases page](https://github.com/rancher/local-path-provisioner/releases) for a current tag and swap it into the URL.
-
-> 📝 **Multi-node note:** local-path / hostPath volumes live on one node's disk. On a single node that's invisible — but on a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
-
 ## Best practices
 
-- **Use PVCs, never `hostPath`,** for app data — `hostPath` ties a Pod to one node and is a security risk.
+- **Use PVCs, never `hostPath`,** for app data — `hostPath` mounts a directory directly from the node's filesystem, tying a Pod to one specific node and bypassing Kubernetes security controls.
 - **Right-size `requests.storage`** and pick the `accessModes` your app truly needs (`ReadWriteOnce` is the common, widely-supported case).
 - **Use `ReadWriteOncePod` for leader or single-writer workloads** when you need Kubernetes to enforce exactly one writer Pod and your storage driver supports it.
+- **Avoid `subPath` for live config files** from ConfigMaps or Secrets; it pins the mounted file and skips live refresh behavior.
 - **For databases, prefer a [StatefulSet](statefulset.md)** with a `volumeClaimTemplate` — unlike a Deployment where all replicas share one PVC, a `volumeClaimTemplate` creates one PVC per replica automatically, giving each its own stable, named volume that survives rescheduling and scales correctly when you add replicas.
 - **Mind the reclaim policy** — know whether deleting a PVC deletes the data.
 
