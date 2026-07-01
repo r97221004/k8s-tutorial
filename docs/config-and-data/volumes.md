@@ -13,6 +13,13 @@ Storage in Kubernetes survives in layers — and knowing which layer you're on t
 
 Think of it this way: a **Volume** is the Pod's local scratch drive — it outlives individual container restarts but is gone the moment the Pod is deleted. A **PersistentVolume** is an external drive plugged into the Pod — no matter how many times the Pod comes and goes, plugging it back in gives you the same data. That's fine for a stateless web server, fatal for a database without one.
 
+This chapter focuses on the two volume paths you'll use most while learning:
+
+- `emptyDir` for throwaway scratch space inside one Pod.
+- PersistentVolumeClaims (PVCs) for app data that should survive Pod deletion.
+
+Kubernetes has other volume types, including `hostPath`, but avoid `hostPath` for app data in normal workloads: it mounts a directory from one specific node, which makes the Pod harder to reschedule and weakens the isolation Kubernetes usually gives you.
+
 ## Ephemeral: `emptyDir`
 
 The simplest volume — scratch space that lives as long as the Pod (survives container restarts, but dies with the Pod):
@@ -58,6 +65,12 @@ Pod volume -> PVC request -> StorageClass provisions PV -> real storage
 
 The Pod names a PVC, the PVC describes the storage it needs, and the StorageClass decides how to create or find a matching PV. Once the PVC is `Bound`, the Pod can mount it.
 
+Keep the mental model small:
+
+- **Pod mounts PVC.**
+- **PVC binds PV.**
+- **StorageClass creates PV** when dynamic provisioning is available.
+
 There are two ways a PVC gets a PV:
 
 | Provisioning style | How it works | Common in |
@@ -81,6 +94,8 @@ Most tutorials use dynamic provisioning because it keeps the app manifest focuse
 > **Multi-node note:** local-path volumes live on one node's disk. On a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
 
 ▶ **Runnable manifest:** [`manifests/config-and-data/data-pvc.yaml`](../../manifests/config-and-data/data-pvc.yaml) (a PVC + a Pod that writes to it)
+
+The lab uses a bare Pod so the storage behavior is easy to see. In real apps, the same `volumes:` and `volumeMounts:` shape appears inside a Deployment's Pod template; for databases, a [StatefulSet](statefulset.md) usually creates one PVC per replica with `volumeClaimTemplates`.
 
 ```yaml
 apiVersion: v1
@@ -168,9 +183,9 @@ Also check `VOLUMEBINDINGMODE`:
 
 If a PVC looks `Pending`, describe both the PVC and the Pod Events before assuming storage is broken. With `WaitForFirstConsumer`, a PVC may wait until a consumer Pod exists; with no default StorageClass, it may wait forever.
 
-## Volume expansion
+## Advanced: Volume expansion
 
-If a PVC runs out of space, you can resize it — but only if the StorageClass has `allowVolumeExpansion: true`. Check first:
+You do not need this for the first PVC exercise, but it matters once an app keeps real data. If a PVC runs out of space, you can resize it — but only if the StorageClass has `allowVolumeExpansion: true`. Check first:
 
 ```bash
 kubectl get storageclass -o custom-columns="NAME:.metadata.name,EXPANSION:.allowVolumeExpansion"
@@ -193,7 +208,7 @@ Shrinking a PVC is not supported — you can only increase `requests.storage`.
 
 ## Best practices
 
-- **Use PVCs, never `hostPath`,** for app data — `hostPath` mounts a directory directly from the node's filesystem, tying a Pod to one specific node and bypassing Kubernetes security controls.
+- **Keep app data behind PVCs** so Pods can move without depending on a hand-picked node path.
 - **Right-size `requests.storage`** and pick the `accessModes` your app truly needs (`ReadWriteOnce` is the common, widely-supported case).
 - **Use `ReadWriteOncePod` for leader or single-writer workloads** when you need Kubernetes to enforce exactly one writer Pod and your storage driver supports it.
 - **Avoid `subPath` for live config files** from ConfigMaps or Secrets; it pins the mounted file and skips live refresh behavior.
