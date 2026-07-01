@@ -109,6 +109,8 @@ Scaling down only removes the Pod — `pgdata-postgres-1` is **not** deleted. If
 
 By default, StatefulSets use ordered lifecycle behavior: Kubernetes creates `postgres-0` before `postgres-1`, and deletes higher ordinals first when scaling down. The field behind that default is `podManagementPolicy: OrderedReady`.
 
+This ordering isn't just cosmetic — it's what makes primary/replica database clustering possible. A classic pattern: `postgres-1`'s startup script runs `pg_basebackup` against the primary at `postgres-0.postgres.default.svc.cluster.local` to clone its data before joining as a replica. If `postgres-1` came up before `postgres-0` was Ready, that DNS name wouldn't resolve yet and the replica would fail to bootstrap. `OrderedReady` guarantees the primary exists and is healthy first, every time.
+
 Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Pods from the highest ordinal down, so `postgres-1` updates before `postgres-0`.
 
 `PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
