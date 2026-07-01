@@ -243,7 +243,14 @@ spec:
 
 `name` links `volumes` to `volumeMounts`; `claimName` links the volume to the PVC. The Pod only needs to know the claim name — it doesn't care which physical disk backs it.
 
-The lab uses a bare Pod so the storage behavior is easy to see. In real apps, the same `volumes:` and `volumeMounts:` shape appears inside a Deployment's Pod template; for databases, a [StatefulSet](statefulset.md) usually creates one PVC per replica with `volumeClaimTemplates`.
+The lab uses a bare Pod so the storage behavior is easy to see. In real apps, the same `volumes:` and `volumeMounts:` shape appears inside a Deployment's Pod template — but with an important caveat: **all replicas in a Deployment share the same PVC**. Every replica points to the same `claimName`, so they all mount the same physical disk.
+
+| Workload | Sharing one PVC across replicas |
+|---|---|
+| Static files, read-only config | ✅ fine — all replicas just read |
+| Database, any write-heavy app | ❌ dangerous — multiple Pods writing the same disk corrupts data |
+
+For write-heavy workloads, use a [StatefulSet](statefulset.md) with `volumeClaimTemplates` instead — it creates one PVC per replica automatically, so each Pod gets its own isolated disk.
 
 `ReadWriteOnce` means the volume can be mounted read-write by **one node at a time**. It does not strictly mean "one Pod only": multiple Pods on the same node may be able to use the same RWO volume, but for app design you should usually treat one writer as the safe default.
 
