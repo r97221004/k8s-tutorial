@@ -298,12 +298,23 @@ Look for Events like volume node affinity conflicts or attach/mount failures. Th
 
 ## Reclaim policy
 
-The reclaim policy controls what happens to the PV — and the data — when its PVC is deleted. Deleting only the Pod does not trigger reclaim behavior; the PVC is the object that owns the claim on durable storage.
+In the exercise above, you deleted the Pod and the data survived — because deleting a Pod never touches the PVC. Whether data survives comes down to one question: **did the new Pod mount the same PVC?**
 
-| Policy | Behavior |
+| Situation | Data survives? |
 |---|---|
-| `Delete` | PV and backing storage are deleted automatically — the default for most dynamic provisioners |
-| `Retain` | PV is kept and data preserved, but the PV enters `Released` state and cannot be rebound until manually reclaimed |
+| Pod deleted, new Pod mounts the same PVC | ✅ yes |
+| Pod deleted, new Pod does **not** mount the PVC | ❌ no — the disk is untouched but the new Pod can't see it |
+| PVC deleted (reclaim policy `Delete`) | ❌ no — PV and data are destroyed |
+| Used `emptyDir` instead of PVC | ❌ no — volume lifetime is tied to the Pod |
+
+The PVC is what owns the claim on durable storage, and the reclaim policy controls what happens to the PV and its data when **the PVC itself** is deleted.
+
+`local-path` uses `Delete` by default, so when you run `kubectl delete -f data-pvc.yaml` in the cleanup step, Kubernetes deletes both the PV and the data on disk automatically. That's convenient in a lab, but in production it means a stray `kubectl delete pvc` permanently destroys the data.
+
+| Policy | What happens when the PVC is deleted |
+|---|---|
+| `Delete` | PV and backing storage are deleted automatically — the default for most dynamic provisioners including `local-path` |
+| `Retain` | PV is kept and data preserved, but the PV enters `Released` state and cannot be rebound until an admin manually reclaims it |
 
 Check what your StorageClass uses:
 
@@ -312,7 +323,7 @@ kubectl get storageclass
 kubectl describe storageclass <name>
 ```
 
-In k9s, type `:sc` or `:storageclasses`, highlight the class, and press `d`. `Delete` is convenient in a lab; `Retain` gives you a safety net in production against accidental data loss from a stray `kubectl delete pvc`.
+In k9s, type `:sc` or `:storageclasses`, highlight the class, and press `d`. `Retain` gives you a safety net in production — the data survives an accidental `kubectl delete pvc` and an admin can recover it from the `Released` PV.
 
 Also check `VOLUMEBINDINGMODE`:
 
