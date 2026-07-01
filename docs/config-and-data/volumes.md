@@ -197,9 +197,9 @@ Most tutorials use dynamic provisioning because it keeps the app manifest focuse
 >
 > **Multi-node note:** local-path volumes live on one node's disk. On a multi-node cluster a Pod rescheduled to another node can't reach that data, and `ReadWriteOnce` means only one node mounts it at a time. Networked storage (NFS, cloud disks, Ceph) exists to solve exactly this.
 
-▶ **Runnable manifest:** [`manifests/config-and-data/data-pvc.yaml`](../../manifests/config-and-data/data-pvc.yaml) (a PVC + a Pod that writes to it)
+PVC and workload live in **separate files** so they can be deleted independently — deleting a Pod should never accidentally delete the data behind it.
 
-The lab uses a bare Pod so the storage behavior is easy to see. In real apps, the same `volumes:` and `volumeMounts:` shape appears inside a Deployment's Pod template; for databases, a [StatefulSet](statefulset.md) usually creates one PVC per replica with `volumeClaimTemplates`.
+▶ [`manifests/config-and-data/data-pvc.yaml`](../../manifests/config-and-data/data-pvc.yaml) — the storage claim:
 
 ```yaml
 apiVersion: v1
@@ -207,11 +207,36 @@ kind: PersistentVolumeClaim
 metadata:
   name: data
 spec:
-  accessModes: ["ReadWriteOnce"]   # mounted read-write by a single node
+  accessModes: ["ReadWriteOnce"]
   resources:
     requests:
       storage: 1Gi
 ```
+
+▶ [`manifests/config-and-data/data-writer.yaml`](../../manifests/config-and-data/data-writer.yaml) — the Pod that mounts it:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+spec:
+  containers:
+    - name: writer
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'persisted!' >> /data/log.txt && sleep 3600"]
+      volumeMounts:
+        - name: data
+          mountPath: /data        # PVC appears here inside the container
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data           # must match the PVC metadata.name above
+```
+
+`name` links `volumes` to `volumeMounts`; `claimName` links the volume to the PVC. The Pod only needs to know the claim name — it doesn't care which physical disk backs it.
+
+The lab uses a bare Pod so the storage behavior is easy to see. In real apps, the same `volumes:` and `volumeMounts:` shape appears inside a Deployment's Pod template; for databases, a [StatefulSet](statefulset.md) usually creates one PVC per replica with `volumeClaimTemplates`.
 
 `ReadWriteOnce` means the volume can be mounted read-write by **one node at a time**. It does not strictly mean "one Pod only": multiple Pods on the same node may be able to use the same RWO volume, but for app design you should usually treat one writer as the safe default.
 
@@ -227,15 +252,17 @@ The main access modes cover different multi-node patterns:
 Most cloud block disks and local-path only support RWO. If your app needs RWX (e.g. multiple Pods writing to a shared directory), you need a networked storage backend. RWOP is stricter than RWO and fits leader/single-writer workloads, but support depends on the storage driver.
 
 ```bash
+# Apply PVC first, then the workload separately
 kubectl apply -f manifests/config-and-data/data-pvc.yaml
+kubectl apply -f manifests/config-and-data/data-writer.yaml
 kubectl wait --for=condition=Ready pod/writer --timeout=60s
 kubectl get pvc data               # STATUS should become Bound
 kubectl get pv                     # the cluster-side volume backing the claim
 kubectl exec writer -- cat /data/log.txt   # the data is there
 
-# Prove it persists: delete the Pod, recreate, data survives
+# Prove it persists: delete only the Pod, PVC stays untouched, data survives
 kubectl delete pod writer
-kubectl apply -f manifests/config-and-data/data-pvc.yaml
+kubectl apply -f manifests/config-and-data/data-writer.yaml
 kubectl wait --for=condition=Ready pod/writer --timeout=60s
 kubectl exec writer -- cat /data/log.txt   # 'persisted!' appears again, appended below the first line
 ```
@@ -248,7 +275,7 @@ In [k9s](../getting-started/k9s.md):
 2. Type `:pv` — see the backing PersistentVolume, its `CLAIM`, and its `RECLAIM POLICY`.
 3. Type `:sc` or `:storageclasses` — inspect the StorageClass used by the PVC. Check the provisioner, reclaim policy, and volume binding mode.
 4. Type `:pods`, highlight `writer`, press `d`, and read Events if the Pod is waiting for the PVC. Press `s` for a shell, then run `cat /data/log.txt`.
-5. Press `Ctrl-D` to delete the Pod. Unlike a Deployment, this is a bare Pod — it won't restart on its own. Run `kubectl apply -f manifests/config-and-data/data-pvc.yaml` from another terminal to recreate it.
+5. Press `Ctrl-D` to delete the Pod. Unlike a Deployment, this is a bare Pod — it won't restart on its own. Run `kubectl apply -f manifests/config-and-data/data-writer.yaml` from another terminal to recreate it.
 6. Once the new Pod appears and becomes Running, press `s` and run `cat /data/log.txt` again — two lines confirm data persisted across the Pod deletion.
 
 If the Pod stays `Pending` on a multi-node cluster with `local-path`, check where the PV was created:
@@ -324,6 +351,8 @@ Shrinking a PVC is not supported — you can only increase `requests.storage`.
 If you're done with the PVC exercise, delete the writer Pod and its claim. Treat this as the data deletion boundary: deleting the PVC may delete the backing storage too, depending on the reclaim policy.
 
 ```bash
+# Delete the Pod first, then the PVC deliberately — two separate steps
+kubectl delete -f manifests/config-and-data/data-writer.yaml --ignore-not-found
 kubectl delete -f manifests/config-and-data/data-pvc.yaml --ignore-not-found
 ```
 

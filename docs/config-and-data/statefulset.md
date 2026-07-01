@@ -128,6 +128,7 @@ If you're moving on to Part 3 and want a clean default namespace, remove the con
 ```bash
 kubectl delete -f manifests/config-and-data/web-with-config.yaml --ignore-not-found
 kubectl delete -f manifests/config-and-data/postgres-statefulset.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/data-writer.yaml --ignore-not-found
 kubectl delete -f manifests/config-and-data/data-pvc.yaml --ignore-not-found
 kubectl delete -f manifests/config-and-data/app-config.yaml --ignore-not-found
 kubectl delete -f manifests/config-and-data/app-secret.yaml --ignore-not-found
