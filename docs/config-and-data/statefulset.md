@@ -70,7 +70,10 @@ spec:
 ```
 
 ```bash
+kubectl apply -f manifests/config-and-data/app-secret.yaml
 kubectl apply -f manifests/config-and-data/postgres-statefulset.yaml
+kubectl wait --for=condition=Ready pod/postgres-0 --timeout=120s
+kubectl exec postgres-0 -- sh -c 'until pg_isready -U appuser; do sleep 2; done'
 kubectl get statefulset,pods -l app=postgres
 kubectl get pvc pgdata-postgres-0
 kubectl exec postgres-0 -- hostname
@@ -87,11 +90,33 @@ With the headless Service, that same Pod also gets a stable DNS name:
 postgres-0.postgres.default.svc.cluster.local
 ```
 
-Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC** — its data is intact.
+You can verify that DNS name from another Pod:
+
+```bash
+kubectl run dns-test --image=busybox:1.36 --restart=Never --command -- sleep 3600
+kubectl wait --for=condition=Ready pod/dns-test --timeout=60s
+kubectl exec dns-test -- nslookup postgres-0.postgres.default.svc.cluster.local
+kubectl delete pod dns-test
+```
+
+Now write a row into PostgreSQL so the persistence test proves more than "the Pod came back":
+
+```bash
+kubectl exec postgres-0 -- psql -U appuser -d appuser -c \
+  "CREATE TABLE IF NOT EXISTS statefulset_lab (id int primary key, note text);"
+kubectl exec postgres-0 -- psql -U appuser -d appuser -c \
+  "INSERT INTO statefulset_lab VALUES (1, 'survived a Pod delete') ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note;"
+kubectl exec postgres-0 -- psql -U appuser -d appuser -c "SELECT * FROM statefulset_lab;"
+```
+
+Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC**.
 
 ```bash
 kubectl delete pod postgres-0
+kubectl wait --for=condition=Ready pod/postgres-0 --timeout=120s
+kubectl exec postgres-0 -- sh -c 'until pg_isready -U appuser; do sleep 2; done'
 kubectl get pods,pvc
+kubectl exec postgres-0 -- psql -U appuser -d appuser -c "SELECT * FROM statefulset_lab;"
 ```
 
 Scale to two replicas and you will see the ordinal pattern repeat: `postgres-1` appears with its own `pgdata-postgres-1` PVC.
@@ -109,7 +134,7 @@ Scaling down only removes the Pod — `pgdata-postgres-1` is **not** deleted. If
 
 By default, StatefulSets use ordered lifecycle behavior: Kubernetes creates `postgres-0` before `postgres-1`, and deletes higher ordinals first when scaling down. The field behind that default is `podManagementPolicy: OrderedReady`.
 
-This ordering isn't just cosmetic — it's what makes primary/replica database clustering possible. A classic pattern: `postgres-1`'s startup script runs `pg_basebackup` against the primary at `postgres-0.postgres.default.svc.cluster.local` to clone its data before joining as a replica. If `postgres-1` came up before `postgres-0` was Ready, that DNS name wouldn't resolve yet and the replica would fail to bootstrap. `OrderedReady` guarantees the primary exists and is healthy first, every time.
+This ordering isn't just cosmetic — it's what makes primary/replica database clustering possible. A classic pattern: `postgres-1`'s startup script runs `pg_basebackup` against the primary at `postgres-0.postgres.default.svc.cluster.local` to clone its data before joining as a replica. If `postgres-1` came up before `postgres-0` was Ready, the primary might not be discoverable or accepting connections yet, and the replica bootstrap could fail. `OrderedReady` makes Kubernetes wait for the lower ordinal Pod to become Ready before creating the next one.
 
 Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Pods from the highest ordinal down, so `postgres-1` updates before `postgres-0`.
 
