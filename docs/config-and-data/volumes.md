@@ -211,6 +211,13 @@ spec:
   resources:
     requests:
       storage: 1Gi
+  # storageClassName not set — Kubernetes uses the cluster's default StorageClass
+```
+
+Omitting `storageClassName` is the portable default: Kubernetes picks whatever StorageClass is marked default in the cluster. If you need a specific storage tier (e.g. faster SSD, a different provisioner), name it explicitly:
+
+```yaml
+  storageClassName: local-path   # or "gp3", "premium-rwo", etc.
 ```
 
 ▶ [`manifests/config-and-data/data-writer.yaml`](../../manifests/config-and-data/data-writer.yaml) — the Pod that mounts it:
