@@ -100,9 +100,12 @@ Scale to two replicas and you will see the ordinal pattern repeat: `postgres-1` 
 kubectl scale statefulset/postgres --replicas=2
 kubectl get pods,pvc
 kubectl scale statefulset/postgres --replicas=1
+kubectl get pvc   # pgdata-postgres-1 is still here
 ```
 
 That second Pod is another independent PostgreSQL instance with its own volume. This lab does not configure PostgreSQL replication.
+
+Scaling down only removes the Pod — `pgdata-postgres-1` is **not** deleted. If you scale back to 2, `postgres-1` reattaches to that same PVC instead of getting a fresh volume. This is the same "PVCs outlive the Pod" behavior as the delete/reattach test above, just triggered by scaling instead of a manual delete.
 
 By default, StatefulSets use ordered lifecycle behavior: Kubernetes creates `postgres-0` before `postgres-1`, and deletes higher ordinals first when scaling down. The field behind that default is `podManagementPolicy: OrderedReady`.
 
