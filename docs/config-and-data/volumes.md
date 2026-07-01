@@ -32,6 +32,58 @@ volumes:
 
 Good for caches, scratch files, and handoff files shared between containers in one Pod — not for anything you can't afford to lose when the Pod goes away.
 
+▶ **Runnable manifest:** [`manifests/config-and-data/emptydir-sidecar.yaml`](../../manifests/config-and-data/emptydir-sidecar.yaml)
+
+The manifest runs two containers in one Pod sharing a single `emptyDir`:
+
+```yaml
+containers:
+  - name: writer
+    image: busybox:1.36
+    command: ["sh", "-c", "i=1; while true; do echo \"line $i\" >> /shared/log.txt; i=$((i+1)); sleep 3; done"]
+    volumeMounts:
+      - name: shared
+        mountPath: /shared
+  - name: reader
+    image: busybox:1.36
+    command: ["sh", "-c", "sleep 3600"]
+    volumeMounts:
+      - name: shared
+        mountPath: /shared
+volumes:
+  - name: shared
+    emptyDir: {}
+```
+
+Both containers mount the same `shared` volume at `/shared`. `writer` appends a new line every 3 seconds; `reader` just idles so you can exec into it and observe the file growing.
+
+```bash
+kubectl apply -f manifests/config-and-data/emptydir-sidecar.yaml
+kubectl wait --for=condition=Ready pod/sidecar-demo --timeout=60s
+
+# Read the file from the reader container — written by a different container
+kubectl exec sidecar-demo -c reader -- cat /shared/log.txt
+
+# Kill the writer container to trigger a restart, then check the file is still there
+kubectl exec sidecar-demo -c writer -- kill 1
+kubectl wait --for=condition=Ready pod/sidecar-demo --timeout=30s
+kubectl exec sidecar-demo -c reader -- cat /shared/log.txt   # lines still present
+
+# Delete the Pod — data is gone
+kubectl delete pod sidecar-demo
+kubectl apply -f manifests/config-and-data/emptydir-sidecar.yaml
+kubectl wait --for=condition=Ready pod/sidecar-demo --timeout=60s
+kubectl exec sidecar-demo -c reader -- cat /shared/log.txt   # file is empty, starts from line 1
+```
+
+The kill step is the key proof: a container restart does **not** wipe the volume — only Pod deletion does. Seeing the line count reset to 1 after you recreate the Pod confirms the volume has the same lifetime as the Pod, not the container.
+
+Clean up when done:
+
+```bash
+kubectl delete -f manifests/config-and-data/emptydir-sidecar.yaml --ignore-not-found
+```
+
 Pass `medium: Memory` to back the volume with `tmpfs` instead of disk — faster, never written to disk, but still counted as memory usage:
 
 ```yaml
@@ -42,9 +94,61 @@ volumes:
       sizeLimit: 128Mi   # prevents unbounded memory growth
 ```
 
-This is the same backing store Kubernetes uses for Secret volumes, which is why Secret files don't appear in `df` output and are gone the moment the Pod exits.
+## Config volumes: ConfigMap & Secret
 
-**ConfigMap and Secret volumes** follow the same `volumes:` / `volumeMounts:` pattern — they mount cluster objects as files inside the Pod. Secret volumes use the same `tmpfs` backing described above. See the [ConfigMap](configmap.md) and [Secret](secret.md) chapters for details on file layout and live-update behavior.
+**ConfigMap and Secret volumes** follow the same `volumes:` / `volumeMounts:` pattern as `emptyDir` — they mount cluster objects as read-only files inside the Pod. Their lifecycle is independent of the Pod: the data comes from the cluster object, not from Pod-local storage.
+
+The key mechanic: **each key in the ConfigMap or Secret becomes a file** at the `mountPath`, with the key as the filename and the value as the file content.
+
+▶ The existing [`manifests/config-and-data/web-with-config.yaml`](../../manifests/config-and-data/web-with-config.yaml) uses both. The relevant volume section:
+
+```yaml
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/app          # ConfigMap keys appear as files here
+    readOnly: true
+  - name: secret-volume
+    mountPath: /etc/app-secret   # Secret keys appear as files here
+    readOnly: true
+volumes:
+  - name: config-volume
+    configMap:
+      name: app-config
+  - name: secret-volume
+    secret:
+      secretName: app-secret
+```
+
+Apply the ConfigMap and Secret first, then the Deployment:
+
+```bash
+kubectl apply -f manifests/config-and-data/app-config.yaml
+kubectl apply -f manifests/config-and-data/app-secret.yaml
+kubectl apply -f manifests/config-and-data/web-with-config.yaml
+kubectl wait --for=condition=Available deployment/web-config --timeout=60s
+```
+
+Exec into the Pod and inspect what Kubernetes created on disk:
+
+```bash
+POD=$(kubectl get pod -l app=web-config -o jsonpath='{.items[0].metadata.name}')
+
+kubectl exec $POD -- ls /etc/app
+# APP_GREETING  APP_TIER  app.properties
+
+kubectl exec $POD -- cat /etc/app/app.properties
+# color=blue
+# log.level=info
+
+kubectl exec $POD -- ls /etc/app-secret
+# DB_PASSWORD  DB_USER
+```
+
+Every key in `app-config` landed as a file under `/etc/app`; every key in `app-secret` landed under `/etc/app-secret`. The app reads them like normal files — no code change needed when the value changes, just a ConfigMap update.
+
+Secret volumes are backed by `tmpfs` (the same in-memory filesystem as `emptyDir { medium: Memory }`), which is why Secret files don't appear in `df` output and are gone when the Pod exits — but the Secret object itself stays in the cluster.
+
+See the [ConfigMap](configmap.md) and [Secret](secret.md) chapters for details on file layout and live-update behavior.
 
 One common trap: `subPath` mounts a single file or subdirectory from a volume, but it does **not** receive live updates from ConfigMaps or Secrets. Use a normal directory mount when you want Kubernetes to refresh projected config files; use `subPath` only when you deliberately want a fixed file path inside an existing directory.
 
