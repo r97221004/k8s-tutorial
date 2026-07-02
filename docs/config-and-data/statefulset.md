@@ -110,6 +110,8 @@ spec:
         resources: { requests: { storage: 1Gi } }
 ```
 
+Notice the Service comes **before** the StatefulSet in the file. That's deliberate, not arbitrary: `spec.serviceName: postgres` refers to that Service by name, and the Service is what gives each Pod its DNS entry — same "the thing being depended on goes first" rule as creating a ConfigMap/Secret before the Pod that reads it. `kubectl apply -f` on a multi-document file sends resources in the order they appear, so this ordering means the governing Service already exists by the time the StatefulSet starts creating Pods. Reversing the order wouldn't hard-fail — the StatefulSet controller still creates Pods even if `serviceName` doesn't resolve yet — but per-Pod DNS wouldn't work until the Service showed up, which is exactly the race this ordering avoids.
+
 ```bash
 kubectl apply -f manifests/config-and-data/app-secret.yaml
 kubectl apply -f manifests/config-and-data/postgres-statefulset.yaml
