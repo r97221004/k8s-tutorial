@@ -35,6 +35,20 @@ postgres-1.postgres.default.svc.cluster.local
 
 That matters because StatefulSet Pods are not interchangeable — you need to reach *a specific* replica (e.g. the primary at `postgres-0`), not "any Pod behind the Service," which is all a normal (non-headless) Service gives you.
 
+### What a volumeClaimTemplate is
+
+A regular Pod (or Deployment) references an *already-existing* PVC by name in `volumes:` — every replica that mounts it shares that one PVC, which is why [Deployment replicas sharing one PVC](../core-objects/deployment.md) is a footgun for anything that writes data.
+
+`volumeClaimTemplates` is different: instead of naming one PVC, it's a *template* the StatefulSet controller uses to create a **new PVC per replica**, automatically, the first time each ordinal comes up. Kubernetes names each one `<template-name>-<statefulset-name>-<ordinal>` — hence `pgdata-postgres-0`, `pgdata-postgres-1`, …
+
+| | Pod/Deployment `volumes:` | StatefulSet `volumeClaimTemplates:` |
+|---|---|---|
+| PVC | You create it yourself, once | Controller creates one automatically per replica |
+| Sharing | All replicas mount the **same** PVC | Each replica gets its **own** PVC |
+| Naming | Whatever you called it | `<template-name>-<statefulset-name>-<ordinal>` |
+
+This is what makes `postgres-1` safe to run alongside `postgres-0` without them corrupting each other's data — see the `pgdata-postgres-0` / `pgdata-postgres-1` PVCs in the scaling exercise below. It's also why the PVCs **outlive** the StatefulSet: they aren't owned by a single Pod, so scaling down or deleting the StatefulSet doesn't delete them (see [Best practices](#best-practices) and [Volumes](volumes.md) for the full reclaim-policy story).
+
 ▶ **Runnable manifest:** [`manifests/config-and-data/postgres-statefulset.yaml`](../../manifests/config-and-data/postgres-statefulset.yaml) (a headless Service + StatefulSet; needs `app-secret` and a default StorageClass — see [Volumes](volumes.md))
 
 Here's the core shape — just enough to see the three things a StatefulSet adds. (The runnable file also adds production-style hardening — probes, a security context, resource limits — explained separately in [Hardening this lab](#hardening-this-lab) below, after the core mechanics make sense.)
