@@ -143,6 +143,8 @@ With the headless Service, that same Pod also gets a stable DNS name:
 postgres-0.postgres.default.svc.cluster.local
 ```
 
+That name has the form `<pod>.<service>.<namespace>.svc.cluster.local`. `postgres` appears twice — once as the Pod's name, once as the Service's `metadata.name` — and `default` is the **namespace**, not part of the Service name. Neither manifest sets `metadata.namespace`, so `kubectl apply` used whatever namespace your current context defaults to; this tutorial has stayed on `default` throughout. Deploy into another namespace (e.g. `-n mydb`) and the DNS name changes to `postgres-0.postgres.mydb.svc.cluster.local` accordingly.
+
 You can verify that DNS name from another Pod:
 
 ```bash
