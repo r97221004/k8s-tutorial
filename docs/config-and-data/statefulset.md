@@ -106,7 +106,7 @@ spec:
 ```bash
 kubectl apply -f manifests/config-and-data/app-secret.yaml
 kubectl apply -f manifests/config-and-data/postgres-statefulset.yaml
-kubectl wait --for=condition=Ready pod/postgres-0 --timeout=120s
+kubectl wait --for=condition=Ready pod/postgres-0 --timeout=180s
 kubectl exec postgres-0 -- sh -c 'until pg_isready -U appuser; do sleep 2; done'
 kubectl get statefulset,pods -l app=postgres
 kubectl get pvc pgdata-postgres-0
@@ -147,7 +147,7 @@ Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:p
 
 ```bash
 kubectl delete pod postgres-0
-kubectl wait --for=condition=Ready pod/postgres-0 --timeout=120s
+kubectl wait --for=condition=Ready pod/postgres-0 --timeout=180s
 kubectl exec postgres-0 -- sh -c 'until pg_isready -U appuser; do sleep 2; done'
 kubectl get pods,pvc
 kubectl exec postgres-0 -- psql -U appuser -d appuser -c "SELECT * FROM statefulset_lab;"
