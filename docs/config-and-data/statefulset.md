@@ -127,6 +127,8 @@ pod/postgres-0   1/1   Running          ← ordinal name, not a random suffix
 persistentvolumeclaim/pgdata-postgres-0  Bound   ← its own dedicated volume
 ```
 
+In [k9s](../getting-started/k9s.md), `:sts` ⏎ shows the StatefulSet's `READY` column climb to `1/1`; `:pods` ⏎ lets you watch `postgres-0` move through `Pending` → `ContainerCreating` → `Running` (`0/1` while the `startupProbe`/`readinessProbe` are still warming up, then `1/1`). Press `l` on it to tail PostgreSQL's own boot log instead of polling `pg_isready` from your terminal.
+
 With the headless Service, that same Pod also gets a stable DNS name:
 
 ```text
@@ -172,6 +174,8 @@ kubectl get pods,pvc
 kubectl scale statefulset/postgres --replicas=1
 kubectl get pvc   # pgdata-postgres-1 is still here
 ```
+
+This is worth watching live instead of just polling `kubectl get`. In k9s, split-screen it: `:sts` ⏎ to watch `READY` go `1/1` → `2/2`, and `:pvc` ⏎ in another view to watch `pgdata-postgres-1` appear as `Pending` then flip to `Bound` right as `postgres-1` starts. Scale back down and `:pvc` still lists `pgdata-postgres-1` — the PVC outlives the Pod that used it, same as pressing `Ctrl-D` to delete a Pod would.
 
 That second Pod is another independent PostgreSQL instance with its own volume. This lab does not configure PostgreSQL replication.
 
