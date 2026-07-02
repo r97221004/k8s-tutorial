@@ -37,7 +37,7 @@ That matters because StatefulSet Pods are not interchangeable — you need to re
 
 ### What a volumeClaimTemplate is
 
-A regular Pod (or Deployment) references an *already-existing* PVC by name in `volumes:` — every replica that mounts it shares that one PVC, which is why [Deployment replicas sharing one PVC](../core-objects/deployment.md) is a footgun for anything that writes data.
+A regular Pod (or Deployment) references an *already-existing* PVC by name in `volumes:` — every replica that mounts it shares that one PVC. As [Volumes](volumes.md) explains, that's fine for read-only data but a footgun once multiple replicas write to it.
 
 `volumeClaimTemplates` is different: instead of naming one PVC, it's a *template* the StatefulSet controller uses to create a **new PVC per replica**, automatically, the first time each ordinal comes up. Kubernetes names each one `<template-name>-<statefulset-name>-<ordinal>` — hence `pgdata-postgres-0`, `pgdata-postgres-1`, …
 
