@@ -45,7 +45,10 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:16
+          image: postgres:16        # lab image tag; pin a patch version/digest in production
+          ports:
+            - containerPort: 5432
+              name: postgres
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -62,10 +65,28 @@ spec:
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "appuser"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "appuser"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
   volumeClaimTemplates:        # ← the key difference: a PVC PER replica
     - metadata: { name: pgdata }
       spec:
         accessModes: ["ReadWriteOnce"]
+        # storageClassName omitted: use the cluster's default StorageClass for this lab.
         resources: { requests: { storage: 1Gi } }
 ```
 
@@ -140,6 +161,8 @@ Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Po
 
 `PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
 
+The probes use `pg_isready` so Kubernetes does not mark the Pod Ready until PostgreSQL is accepting connections, and can restart the container if the process stops responding. The resource requests keep the scheduler honest for this lab; production sizing should come from load tests and monitoring.
+
 ## When (not) to use one
 
 - ✅ Databases, message queues, anything where each replica owns data or needs a stable identity.
@@ -150,6 +173,7 @@ Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Po
 - **Don't run production databases in-cluster casually** — managed DBs remove a lot of operational pain. Use a StatefulSet when you have a real reason to self-host.
 - **Always pair with a headless Service** (`clusterIP: None`) for stable per-Pod DNS.
 - **Size `volumeClaimTemplates` carefully** — they're created per replica and usually persist even after the StatefulSet is deleted (so data isn't lost by accident).
+- **Pin production images and storage deliberately** — this lab uses `postgres:16` and the default StorageClass for portability, but production manifests should pin image versions/digests and choose an explicit storage class.
 
 ## Reset after Part 2
 

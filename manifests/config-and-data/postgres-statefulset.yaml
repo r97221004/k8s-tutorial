@@ -26,9 +26,10 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:16
+          image: postgres:16   # lab image tag; pin a patch version/digest in production
           ports:
             - containerPort: 5432
+              name: postgres
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -45,11 +46,29 @@ spec:
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "appuser"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "appuser"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
   volumeClaimTemplates:               # each replica gets its OWN PVC
     - metadata:
         name: pgdata
       spec:
         accessModes: ["ReadWriteOnce"]
+        # storageClassName omitted: use the cluster's default StorageClass for this lab.
         resources:
           requests:
             storage: 1Gi
