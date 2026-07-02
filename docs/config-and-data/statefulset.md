@@ -28,7 +28,9 @@ spec:
   selector:
     app: postgres
   ports:
-    - port: 5432
+    - name: postgres
+      port: 5432
+      targetPort: postgres
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -43,6 +45,12 @@ spec:
     metadata:
       labels: { app: postgres }
     spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       containers:
         - name: postgres
           image: postgres:16        # lab image tag; pin a patch version/digest in production
@@ -65,14 +73,19 @@ spec:
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
+            failureThreshold: 30
+            periodSeconds: 5
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "appuser"]
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "appuser"]
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
             initialDelaySeconds: 30
             periodSeconds: 10
           resources:
@@ -161,7 +174,9 @@ Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Po
 
 `PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
 
-The probes use `pg_isready` so Kubernetes does not mark the Pod Ready until PostgreSQL is accepting connections, and can restart the container if the process stops responding. The resource requests keep the scheduler honest for this lab; production sizing should come from load tests and monitoring.
+The probes use `pg_isready` so Kubernetes does not mark the Pod Ready until PostgreSQL is accepting connections, and can restart the container if the process stops responding. The `startupProbe` gives first-time initialization more room before liveness checks begin. The resource requests keep the scheduler honest for this lab; production sizing should come from load tests and monitoring.
+
+The pod security context runs PostgreSQL as the image's non-root `postgres` user (`999`) and uses `fsGroup` so the mounted volume is writable. This is still intentionally small for a tutorial; hardened production databases usually add stricter security policy, backups, monitoring, and tested restore procedures.
 
 ## When (not) to use one
 
