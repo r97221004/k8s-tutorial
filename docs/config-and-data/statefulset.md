@@ -37,6 +37,8 @@ That matters because StatefulSet Pods are not interchangeable — you need to re
 
 ▶ **Runnable manifest:** [`manifests/config-and-data/postgres-statefulset.yaml`](../../manifests/config-and-data/postgres-statefulset.yaml) (a headless Service + StatefulSet; needs `app-secret` and a default StorageClass — see [Volumes](volumes.md))
 
+Here's the core shape — just enough to see the three things a StatefulSet adds. (The runnable file also adds production-style hardening — probes, a security context, resource limits — explained separately in [Hardening this lab](#hardening-this-lab) below, after the core mechanics make sense.)
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -64,12 +66,6 @@ spec:
     metadata:
       labels: { app: postgres }
     spec:
-      terminationGracePeriodSeconds: 30
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
       containers:
         - name: postgres
           image: postgres:16        # lab image tag; pin a patch version/digest in production
@@ -92,28 +88,6 @@ spec:
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
-          startupProbe:
-            exec:
-              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
-            failureThreshold: 30
-            periodSeconds: 5
-          readinessProbe:
-            exec:
-              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          livenessProbe:
-            exec:
-              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
   volumeClaimTemplates:        # ← the key difference: a PVC PER replica
     - metadata: { name: pgdata }
       spec:
@@ -195,9 +169,57 @@ Updates are ordered too. The default `updateStrategy: RollingUpdate` replaces Po
 
 `PGDATA` points PostgreSQL at a subdirectory inside the mounted volume. That avoids a common lab failure where the image expects to initialize an empty data directory but the volume mount contains filesystem metadata.
 
-The probes use `pg_isready` so Kubernetes does not mark the Pod Ready until PostgreSQL is accepting connections, and can restart the container if the process stops responding. The `startupProbe` gives first-time initialization more room before liveness checks begin. The resource requests keep the scheduler honest for this lab; production sizing should come from load tests and monitoring.
+## Hardening this lab
 
-The pod security context runs PostgreSQL as the image's non-root `postgres` user (`999`) and uses `fsGroup` so the mounted volume is writable. This is still intentionally small for a tutorial; hardened production databases usually add stricter security policy, backups, monitoring, and tested restore procedures.
+The core YAML above is enough to see stable identity, per-Pod storage, and ordering. The runnable manifest goes further and adds a few fields you'll see in most real StatefulSets. Here's what each one does, in plain terms:
+
+| Field | What it does | Why it's here |
+|---|---|---|
+| `terminationGracePeriodSeconds: 30` | Gives PostgreSQL 30s to shut down cleanly before Kubernetes force-kills it | An abrupt `SIGKILL` mid-write risks a corrupted or unclean data directory |
+| `securityContext` (`runAsUser/Group: 999`, `fsGroup`) | Runs the container as the image's built-in non-root `postgres` user instead of root, and makes the mounted volume writable by that user's group | Running databases as root is an unnecessary privilege; this is the standard hardening for the official postgres image |
+| `startupProbe` | Gives the container up to `30 × 5s = 150s` to finish first-time initialization before liveness checks start judging it | Without this, a slow `initdb` on first boot could get killed by the liveness probe before it ever finishes starting |
+| `readinessProbe` | Runs `pg_isready` every 5s; the Pod isn't marked `Ready` (and won't receive traffic) until it passes | Without it, `kubectl wait --for=condition=Ready` would report Ready as soon as the container process starts — before PostgreSQL can actually accept connections |
+| `livenessProbe` | Runs `pg_isready` every 10s once the Pod is up; if it keeps failing, Kubernetes restarts the container | Recovers automatically if PostgreSQL wedges or stops responding without the process exiting |
+| `resources` (requests/limits) | Reserves 100m CPU / 256Mi memory, caps at 500m CPU / 512Mi memory | Keeps the scheduler informed and stops one runaway Pod from starving others on the node |
+
+Here's just the additional fields, layered onto the container spec and Pod spec from the core example above:
+
+```yaml
+      # Pod-level, alongside `containers:`
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - name: postgres
+          # ...same image/env/volumeMounts as above...
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\""]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+```
+
+This is still a tutorial-sized lab, not a hardened production posture — real production databases add network policy, pod security standards, backups, monitoring, and tested restore procedures on top of this.
 
 ## When (not) to use one
 
