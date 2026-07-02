@@ -16,6 +16,25 @@ It is also a **single-replica lab**, not high availability PostgreSQL. Scaling t
 - **Stable per-Pod storage** — a `volumeClaimTemplate` gives **each replica its own [PVC](volumes.md)** (`pgdata-postgres-0`, …). When `postgres-0` restarts, it reattaches to *its* volume, not a sibling's.
 - **Ordered, predictable lifecycle** — Pods are created/updated/deleted in order (`-0`, then `-1`, …), which matters for clustered databases.
 
+### What a headless Service is
+
+A **headless Service** is a Service with `clusterIP: None` — it gets no virtual IP and does no load balancing. Instead of one DNS name that resolves to a single (load-balanced) IP, DNS resolves it to the IPs of **every matching Pod** individually.
+
+| | Normal Service | Headless Service |
+|---|---|---|
+| ClusterIP | Virtual IP assigned | `None` |
+| DNS lookup returns | One A record (the virtual IP) | One A record per matching Pod |
+| Traffic routing | kube-proxy load-balances to any backing Pod | Client resolves a specific Pod's IP/DNS name itself |
+
+Paired with a StatefulSet, this gives each Pod its own stable DNS name:
+
+```
+postgres-0.postgres.default.svc.cluster.local
+postgres-1.postgres.default.svc.cluster.local
+```
+
+That matters because StatefulSet Pods are not interchangeable — you need to reach *a specific* replica (e.g. the primary at `postgres-0`), not "any Pod behind the Service," which is all a normal (non-headless) Service gives you.
+
 ▶ **Runnable manifest:** [`manifests/config-and-data/postgres-statefulset.yaml`](../../manifests/config-and-data/postgres-statefulset.yaml) (a headless Service + StatefulSet; needs `app-secret` and a default StorageClass — see [Volumes](volumes.md))
 
 ```yaml
