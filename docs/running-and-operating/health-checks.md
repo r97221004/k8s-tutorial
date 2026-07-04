@@ -36,13 +36,21 @@ startupProbe:        # slow starters get up to 30×2s before liveness applies
   periodSeconds: 2
 readinessProbe:      # gate traffic until the app answers
   httpGet: { path: /, port: 80 }
+  initialDelaySeconds: 2
   periodSeconds: 5
 livenessProbe:       # restart if it stops answering
   httpGet: { path: /, port: 80 }
+  initialDelaySeconds: 5
   periodSeconds: 10
 ```
 
-Probes come in three flavours: **`httpGet`** (2xx/3xx = pass — most web apps), **`tcpSocket`** (port open = pass — for non-HTTP), and **`exec`** (a command exits 0 = pass — anything else).
+Probes come in three flavours:
+
+- **`httpGet`** — 2xx/3xx = pass (most web apps): `httpGet: { path: /healthz, port: 80 }`
+- **`tcpSocket`** — port open = pass (non-HTTP services): `tcpSocket: { port: 5432 }`
+- **`exec`** — a command exits `0` = pass (anything else): `exec: { command: ["cat", "/tmp/healthy"] }`
+
+`failureThreshold` and `timeoutSeconds` tune readiness/liveness the same way they tune startupProbe: raise `failureThreshold` (or `timeoutSeconds`) for a flappy network or a slow dependency so a single blip doesn't pull a Pod out of service or restart it; keep both low when you actually want a fast reaction to real failures.
 
 ```bash
 kubectl get pods -l app=web      # READY 1/1 only appears once readiness passes
