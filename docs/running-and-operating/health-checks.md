@@ -48,6 +48,11 @@ livenessProbe:       # restart if it stops answering
   periodSeconds: 10
 ```
 
+Two fields worth calling out:
+
+- **`initialDelaySeconds`** — how long Kubernetes waits after the container starts before running the *first* probe. `startupProbe` already covers slow boots, so this is just a small buffer, not the main defense against false failures.
+- **`periodSeconds`** — how often the probe re-runs for the rest of the Pod's life. Readiness is checked more often (`5s`) because flipping traffic on/off is cheap; liveness is checked less often (`10s`) because restarting a container is expensive, so it's worth waiting a bit longer to be sure.
+
 While `startupProbe` is still failing, Kubernetes holds off readiness and liveness checks. Once startup succeeds, liveness takes over normal "should this container be restarted?" decisions, and readiness controls whether the Pod receives Service traffic.
 
 Probes come in three flavours:
