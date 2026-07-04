@@ -26,7 +26,7 @@ kubectl apply -f manifests/core-objects/web-service.yaml
 kubectl rollout status deployment/web
 ```
 
-## A production-ready Deployment
+## A probe-ready Deployment
 
 ▶ **Runnable manifest:** [`manifests/running-and-operating/web-healthy.yaml`](../../manifests/running-and-operating/web-healthy.yaml) (the `web` Deployment, now with probes + resources)
 
@@ -45,6 +45,8 @@ livenessProbe:       # restart if it stops answering
   periodSeconds: 10
 ```
 
+While `startupProbe` is still failing, Kubernetes holds off readiness and liveness checks. Once startup succeeds, liveness takes over normal "should this container be restarted?" decisions, and readiness controls whether the Pod receives Service traffic.
+
 Probes come in three flavours:
 
 - **`httpGet`** — 2xx/3xx = pass (most web apps): `httpGet: { path: /healthz, port: 80 }`
@@ -59,9 +61,25 @@ kubectl describe pod -l app=web  # see Liveness/Readiness lines and probe events
 kubectl get endpoints web        # only Ready Pods appear behind the Service
 ```
 
+## See startup hold back the other probes
+
+Startup probes protect slow-starting apps from being judged too early. Break startup on purpose:
+
+```bash
+kubectl patch deployment web --type json \
+  -p='[{"op":"replace","path":"/spec/template/spec/containers/0/startupProbe/httpGet/path","value":"/nope"}]'
+```
+
+In k9s, type `:pods` and filter for `web`. The new Pods stay `0/1` while startup keeps failing. Press `d` on one of them and check Events; you should see startup probe failures, while readiness and liveness are still held back. If startup keeps failing until `failureThreshold` is exhausted, the container is restarted. Restore the good probe before moving on:
+
+```bash
+kubectl apply -f manifests/running-and-operating/web-healthy.yaml
+kubectl rollout status deployment/web
+```
+
 ## See readiness gate traffic (with k9s)
 
-Open [k9s](../getting-started/k9s.md), `:pods`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints.
+Open [k9s](../getting-started/k9s.md), type `:pods`, and filter for `web`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints. Press `d` on a Pod to see the configured Readiness/Liveness/Startup probes in its describe view.
 
 Break readiness on purpose:
 
@@ -70,7 +88,7 @@ kubectl patch deployment web --type json \
   -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/nope"}]'
 ```
 
-In k9s, watch the new `web-...` Pods stay `Running` but `0/1` Ready. Press `d` on a Pod and check Events; you should see readiness probe failures. From another terminal:
+In k9s, watch the new `web-...` Pods stay `Running` but `0/1` Ready. Press `d` on one of those Pods and check Events; you should see readiness probe failures. If your k9s version exposes Endpoints or EndpointSlices, you can inspect `web` there too. The portable check is:
 
 ```bash
 kubectl get endpoints web
@@ -92,7 +110,7 @@ kubectl patch deployment web --type json \
   -p='[{"op":"replace","path":"/spec/template/spec/containers/0/livenessProbe/httpGet/path","value":"/nope"}]'
 ```
 
-In k9s, stay on `:pods` and watch the **RESTARTS** column climb after the liveness probe fails enough times. Press `d` on a Pod to see liveness probe failure Events. Restore the Deployment when you are done:
+In k9s, stay on `:pods` and watch the **RESTARTS** column climb after the liveness probe fails enough times. Press `d` on a Pod to see liveness probe failure Events, or `l` to inspect the container logs after a restart. This intentionally breaks all replicas, so restore the Deployment as soon as you have seen the restart behavior:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml
