@@ -61,6 +61,8 @@ Each probe checks the app with one of three mechanisms — **`httpGet`** (2xx/3x
 
 - `initialDelaySeconds: 5`, `periodSeconds: 10` — checked less often than readiness, because restarting is expensive; it's worth waiting a bit longer to be sure before pulling that trigger.
 
+`initialDelaySeconds` and `startupProbe` are two independent delays, not one feeding into the other — `initialDelaySeconds` always counts from when the *container* starts, `startupProbe` gating still applies on top. So the real first-check time is whichever comes later: `max(container start + initialDelaySeconds, startupProbe success time)`. With the values above, `startupProbe` can take up to 60s while readiness only waits 2s, so in practice `startupProbe` succeeding is what actually unblocks the first readiness check — but that's because of these specific numbers, not because `initialDelaySeconds` restarts its clock when `startupProbe` succeeds.
+
 Two more fields tune how forgiving any of these probes are:
 
 - **`failureThreshold`** — how many *consecutive* failures Kubernetes requires before it acts. It's a counter, not a timer. The default is `3`: fail, fail, fail, *then* act — one bad response alone does nothing. Combined with `periodSeconds`, it sets how long real trouble has to persist: `failureThreshold: 3` with `periodSeconds: 10` means ~30s of continuous failure before the Pod is marked not-ready or restarted.
