@@ -14,7 +14,10 @@
 | **readinessProbe** | "Can it serve traffic *right now*?" | remove the Pod from its [Service](../core-objects/service.md)'s endpoints (no traffic) — but don't restart |
 | **livenessProbe** | "Is it still healthy?" | **restart** the container |
 
-The crucial distinction: **readiness controls traffic; liveness controls restarts.** Getting them backwards is a classic mistake — a too-aggressive liveness probe restart-loops a Pod that was merely busy.
+The crucial distinction: **readiness controls traffic; liveness controls restarts.** Mixing them up is a classic mistake. Say your app is just slow under heavy load, still working, just taking longer to respond:
+
+- **Readiness** failing here is fine — the Pod stops getting *new* traffic until it catches up, no harm done.
+- **Liveness** failing here is bad — Kubernetes reads "slow" as "dead" and restarts the container. The new Pod immediately faces the same load, fails the same probe, and gets restarted again — a restart loop, triggered by a Pod that was never actually broken.
 
 ## Before you start
 
