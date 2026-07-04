@@ -48,20 +48,25 @@ livenessProbe:       # restart if it stops answering
   periodSeconds: 10
 ```
 
-Two fields worth calling out:
+Each probe checks the app with one of three mechanisms — **`httpGet`** (2xx/3xx = pass, most web apps), **`tcpSocket`** (port open = pass, non-HTTP services), or **`exec`** (a command exits `0` = pass, anything else). The manifest above uses `httpGet` for all three; walking through them in order:
 
-- **`initialDelaySeconds`** — how long Kubernetes waits after the container starts before running the *first* probe. `startupProbe` already covers slow boots, so this is just a small buffer, not the main defense against false failures.
-- **`periodSeconds`** — how often the probe re-runs for the rest of the Pod's life. Readiness is checked more often (`5s`) because flipping traffic on/off is cheap; liveness is checked less often (`10s`) because restarting a container is expensive, so it's worth waiting a bit longer to be sure.
+**`startupProbe`** holds off readiness and liveness until it passes once — after that it stops running for the rest of the Pod's life. `failureThreshold: 30` and `periodSeconds: 2` mean: retry every 2s, up to 30 times, before giving up — 60s to finish starting. Fail past that, and Kubernetes restarts the container.
 
-While `startupProbe` is still failing, Kubernetes holds off readiness and liveness checks. Once startup succeeds, liveness takes over normal "should this container be restarted?" decisions, and readiness controls whether the Pod receives Service traffic.
+**`readinessProbe`** then runs continuously to decide whether the Pod should receive traffic. Failing it removes the Pod from the Service's endpoints — no restart, just no traffic until it recovers.
 
-Probes come in three flavours:
+- `initialDelaySeconds: 2` — wait 2s after the container starts before the *first* check. Since `startupProbe` already covers slow boots, this is just a small buffer, not the main defense against false failures.
+- `periodSeconds: 5` — re-check every 5s from then on. Checked often because flipping traffic on/off is cheap.
 
-- **`httpGet`** — 2xx/3xx = pass (most web apps): `httpGet: { path: /healthz, port: 80 }`
-- **`tcpSocket`** — port open = pass (non-HTTP services): `tcpSocket: { port: 5432 }`
-- **`exec`** — a command exits `0` = pass (anything else): `exec: { command: ["cat", "/tmp/healthy"] }`
+**`livenessProbe`** also runs continuously, but failing it means Kubernetes decides the container is broken and restarts it.
 
-`failureThreshold` and `timeoutSeconds` tune readiness/liveness the same way they tune startupProbe: raise `failureThreshold` (or `timeoutSeconds`) for a flappy network or a slow dependency so a single blip doesn't pull a Pod out of service or restart it; keep both low when you actually want a fast reaction to real failures.
+- `initialDelaySeconds: 5`, `periodSeconds: 10` — checked less often than readiness, because restarting is expensive; it's worth waiting a bit longer to be sure before pulling that trigger.
+
+Two more fields tune how forgiving any of these probes are:
+
+- **`failureThreshold`** — how many *consecutive* failures Kubernetes requires before it acts. It's a counter, not a timer. The default is `3`: fail, fail, fail, *then* act — one bad response alone does nothing. Combined with `periodSeconds`, it sets how long real trouble has to persist: `failureThreshold: 3` with `periodSeconds: 10` means ~30s of continuous failure before the Pod is marked not-ready or restarted.
+- **`timeoutSeconds`** — how long Kubernetes waits for a single probe to respond before counting *that one* as failed (default `1s`). Too short, and a probe on a busy app times out and counts as a failure even though the app would've answered a moment later.
+
+Raise `failureThreshold` (or `timeoutSeconds`) for a flappy network or a slow dependency, so a single blip doesn't pull a Pod out of service or restart it. Keep both low when you actually want a fast reaction to real failures.
 
 ```bash
 kubectl get pods -l app=web      # READY 1/1 only appears once readiness passes
