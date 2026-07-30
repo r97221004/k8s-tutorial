@@ -83,7 +83,7 @@ kubectl get nodes    # one node, STATUS Ready
 helm list            # no releases yet — and, crucially, no error
 ```
 
-That second command is the one beginners should run first. An empty result is success; `helm list` failing with `Error: Kubernetes cluster unreachable` is never a Helm problem — it means Helm couldn't use your kubeconfig, so fix `kubectl` first.
+That second command is the one beginners should run first. An empty result is success; `helm list` failing with `Error: Kubernetes cluster unreachable` is never a Helm problem — it means Helm couldn't use your kubeconfig, so fix `kubectl` first. A successful empty result only proves *some* cluster is reachable through your current context, not necessarily the one you meant to set up — see [a closer look at `helm list`](#a-closer-look-at-helm-list) if that distinction matters to you right now.
 
 Two render modes are worth distinguishing:
 
@@ -102,6 +102,15 @@ Two render modes are worth distinguishing:
 
 If you have a cluster, spend one minute here before any theory — having seen Helm *work* makes the rest read much faster. (No cluster? Skip to [The four nouns](#the-four-nouns); nothing below depends on this.)
 
+Confirm the cluster is reachable before installing anything into it — the same two-command check from [step 3 above](#3-a-cluster-for-the-hands-on-lab). Skip it if you already ran it a moment ago; otherwise:
+
+```bash
+kubectl get nodes    # STATUS Ready — a node exists and is healthy enough to run Pods
+helm list            # empty table, no error — Helm itself can reach the cluster
+```
+
+Run both, not just one — they check different things and each can pass while the other fails. `kubectl get nodes` says nothing about whether *Helm* has permission to do anything: listing nodes is cluster-scoped and often more openly permitted than listing the Secrets Helm stores release records in, so `kubectl get nodes` can succeed while `helm list` hits `Forbidden`. Conversely, `helm list` succeeding says nothing about node health — the apiserver and etcd can be fully reachable, so `helm list` returns cleanly, even while every node is `NotReady`; in that state `helm install` would still "succeed" at the API level, and the Pod would then sit at `Pending` forever with no healthy node to run it on. On this single-node lab, under one admin kubeconfig throughout, both checks always agree — that's specific to this setup, not a general guarantee. Proceeding here:
+
 ```bash
 helm install demo manifests/packaging/helm/my-app
 kubectl get deploy,svc,cm -l app.kubernetes.io/instance=demo
@@ -110,7 +119,48 @@ helm uninstall demo
 
 One command created a Deployment, a Service *and* a ConfigMap; one command removed all three. That's the whole value proposition — a set of related objects managed as a single named thing.
 
-Two things probably looked odd, and both are answered later, so don't chase them now: the objects are called `demo-my-app` rather than `demo` (that's the [`fullname` helper](#3-_helperstpl-define-and-include)), and you never wrote any of that YAML by hand (that's [rendering](#how-rendering-actually-works)).
+**How did that reach the cluster at all?** The same way `kubectl apply` does: Helm read your **kubeconfig** — the exact file `kubectl` already uses — and talked to the same `kube-apiserver`. There is no separate Helm server or agent running inside the cluster. (Helm 2 had one, called Tiller; Helm 3 removed it, which is why installing Helm was just "download one binary," not "install something into every cluster you touch.") Concretely, `helm install` did two things, in order: it turned the chart's templates into plain Kubernetes YAML **on your laptop**, then applied that YAML the same way `kubectl apply -f` would have. [How rendering actually works](#how-rendering-actually-works) below covers this with a diagram — for now, the short version is: **Helm is a YAML generator bolted onto `kubectl`, not a separate system living in your cluster.**
+
+One more thing probably looked odd, and it's answered later, so don't chase it now: the objects are called `demo-my-app` rather than `demo` — that's the [`fullname` helper](#3-_helperstpl-define-and-include).
+
+### Commands you'll see throughout this chapter
+
+Before the vocabulary, a quick anchor: every Helm command used anywhere in this chapter, in one place, with whether it needs a live cluster to run. Skim it once, then treat it as a lookup table — you are not expected to memorize it.
+
+| Command | What it does | Needs a cluster? |
+|---|---|---|
+| `helm version --short` | Prints the Helm client version you have installed | No |
+| `helm lint <chart>` | Checks a chart's templates for obvious mistakes before you render or install it | No |
+| `helm template <name> <chart>` | Renders the chart locally to plain YAML. Nothing is installed; nothing but your own disk is touched | No |
+| `helm show values <chart>` | Prints a chart's `values.yaml` — the knobs it exposes, with their defaults | No |
+| `helm show chart <chart>` | Prints a chart's `Chart.yaml` — name, version, description | No |
+| `helm repo add` / `update` / `search` | Registers a chart repository, refreshes its index, searches it. Needs internet, not a cluster | No |
+| `helm list` (alias `helm ls`) | Lists releases **in your current namespace only**. Empty output is success, not failure — [details below](#a-closer-look-at-helm-list) | Yes |
+| `helm status <release>` | Is this release healthy right now? What did its last operation do? | Yes |
+| `helm install <name> <chart>` | Renders, then creates: install a brand-new release | Yes |
+| `helm upgrade <name> <chart>` | Renders, then applies: change an existing release's values or chart version | Yes |
+| `helm get manifest <release>` | The exact YAML this release last applied to the cluster | Yes |
+| `helm get values <release>` | The values this release was installed or last upgraded with | Yes |
+| `helm history <release>` | Every past revision of a release, oldest to newest | Yes |
+| `helm rollback <release> <rev>` | Creates a **new** revision whose content copies an older one | Yes |
+| `helm uninstall <release>` | Removes every object this release created | Yes |
+
+Every one of these gets used and explained again in its own context later in the chapter — this table exists so you have somewhere to come back to, not so you absorb it right now.
+
+#### A closer look at `helm list`
+
+It is the command beginners misread most, so it earns its own explanation:
+
+- **It lists Helm *releases*, not arbitrary cluster objects.** Anything created with plain `kubectl apply`, or by any tool other than Helm, never shows up here. `helm list` only knows about things it installed itself — internally tracked as Secrets carrying an `owner=helm` label.
+- **It defaults to your current namespace only.** Add `-A` / `--all-namespaces` to check every namespace, or `-n <namespace>` for one specific namespace. `helm list` staying empty in `default` says nothing about `kube-system` or anywhere else.
+- **It defaults to showing only `deployed` or `failed` releases.** Add `--all` to also see `uninstalled`, `superseded`, and in-progress ones.
+- The columns in the default table are `NAME NAMESPACE REVISION UPDATED STATUS CHART APP VERSION` — one row per release, not per Kubernetes object.
+- **An empty, error-free result proves exactly two things and no more:** your kubeconfig currently points at *some* reachable Kubernetes API, and nothing has been installed there via Helm in that namespace. It does **not** prove that cluster is the one you set up for this tutorial — a leftover `docker-desktop` context, an old k3s or minikube cluster still running in the background, or a stale context pointing at a shared or company cluster would all produce the exact same "empty, no error" result. If you're ever unsure which cluster you're actually talking to:
+
+  ```bash
+  kubectl config current-context     # the name of the context in use right now
+  kubectl config view --minify       # that context's full detail: cluster, server URL, user
+  ```
 
 ## The four nouns
 
