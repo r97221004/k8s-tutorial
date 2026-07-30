@@ -19,14 +19,21 @@ That is the real goal of this chapter: **by the end you should be able to open a
 
 ## How to read this chapter
 
-It's a long one, so here's the map. Four parts, and only the last one needs a cluster:
+It's a long one, so here's the map. Parts B and C — the chart-reading skill — need no cluster at all:
 
-| Part | Sections | What you get | Cluster? |
-|---|---|---|---|
-| **A — Setup** | [Before you start](#before-you-start), [First run](#first-run) | Helm installed, one release created and deleted | for First run only |
-| **B — The model** | [four nouns](#the-four-nouns) → [rendering](#how-rendering-actually-works) → [chart anatomy](#anatomy-of-a-chart) → [built-in objects](#the-objects-available-in-a-template) | You can say what a chart *is* and what Helm does to it | no |
-| **C — The syntax** | [the five things](#the-five-things-that-trip-readers-up), [two annotations](#two-annotations-worth-recognizing) | **The core skill: reading someone else's templates** | no |
-| **D — Operating** | [values](#where-values-come-from), [releases](#releases-and-revisions), [hands-on](#hands-on), [third-party charts](#using-someone-elses-chart), [subcharts](#subcharts-and-dependencies), [checklist](#a-checklist-for-reading-an-unfamiliar-chart) | Install, upgrade, roll back, and audit real releases | yes, for hands-on |
+| Part | What you get | Cluster? |
+|---|---|---|
+| **A — Setup** | Helm installed, one release created and deleted | only for First run |
+| **B — The model** | You can say what a chart *is* and what Helm does to it | no |
+| **C — The syntax** | **The core skill: reading someone else's templates** | no |
+| **D — Operating** | Install, upgrade, roll back, and audit real releases | only for Hands-on |
+
+Section by section:
+
+- **A — Setup:** [Before you start](#before-you-start) → [First run](#first-run)
+- **B — The model:** [four nouns](#the-four-nouns) → [rendering](#how-rendering-actually-works) → [chart anatomy](#anatomy-of-a-chart) → [built-in objects](#the-objects-available-in-a-template)
+- **C — The syntax:** [the five things](#the-five-things-that-trip-readers-up) → [two annotations](#two-annotations-worth-recognizing)
+- **D — Operating:** [values](#where-values-come-from) → [releases](#releases-and-revisions) → [hands-on](#hands-on) → [third-party charts](#using-someone-elses-chart) → [subcharts](#subcharts-and-dependencies) → [checklist](#a-checklist-for-reading-an-unfamiliar-chart)
 
 **Short on time?** Skim B, then work through C with `helm template` running in a second terminal. That alone gets you to "I can read my team's chart" — which is why none of it requires a cluster.
 
@@ -63,10 +70,10 @@ Any cluster works — the [kubeadm one this guide builds](../getting-started/set
 
 ```bash
 kubectl get nodes    # one node, STATUS Ready
-helm list            # an empty table — NOT an error
+helm list            # no releases yet — and, crucially, no error
 ```
 
-That second command is the one beginners should run first. `helm list` failing with `Error: Kubernetes cluster unreachable` is never a Helm problem — it means Helm couldn't use your kubeconfig, so fix `kubectl` first.
+That second command is the one beginners should run first. An empty result is success; `helm list` failing with `Error: Kubernetes cluster unreachable` is never a Helm problem — it means Helm couldn't use your kubeconfig, so fix `kubectl` first.
 
 One gotcha worth knowing early: **`--dry-run` still needs a cluster.** `helm install --dry-run` contacts the apiserver for version discovery and validation, so it fails without one. The cluster-free way to see rendered output is `helm template`, which is why this chapter reaches for it constantly.
 
@@ -106,14 +113,51 @@ One chart, many releases with different values = the same app across every envir
 This is the single most useful mental model, and it clears up most confusion: **the cluster never sees a template.** Helm renders templates to plain YAML on your machine, then sends that YAML to the apiserver — the same YAML `kubectl apply` would have sent.
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
 flowchart LR
-  V["values.yaml<br/>(chart defaults)"] --> M["merged .Values"]
-  F["-f my-values.yaml"] --> M
-  S["--set key=value"] --> M
-  T["templates/*.yaml"] --> H["helm renders<br/>(on your machine)"]
-  M --> H
-  H --> Y["plain Kubernetes YAML"]
-  Y --> A["kube-apiserver"]
+    subgraph pipeline["⚙️ How a chart becomes a Deployment"]
+        direction LR
+        subgraph src["📋 Value sources"]
+            direction TB
+            v["📄 values.yaml<br/>(chart defaults)"]
+            f["📝 -f my-values.yaml"]
+            s["⌨️ --set key=value"]
+        end
+        t["📁 templates/*.yaml"]
+        m["🔀 merged .Values"]
+        h["⚙️ helm renders<br/>(on your machine)"]
+        y["📋 plain Kubernetes YAML"]
+        a["🚪 kube-apiserver"]
+
+        v --> m
+        f --> m
+        s --> m
+        t --> h
+        m --> h
+        h --> y
+        y --> a
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class v,f,s,t,m,y tgt
+    class h ctrl
+    class a eng
+    style src fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style pipeline fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
 Two consequences worth internalizing:
@@ -259,6 +303,8 @@ that renders as:
 
 `indent` and `nindent` differ by exactly one newline: `nindent` = newline + `indent`. That's why you see `{{- toYaml . | nindent 4 }}` right after a `key:` on the previous line — the `{{-` eats the newline, and `nindent` puts back a newline plus correct indentation. Getting the number wrong is the most common way to break a chart, and it shows up immediately in `helm template`.
 
+One thing that looks like a bug the first time: **`toYaml` sorts map keys alphabetically.** Our `values.yaml` lists `requests` before `limits`, but the rendered Deployment shows `limits` first. Nothing is wrong — YAML mappings are unordered, and `toYaml` just picks a deterministic order. Don't waste time hunting for the code that reordered it.
+
 ### 3. `_helpers.tpl`, `define`, and `include`
 
 Real charts almost never write `name:` directly. They define a snippet once and pull it in everywhere. Our chart's `_helpers.tpl` defines five, and between them they account for nearly every `{{ }}` in the other templates — so when a chart's `metadata:` looks like nothing but `include` calls, this file is what you read:
@@ -271,7 +317,7 @@ Real charts almost never write `name:` directly. They define a snippet once and 
 | `my-app.labels` | The full label set for every object, including the selector labels |
 | `my-app.selectorLabels` | Just the labels a selector matches on |
 
-Here's the smallest of them, and how a template uses it:
+Here's one of them, and how a template pulls it in:
 
 ```yaml
 {{/* in templates/_helpers.tpl */}}
@@ -289,15 +335,42 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 ```
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
 flowchart LR
-  H["_helpers.tpl<br/>define my-app.selectorLabels"]
-  H --> D["deployment.yaml<br/>include … then nindent 6"]
-  H --> S["service.yaml<br/>include … then nindent 4"]
-  D --> O1["matchLabels:<br/>app.kubernetes.io/name: my-app<br/>app.kubernetes.io/instance: demo"]
-  S --> O2["selector:<br/>app.kubernetes.io/name: my-app<br/>app.kubernetes.io/instance: demo"]
+    subgraph box["🛠️ One helper, used by two templates"]
+        direction LR
+        hp["🛠️ _helpers.tpl<br/>define my-app.selectorLabels"]
+        d["📦 deployment.yaml<br/>include … · nindent 6"]
+        s["🌐 service.yaml<br/>include … · nindent 4"]
+        o1["matchLabels:<br/>name=my-app, instance=demo"]
+        o2["selector:<br/>name=my-app, instance=demo"]
+
+        hp --> d --> o1
+        hp --> s --> o2
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class hp eng
+    class d,s tgt
+    class o1,o2 ctrl
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
-This isn't style for its own sake. A Service's `selector` must match a Deployment's `matchLabels` exactly, and a Deployment's `selector` is **immutable** after creation — one helper used by both files makes that impossible to get wrong.
+This isn't style for its own sake. As [Labels & Selectors](../core-objects/labels-selectors.md) explained, nothing here is wired by reference — the Deployment's `matchLabels`, the Pod template's `labels`, and the Service's `selector` all have to agree on the Pod's labels for any of it to connect. That's the same set of labels written in three places across two files, and a Deployment's `selector` is **immutable** after creation, so getting it wrong means deleting and recreating. One helper emitting all three makes them impossible to drift.
 
 Three details to know when reading:
 
@@ -372,7 +445,7 @@ data:
   LOG_LEVEL: "info"
 ```
 
-And here is `$` in action, from `templates/ingress.yaml` — inside two nested `range`s, `.` is the current path, so the root has to be reached explicitly:
+And here is `$` in action, from `templates/ingress.yaml` — inside two nested `range`s, `.` is the current path entry, so the root has to be reached explicitly:
 
 ```yaml
               service:
@@ -439,12 +512,47 @@ Hooked resources are applied at their phase (`pre-install`, `post-install`, `pre
 Every override lands in the same merged `.Values` object, with a fixed priority:
 
 ```mermaid
-flowchart TD
-  A["1. the chart's own values.yaml"] --> M["merged .Values"]
-  B["2. a parent chart's values<br/>(only if this is a subchart)"] --> M
-  C["3. -f files, left to right<br/>(later files win)"] --> M
-  D["4. --set / --set-string<br/>(highest priority)"] --> M
-  M --> T["every template"]
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
+flowchart LR
+    subgraph box["🔀 Values precedence"]
+        direction LR
+        subgraph layers["🗂️ Merge order, lowest to highest"]
+            direction TB
+            a["1️⃣ chart's own values.yaml"]
+            b["2️⃣ parent chart's values<br/>(subcharts only)"]
+            c["3️⃣ -f files, left to right<br/>(later files win)"]
+            d["4️⃣ --set / --set-string<br/>(always wins)"]
+        end
+        m["🔀 merged .Values"]
+        t["📄 every template"]
+
+        a --> m
+        b --> m
+        c --> m
+        d --> m
+        m --> t
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class a,b,c,t tgt
+    class d eng
+    class m ctrl
+    style layers fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
 Merging is **per key, recursively** — `-f values-prod.yaml` that sets only `replicaCount` leaves every other default intact. The exception is lists: a list is replaced wholesale, never merged element-wise.
@@ -464,11 +572,38 @@ For a third-party chart, `helm show values` is where you should always start —
 Every `install`/`upgrade`/`rollback` creates a new **revision**, and Helm keeps the old ones. This includes rollbacks, which roll *forward* to a new revision containing old content:
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
 flowchart LR
-  I["helm install<br/>revision 1<br/>replicas 2"] --> U1["helm upgrade -f values-prod.yaml<br/>revision 2<br/>replicas 3"]
-  U1 --> U2["helm upgrade --set replicaCount=5<br/>revision 3<br/>replicas 5"]
-  U2 --> R["helm rollback demo 2<br/>revision 4<br/>(content of revision 2)"]
+    subgraph box["📜 Revision history only ever grows"]
+        direction LR
+        i["🚀 helm install demo<br/>revision 1 · replicas 2"]
+        u["⬆️ helm upgrade -f values-prod.yaml<br/>revision 2 · replicas 3"]
+        r["↩️ helm rollback demo 1<br/>revision 3 · copy of revision 1"]
+
+        i --> u
+        u ==>|"rolls forward, not back"| r
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    class i,u ctrl
+    class r eng
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
+
+Note the last box: rolling back to revision 1 does not *return* to revision 1, it creates revision **3** whose content is a copy of revision 1. The history only ever grows, so you can always roll back your rollback. That's exactly the sequence you'll run in [Hands-on](#hands-on) below.
 
 That history is not stored in Helm's own database — it lives in the cluster, as one Secret per revision in the release's namespace:
 
@@ -593,8 +728,11 @@ Clean up:
 
 ```bash
 helm uninstall demo
-kubectl get all -l app.kubernetes.io/instance=demo   # nothing
+kubectl get deploy,svc,cm -l app.kubernetes.io/instance=demo   # nothing
+helm list                                                      # no releases
 ```
+
+Check the same three kinds you created, not `kubectl get all` — despite the name, `all` covers workloads and Services but **not** ConfigMaps or Secrets, so it would report a clean namespace while a ConfigMap was still sitting there.
 
 `helm uninstall` removes everything the release created, which is a real advantage over `kubectl delete -f` across a directory of files — Helm knows exactly what it created.
 
@@ -644,15 +782,44 @@ dependencies:
 helm dependency update manifests/packaging/helm/my-app   # fetches into charts/, writes Chart.lock
 ```
 
+Our chart keeps that block commented out so it stays installable offline, so the command above succeeds silently and does nothing — uncomment the `dependencies:` in `Chart.yaml` first if you want to watch it actually pull a subchart down.
+
 `repository:` can also point at an OCI registry (`oci://…`), which is how a growing number of projects publish charts. `condition: redis.enabled` lets a user switch the whole subchart off. The part that confuses everyone is **values scoping**: a subchart only sees the values under its own key, with its own key stripped off.
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
 flowchart TD
-  P["parent values.yaml"]
-  P --> K["key 'redis:'<br/>holds redis.auth.enabled = false"]
-  P --> G["key 'global:'<br/>holds global.imageRegistry"]
-  K --> S1["the redis subchart reads it as<br/>.Values.auth.enabled<br/>(the 'redis' prefix is stripped)"]
-  G --> S2["every chart reads it as<br/>.Values.global.imageRegistry<br/>(unchanged)"]
+    subgraph box["🔑 Subchart values are scoped by key"]
+        direction TB
+        p["📄 parent values.yaml"]
+        r["🔑 redis:<br/>auth.enabled = false"]
+        g["🌍 global:<br/>imageRegistry"]
+        s1["📦 redis subchart reads:<br/>.Values.auth.enabled<br/>('redis' prefix stripped)"]
+        s2["🔗 every chart reads:<br/>.Values.global.imageRegistry<br/>(unchanged)"]
+
+        p --> r --> s1
+        p --> g ==>|"visible everywhere, unstripped"| s2
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class p ctrl
+    class r,s1 tgt
+    class g,s2 eng
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
 So to set the Redis subchart's `auth.enabled`, the parent writes `redis.auth.enabled` — and the subchart's own templates still say `.Values.auth.enabled`. The `global:` key is the exception: it is visible, unchanged, to the parent and every subchart.
@@ -693,7 +860,7 @@ They're not mutually exclusive: plenty of teams install third-party software wit
 ## Best practices
 
 - **Pin chart versions** (`--version`) so installs are reproducible.
-- **Keep per-environment values files in Git** (`values-prod.yaml`), and inject secrets separately — never commit real ones (see [Secrets](../config-and-data/secret.md)).
+- **Keep per-environment values files in Git, *outside* the chart directory** (`values-prod.yaml`) — anything inside it gets packaged and shipped. Inject secrets separately, and never commit real ones (see [Secrets](../config-and-data/secret.md)).
 - **`helm template` or `--dry-run` before upgrading production**; the [`helm diff`](https://github.com/databus23/helm-diff) plugin shows the change against what's live.
 - **`helm upgrade --install --atomic --wait`** in CI — idempotent, and self-reverting on failure.
 - **Never `kubectl edit` a Helm-managed object.** The next `helm upgrade` renders from the chart and reverts you. Change the values instead.
