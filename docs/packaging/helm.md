@@ -164,12 +164,18 @@ It is the command beginners misread most, so it earns its own explanation:
 
 ## The four nouns
 
-- **Chart** — a package of templated manifests + default values (a folder, or a `.tgz`).
-- **Values** — the knobs (`values.yaml`, or `--set`/`-f` overrides) injected into the templates.
-- **Template** — a manifest with placeholders, e.g. `replicas: {{ .Values.replicaCount }}`.
-- **Release** — one *installation* of a chart into a cluster, with a name and a revision history.
+[First run](#first-run) already used all four of these — this section just puts names on what you did:
 
-One chart, many releases with different values = the same app across every environment, without copy-paste.
+```bash
+helm install demo manifests/packaging/helm/my-app
+```
+
+- **Chart** — the thing you pointed at: `manifests/packaging/helm/my-app/`. A package of templated manifests plus default values, as a folder (or packaged into a `.tgz`). This is the reusable unit — one chart, installable as many times as you like.
+- **Values** — the knobs that fill in a chart's placeholders: the chart's own `values.yaml` (its defaults), plus anything you override with `-f`/`--set`. The `demo` install above used no `-f`, no `--set` — every setting came straight from `my-app/values.yaml` (`replicaCount: 2`, `image.repository: nginx`, …).
+- **Template** — one manifest file inside the chart, written with `{{ }}` placeholders instead of hardcoded values — e.g. `replicas: {{ .Values.replicaCount }}` in `templates/deployment.yaml`. A template plus a set of values is what gets rendered into one ordinary Kubernetes manifest.
+- **Release** — the name you gave *this particular installation*: `demo`. One chart, installed into a cluster, under a name, with its own revision history. Run `helm install demo2 manifests/packaging/helm/my-app` and you'd get a second, completely independent release of the *same* chart — two `Deployment`s, two `Service`s, tracked separately.
+
+Put the four together and that's the whole model: **install a Chart, with some Values, whose Templates render into manifests, as a named Release.** One chart, many releases with different values, is how the same app runs unmodified across every environment — no copy-pasted YAML.
 
 ## How rendering actually works
 
