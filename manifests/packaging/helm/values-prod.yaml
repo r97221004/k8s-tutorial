@@ -1,0 +1,26 @@
+# A per-environment overlay. Only the differences from the chart's values.yaml belong here.
+#
+# Deliberately kept OUTSIDE my-app/ : the chart is the artifact you distribute, while
+# this file is your deployment config. Anything inside the chart directory gets bundled
+# into the .tgz by `helm package` and shipped to everyone who installs it.
+#
+#   helm upgrade demo manifests/packaging/helm/my-app \
+#     -f manifests/packaging/helm/values-prod.yaml
+
+replicaCount: 3
+
+image:
+  # Production pins an explicit tag instead of inheriting appVersion.
+  tag: "1.27.3"
+
+config:
+  GREETING: hello from values-prod.yaml
+  LOG_LEVEL: warn
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

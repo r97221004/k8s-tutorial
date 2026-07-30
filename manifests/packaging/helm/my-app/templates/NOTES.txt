@@ -1,0 +1,22 @@
+{{ .Chart.Name }} {{ .Chart.AppVersion }} is installed as release "{{ .Release.Name }}".
+
+  Revision: {{ .Release.Revision }}
+  Replicas: {{ .Values.replicaCount }}
+
+See what was created:
+
+  kubectl get deploy,svc,cm -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Reach the app:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http://{{ .host }}
+{{- end }}
+{{- else }}
+  kubectl port-forward svc/{{ include "my-app.fullname" . }} 8080:{{ .Values.service.port }}
+  curl http://localhost:8080
+{{- end }}
+
+Check the values that are actually in effect:
+
+  helm get values {{ .Release.Name }}

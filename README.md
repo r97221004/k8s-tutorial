@@ -186,7 +186,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 
 **Part 5 — Packaging & Beyond**
 
-- [**Helm (intro)**](docs/packaging/helm.md) — the Kubernetes package manager.
+- [**Helm**](docs/packaging/helm.md) — the Kubernetes package manager, and how to read a chart.
 - [**Kustomize (intro)**](docs/packaging/kustomize.md) — overlay-based config.
 
 **Capstone**
