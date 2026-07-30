@@ -295,7 +295,7 @@ Using it doesn't mean moving it in, either. At install/upgrade time you pass it 
 | `charts/` | Subcharts, vendored in as `.tgz` (absent here — see [Subcharts](#subcharts-and-dependencies)) |
 | `Chart.lock` | Resolved subchart versions, like `package-lock.json` (absent here) |
 
-The two things beginners misread: `templates/` is not only for `kind:` resources (`_helpers.tpl` and `NOTES.txt` live there too), and `version` vs `appVersion` are different — bumping your chart's templates bumps `version`, shipping a new app image bumps `appVersion`.
+The two things beginners misread: `templates/` is not only for `kind:` resources (`_helpers.tpl` and `NOTES.txt` live there too), and `version` vs `appVersion` are different — and **neither one ever changes on its own.** Both are just static text in `Chart.yaml`; Helm only ever reads whatever number is currently sitting there, and has no `bump`/increment command anywhere in its CLI. Package the same chart twice without touching `Chart.yaml` and you get the identical `.tgz` filename both times — nothing auto-increments. So it's on you, the chart author, to edit `Chart.yaml` by hand: bump `version` when you change the chart's own templates or logic, bump `appVersion` when you ship a new build of the underlying app image. (Some teams script this bump into CI — that's tooling layered on top, not a Helm feature.)
 
 ### Reading `values.yaml`
 
