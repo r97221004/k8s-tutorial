@@ -15,7 +15,7 @@ metadata:
     {{- include "my-app.labels" . | nindent 4 }}
 ```
 
-That is the real goal of this chapter: **by the end you should be able to open an unfamiliar chart and explain what every line does.** We build up to it with a small chart you can render and install yourself.
+That is the real goal of this chapter: **by the end you should be able to trace how an unfamiliar chart turns values into Kubernetes resources, and know how to investigate any helper or branch you do not recognize.** We build up to it with a small chart you can render and install yourself.
 
 ## How to read this chapter
 
@@ -35,7 +35,15 @@ Section by section:
 - **C — The syntax:** [the five things](#the-five-things-that-trip-readers-up) → [two annotations](#two-annotations-worth-recognizing)
 - **D — Operating:** [values](#where-values-come-from) → [releases](#releases-and-revisions) → [hands-on](#hands-on) → [third-party charts](#using-someone-elses-chart) → [subcharts](#subcharts-and-dependencies) → [checklist](#a-checklist-for-reading-an-unfamiliar-chart)
 
-**Short on time?** Skim B, then work through C with `helm template` running in a second terminal. That alone gets you to "I can read my team's chart" — which is why none of it requires a cluster.
+Do not try to absorb all 1,000+ lines in one sitting. Read it in passes:
+
+| Pass | Read | Goal | Cluster? |
+|---|---|---|---|
+| **1 — Learn to read charts** | [Four nouns](#the-four-nouns) → [rendering](#how-rendering-actually-works) → [chart anatomy](#anatomy-of-a-chart) → [five syntax traps](#the-five-things-that-trip-readers-up) → [15-minute drill](#a-15-minute-chart-reading-drill) | Trace values, helpers, scopes, and rendered resources | no |
+| **2 — Learn to operate releases** | [Values precedence](#where-values-come-from) → [revisions](#releases-and-revisions) → [hands-on](#hands-on) | Install, upgrade, inspect, and roll back safely | yes for hands-on |
+| **3 — Use as reference** | [Larger-chart decoder](#a-compact-decoder-for-larger-charts) → [hooks](#two-annotations-worth-recognizing) → [third-party charts](#using-someone-elses-chart) → [subcharts](#subcharts-and-dependencies) | Decode advanced patterns when you encounter them | depends |
+
+If your immediate goal is "read my team's chart," complete pass 1 first. It is intentionally cluster-free.
 
 ## Before you start
 
@@ -45,12 +53,14 @@ If you've never touched Helm, here's everything you need. Nothing in parts B and
 
 Unlike Kustomize (which is built into `kubectl`), Helm is a separate binary. It runs entirely on your machine and talks to the cluster through your normal kubeconfig — there is **no server-side component**, no Tiller, nothing to install into the cluster (that changed in Helm 3; old blog posts may tell you otherwise).
 
+> **Version note:** This chapter and its commands target **Helm 3.x**. The chart format and core template language also apply to Helm 4, but some command flags changed — notably Helm 4 uses `--rollback-on-failure` where the Helm 3 examples below use `--atomic`. Check `helm version --short` before copying CI commands between projects.
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 helm version --short
 ```
 
-Package managers work too (`brew install helm`, `apt-get install helm`, `choco install kubernetes-helm`). That script installs a single binary into `/usr/local/bin`, escalating with `sudo` if it needs to — the same caveat the [README](../../README.md#prerequisites) makes about piping a remote script into a shell applies here, so read it first if that matters to you.
+Package managers work too (`brew install helm`, `apt-get install helm`, `choco install kubernetes-helm`), but may install the current major version rather than Helm 3. The script above installs a single binary into `/usr/local/bin`, escalating with `sudo` if it needs to — the same caveat the [README](../../README.md#prerequisites) makes about piping a remote script into a shell applies here, so read it first if that matters to you.
 
 ### 2. Get this repository
 
@@ -75,7 +85,10 @@ helm list            # no releases yet — and, crucially, no error
 
 That second command is the one beginners should run first. An empty result is success; `helm list` failing with `Error: Kubernetes cluster unreachable` is never a Helm problem — it means Helm couldn't use your kubeconfig, so fix `kubectl` first.
 
-One gotcha worth knowing early: **`--dry-run` still needs a cluster.** `helm install --dry-run` contacts the apiserver for version discovery and validation, so it fails without one. The cluster-free way to see rendered output is `helm template`, which is why this chapter reaches for it constantly.
+Two render modes are worth distinguishing:
+
+- **`helm template`** renders locally and never installs anything. It is the clearest cluster-free tool for reading a chart.
+- **`helm install --dry-run`** (or the explicit `--dry-run=client`) also works without a cluster. Use `--dry-run=server` when you intentionally want server-side validation and cluster-aware functions such as `lookup`; that mode requires cluster access.
 
 ### 4. The rest
 
@@ -162,8 +175,10 @@ flowchart LR
 
 Two consequences worth internalizing:
 
-- **`helm template` shows you the truth.** Any time a chart confuses you, render it and read the output. You are never guessing.
+- **`helm template` shows the locally rendered result.** Any time a chart confuses you, render it and read the output instead of mentally simulating indentation and branches.
 - **The apiserver cannot help you debug a template.** A typo inside `{{ }}` is a Helm-side error you'll see locally, before anything reaches the cluster.
+
+For most application charts, that local output is exactly what you need. There is one important boundary: `helm template` fakes cluster-discovered information, so templates using `lookup` or branching on `.Capabilities` can render differently during a real install. Use `--kube-version` / `--api-versions` to simulate capabilities locally, or `--dry-run=server` when you need the target cluster's answer.
 
 ## Anatomy of a chart
 
@@ -198,6 +213,17 @@ manifests/packaging/helm/
 | `Chart.lock` | Resolved subchart versions, like `package-lock.json` (absent here) |
 
 The two things beginners misread: `templates/` is not only for `kind:` resources (`_helpers.tpl` and `NOTES.txt` live there too), and `version` vs `appVersion` are different — bumping your chart's templates bumps `version`, shipping a new app image bumps `appVersion`.
+
+Larger charts often add a few more entries. You do not need them to understand this tutorial chart, but recognize them when you open a teammate's:
+
+| Entry | What it means |
+|---|---|
+| `values.schema.json` | A JSON Schema that validates values before rendering and can document accepted types |
+| `crds/` | CustomResourceDefinitions installed before templates; Helm does not upgrade or delete them like ordinary release resources |
+| `templates/tests/` | Usually Pods or Jobs with a `helm.sh/hook: test` annotation, run explicitly with `helm test` |
+| `type: library` in `Chart.yaml` | A helper-only chart meant to be imported by other charts, not installed by itself |
+
+When inventorying a chart, inspect both `templates/` **and** `crds/`; `ls templates/` alone cannot tell you every object Helm may create.
 
 ## The objects available in a template
 
@@ -374,7 +400,7 @@ This isn't style for its own sake. As [Labels & Selectors](../core-objects/label
 
 Three details to know when reading:
 
-- **The `.` at the end matters.** `include "name" .` passes the root context to the snippet. Pass nothing and `.Values` is undefined inside it. Inside a `range` or `with`, chart authors write `include "name" $` for the same reason (see below).
+- **The `.` at the end matters.** `include "name" .` passes the current context to the snippet. Passing `nil` or the wrong scoped context can make root objects such as `.Values` unavailable inside it. Inside a `range` or `with`, chart authors write `include "name" $` when the helper expects the root context (see below).
 - **`include` vs `template`.** Both call a snippet; only `include` returns a *string*, so only `include` can be piped into `nindent`. `{{ template "x" . }}` cannot be indented, which is why modern charts use `include` almost exclusively.
 - **Names are global and namespaced by convention.** Every `define` in every chart *and subchart* shares one namespace, hence the `my-app.` prefix.
 
@@ -454,6 +480,48 @@ And here is `$` in action, from `templates/ingress.yaml` — inside two nested `
                   number: {{ $.Values.service.port }}
 ```
 
+Visualize the scope as a stack. `$` stays pinned to the root while `.` follows the current block:
+
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color:#FFFFFF !important; }
+---
+flowchart TD
+    subgraph box["🎯 Scope stack: . moves, $ stays pinned to root"]
+        direction TB
+        root["Template starts<br/><b>.</b> = root context<br/><b>$</b> = root context"]
+        hosts["range .Values.ingress.hosts<br/><b>.</b> = current host<br/><b>$</b> = root context"]
+        paths["range .paths<br/><b>.</b> = current path<br/><b>$</b> = root context"]
+        use["Use .path and .pathType<br/>Use $.Values.service.port<br/>Pass $ to root-based helpers"]
+
+        root --> hosts --> paths --> use
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class root,use ctrl
+    class hosts,paths eng
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+```
+
+| Location | `.` means | How to reach root |
+|---|---|---|
+| At template entry | Helm's full root context | `.` or `$` |
+| Inside `with .Values.nodeSelector` | The `nodeSelector` map | `$` |
+| Inside `range .Values.ingress.hosts` | The current host item | `$` |
+| Inside the nested `range .paths` | The current path item | `$` |
+
 ### 5. The functions you'll see constantly
 
 Helm ships the [Sprig](https://masterminds.github.io/sprig/) function library. You don't need to memorize it, but these show up in nearly every chart:
@@ -471,6 +539,28 @@ Helm ships the [Sprig](https://masterminds.github.io/sprig/) function library. Y
 | `tpl` | Render a *value* as a template | letting users put `{{ }}` inside their own values |
 | `trunc` / `trimSuffix` | Cut to length / strip a suffix | the 63-character name limit |
 
+The pipe sends the value on its left as the **last argument** to the function on its right. These pairs are equivalent:
+
+```gotemplate
+{{ quote .Values.config.GREETING }}
+{{ .Values.config.GREETING | quote }}
+
+{{ default .Chart.AppVersion .Values.image.tag }}
+{{ .Values.image.tag | default .Chart.AppVersion }}
+```
+
+Read a longer pipeline from left to right:
+
+```gotemplate
+{{ include "my-app.labels" . | nindent 4 }}
+```
+
+1. Call the helper with the current context.
+2. Take the returned string.
+3. Add a newline and indent it four spaces.
+
+Parentheses evaluate first. In the checksum expression, `print` builds a filename, `include` renders that file, then the pipe sends the rendered string to `sha256sum`.
+
 `required` is the polite way a chart demands input. Swap `default .Chart.AppVersion` for `required "image.tag must be set"` in `deployment.yaml`, leave `image.tag` empty, and the render stops with a message you can act on:
 
 ```
@@ -484,6 +574,40 @@ Error: template: my-app/templates/deployment.yaml:26:28: executing "my-app/templ
 ```
 
 `nil pointer evaluating interface {}.<key>` always means the same thing: **a parent key in the path doesn't exist.** Here `.Values.image` itself is missing, so there is nothing to look `repository` up on — the error names the child, but the missing thing is the parent. Note that `required` cannot rescue you from this: it checks the final value, so the nil dereference happens first.
+
+### A compact decoder for larger charts
+
+The tutorial chart deliberately keeps its expressions small. Team charts often compress more work into one line; decode the pieces rather than trying to read the whole expression at once:
+
+| Pattern | Read it as |
+|---|---|
+| `{{- $name := ... }}` | Calculate something once and store it in the variable `$name` |
+| `eq`, `ne`, `and`, `or`, `not` | Comparison and boolean logic, usually inside `if` |
+| `dict "value" .Values.foo "context" $` | Build a map with keys `value` and `context`, often to pass several arguments to a helper |
+| `list`, `append`, `concat` | Build or combine lists |
+| `hasKey`, `dig`, `coalesce` | Safely inspect nested or optional values |
+| `merge`, `mergeOverwrite`, `deepCopy` | Combine maps; check which side wins before trusting the result |
+| `semverCompare` | Choose YAML according to a Kubernetes or application version |
+| `.Capabilities.APIVersions.Has "group/v1/Kind"` | Emit a resource only when that API exists |
+| `lookup "v1" "Secret" .Release.Namespace "name"` | Read a live cluster object while rendering |
+
+For example:
+
+```gotemplate
+{{- $ctx := dict "value" .Values.podLabels "context" $ -}}
+{{- include "company.tplvalues.render" $ctx | nindent 8 }}
+```
+
+Read it as: make an argument object containing the user's labels and the root context, pass it to a company helper, then indent the returned YAML. The helper name is not built into Helm — search for its `define`, including in library subcharts:
+
+```bash
+grep -R -n 'define "company\.tplvalues\.render"' .
+```
+
+Two rules keep this manageable:
+
+- When you see `include`, find the matching `define` before guessing what it returns.
+- When you see `lookup` or `.Capabilities`, local rendering may not match the target cluster; inspect both branches and render with the appropriate cluster capabilities.
 
 ## Two annotations worth recognizing
 
@@ -569,7 +693,7 @@ For a third-party chart, `helm show values` is where you should always start —
 
 ## Releases and revisions
 
-Every `install`/`upgrade`/`rollback` creates a new **revision**, and Helm keeps the old ones. This includes rollbacks, which roll *forward* to a new revision containing old content:
+Every successful `install`/`upgrade`/`rollback` creates a new **revision**. This includes rollbacks, which roll *forward* to a new revision containing old content:
 
 ```mermaid
 ---
@@ -586,7 +710,7 @@ config:
     .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
 flowchart LR
-    subgraph box["📜 Revision history only ever grows"]
+    subgraph box["📜 Rollback creates a new revision"]
         direction LR
         i["🚀 helm install demo<br/>revision 1 · replicas 2"]
         u["⬆️ helm upgrade -f values-prod.yaml<br/>revision 2 · replicas 3"]
@@ -603,7 +727,7 @@ flowchart LR
     style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
-Note the last box: rolling back to revision 1 does not *return* to revision 1, it creates revision **3** whose content is a copy of revision 1. The history only ever grows, so you can always roll back your rollback. That's exactly the sequence you'll run in [Hands-on](#hands-on) below.
+Note the last box: rolling back to revision 1 does not *return* to revision 1, it creates revision **3** whose content is a copy of revision 1. You can roll back that rollback while the older revision is still retained. Helm limits retained history (Helm 3 upgrades default to 10 revisions), so old revisions can eventually be pruned. That's exactly the three-revision sequence you'll run in [Hands-on](#hands-on) below.
 
 That history is not stored in Helm's own database — it lives in the cluster, as one Secret per revision in the release's namespace:
 
@@ -620,11 +744,11 @@ The flags that matter in practice:
 |---|---|
 | `--install` (on `upgrade`) | Install if the release doesn't exist yet — makes CI idempotent |
 | `--wait` | Don't report success until the resources are actually ready |
-| `--atomic` | Roll back automatically if the upgrade fails (implies `--wait`) |
+| `--atomic` | Helm 3: roll back automatically if the upgrade fails (implies `--wait`) |
 | `--dry-run` | Render and validate without applying |
 | `--version` | Pin the chart version (always do this for third-party charts) |
 
-`helm upgrade --install --atomic --wait` is the near-universal CI incantation.
+For Helm 3, `helm upgrade --install --atomic --wait` is a common CI incantation. Helm 4 renamed the failure-handling flag to `--rollback-on-failure`; keep the command in your repository aligned with the Helm major version used by CI.
 
 ## Hands-on
 
@@ -701,10 +825,65 @@ Compare what you asked for against what is actually deployed:
 
 ```bash
 helm get values demo        # just the prod overrides
-helm get manifest demo      # the exact YAML in the cluster
+helm get manifest demo      # the manifest stored for the current Helm revision
 ```
 
-`helm get manifest` is the command to reach for when someone asks "what is actually running?" — it's the rendered truth for the current revision, not the chart's defaults.
+`helm get manifest` is Helm's **desired release manifest**, not a fresh export of live objects. A person, admission webhook, or controller may have changed the live object after Helm applied it. When someone asks "what is actually running?", compare both views:
+
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color:#FFFFFF !important; }
+---
+flowchart LR
+    subgraph box["🔍 Desired manifest vs. live object"]
+        direction LR
+        src["Chart + merged values"]
+        render["Helm renders"]
+        desired["Release record<br/>desired manifest"]
+        live["API server<br/>live object"]
+        actor["Human / webhook / controller"]
+        get["helm get manifest"]
+        kubectl["kubectl get -o yaml"]
+
+        src --> render --> desired
+        desired -->|"install / upgrade"| live
+        actor -->|"mutation or drift"| live
+        get -.reads.-> desired
+        kubectl -.reads.-> live
+    end
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class src,render ctrl
+    class desired,get eng
+    class live,kubectl tgt
+    class actor ctrl
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+```
+
+| Question | Command | What it reads |
+|---|---|---|
+| What would this chart render locally? | `helm template` | Local chart files and supplied values |
+| What did the current release revision generate? | `helm get manifest` | Helm's stored release record |
+| What does Kubernetes hold now? | `kubectl get … -o yaml` | The live API object |
+
+```bash
+helm get manifest demo > /tmp/demo-desired.yaml
+kubectl get deployment demo-my-app -o yaml > /tmp/demo-live-deployment.yaml
+```
+
+The first answers "what did this Helm revision generate?"; the second answers "what does the apiserver hold now?" The live export also contains status and server-added metadata, so a raw `diff` will be noisy — use it to investigate a suspected field, or use the `helm diff` plugin for a release-aware comparison.
 
 Then undo it:
 
@@ -734,7 +913,7 @@ helm list                                                      # no releases
 
 Check the same three kinds you created, not `kubectl get all` — despite the name, `all` covers workloads and Services but **not** ConfigMaps or Secrets, so it would report a clean namespace while a ConfigMap was still sitting there.
 
-`helm uninstall` removes everything the release created, which is a real advantage over `kubectl delete -f` across a directory of files — Helm knows exactly what it created.
+For this tutorial chart, `helm uninstall` removes all three tracked resources. More generally, it removes resources Helm tracks as part of the release; hook resources, objects annotated with `helm.sh/resource-policy: keep`, CRDs, or resources whose ownership changed can remain. That tracking is still a real advantage over running `kubectl delete -f` across an arbitrary directory.
 
 ## Using someone else's chart
 
@@ -748,14 +927,22 @@ helm show chart ingress-nginx/ingress-nginx
 helm show values ingress-nginx/ingress-nginx | head -40
 ```
 
-Every command above is read-only, so run them freely. Linger on `helm show values` — for a large chart that output runs to hundreds of lines, and it is the only documentation guaranteed to match the version you're installing. Find the handful of keys you need, put them in a values file, and pin the version (pick a real one from the `helm search repo --versions` output above):
+Every command above is read-only, so run them freely. Linger on `helm show values` — for a large chart that output runs to hundreds of lines, and it is the only documentation guaranteed to match the version you're installing. Find the handful of keys you need and put them in a values file.
+
+Select the newest version from the search result into a shell variable, print it so it is visible in logs, and use that exact version for the install:
 
 ```bash
+CHART_VERSION=$(helm search repo ingress-nginx/ingress-nginx --versions \
+  | awk 'NR == 2 { print $2 }')
+echo "Installing ingress-nginx chart ${CHART_VERSION}"
+
 helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx --create-namespace \
-  --version 4.11.3 \
+  --version "$CHART_VERSION" \
   -f my-ingress-values.yaml
 ```
+
+For reproducible automation, commit that resolved version to your deployment configuration rather than recalculating "newest" on every CI run.
 
 Don't run that last one if you already installed a controller in the [Ingress](../networking/ingress.md) chapter — it's here to show the shape of a real third-party install, not as a step in this lab.
 
@@ -833,13 +1020,14 @@ In order, this gets you oriented in a few minutes:
 | Step | Command / file | What you learn |
 |---|---|---|
 | 1 | `Chart.yaml` | What it is, its version, and whether it drags in subcharts |
-| 2 | `helm show values <chart>` | The knobs — the author's intended interface |
-| 3 | `ls templates/` | Which Kubernetes resources exist at all |
-| 4 | `templates/_helpers.tpl` | The naming and labelling scheme every other file uses |
-| 5 | `helm template <name> <chart>` | **The truth.** The exact YAML this chart produces |
-| 6 | `helm template … -f their-values.yaml` | What your team's environment actually produces |
-| 7 | `helm get manifest <release>` | What is deployed *right now*, which may lag the chart in Git |
-| 8 | `helm get values <release> --all` | Which values that running release was given |
+| 2 | `values.yaml` + `values.schema.json` | The knobs, defaults, accepted types, and required input |
+| 3 | `templates/` + `crds/` | Which resources and lifecycle behavior may exist |
+| 4 | `templates/_helpers.tpl` + library dependencies | The naming, labelling, and shared rendering scheme |
+| 5 | `helm template <name> <chart>` | The locally rendered YAML with chart defaults |
+| 6 | `helm template … -f their-values.yaml` | What your team's values render locally |
+| 7 | `helm get manifest <release>` | The desired manifest stored in the current release revision |
+| 8 | `helm get values <release> --all` | Which computed values that release used |
+| 9 | `kubectl get … -o yaml` | The live object, including drift and server-added fields |
 
 When a template still doesn't make sense, don't read harder — change a value and re-render. Diffing two `helm template` outputs answers "what does this knob do?" faster than any amount of squinting:
 
@@ -847,6 +1035,52 @@ When a template still doesn't make sense, don't read harder — change a value a
 C=manifests/packaging/helm/my-app
 diff <(helm template demo $C) <(helm template demo $C --set replicaCount=5)
 ```
+
+### A 15-minute chart-reading drill
+
+Do this once without following the explanations above line by line. This repository includes a separate [`reader-lab` chart](../../manifests/packaging/helm/reader-lab/) that the chapter has not explained for you. It needs no cluster. Afterward, repeat the same process with a small chart from your team.
+
+Set a timer and produce a short note containing:
+
+1. **Inventory:** chart type, dependencies, CRDs, hooks, and the Kubernetes kinds it can emit.
+2. **Inputs:** the values files your team supplies, which defaults they override, and whether a schema validates them.
+3. **Identity:** how resource names and selector labels are calculated.
+4. **Branches:** three values that enable, disable, or materially change resources.
+5. **Scope:** one place where `.` changes and `$` is used to recover the root.
+6. **Helpers:** one `include` traced all the way to its `define`, including what context it receives and what text it returns.
+7. **Output:** a default render and a team-values render, with the important differences explained.
+8. **Reality check:** if a release exists, distinguish its stored manifest from one corresponding live object.
+
+Useful commands:
+
+```bash
+CHART=manifests/packaging/helm/reader-lab
+TEAM_VALUES=manifests/packaging/helm/reader-lab-team-values.yaml
+helm lint "$CHART"
+helm dependency list "$CHART"   # "no dependencies" is the expected result
+grep -R -nE 'kind:|helm.sh/hook|lookup|Capabilities|include|define' "$CHART"
+helm template reader "$CHART" > /tmp/chart-default.yaml
+helm template reader "$CHART" -f "$TEAM_VALUES" > /tmp/chart-team.yaml
+diff -u /tmp/chart-default.yaml /tmp/chart-team.yaml
+```
+
+You have reached the goal of this chapter when you can explain the rendered difference by pointing back to a value, a branch, and any helper involved — without reading every Sprig function from memory.
+
+<details>
+<summary><strong>Check your reader-lab answers</strong></summary>
+
+| Question | Answer |
+|---|---|
+| Inventory | Defaults render a Deployment and Service. Team values additionally enable a ConfigMap. There are no dependencies, CRDs, or hooks. |
+| Inputs | `values.schema.json` validates the image, replica count, Service, environment list, labels, and ConfigMap shape. The team file changes replicas, tag, environment list, labels, and ConfigMap settings. |
+| Identity | With release `reader`, the helper produces `reader-reader-lab`. `fullnameOverride` would replace it. |
+| Branches | `service.enabled` controls the Service; `config.enabled` controls both the ConfigMap and the Deployment's checksum / `envFrom`; an empty `resources` map suppresses the resources block. |
+| Scope | Inside `range .Values.env`, `.` is one environment item. `$.Release.Name` reaches the root and supplies a fallback for an empty value. |
+| Helpers | `reader-lab.labels` receives a `dict` containing `root` and `extra`; it reads release/chart data through `.root` and appends `.extra` labels. |
+| Rendered difference | Team values change replicas from 1 to 3, pin the image tag, replace the entire environment list, add team labels, create a ConfigMap, and add `checksum/config` plus `envFrom` to the Pod template. |
+| Reality check | This lab has no installed release. On a real release, use `helm get manifest` for its stored desired manifest and `kubectl get -o yaml` for live state. |
+
+</details>
 
 ## Helm or Kustomize?
 
@@ -862,7 +1096,7 @@ They're not mutually exclusive: plenty of teams install third-party software wit
 - **Pin chart versions** (`--version`) so installs are reproducible.
 - **Keep per-environment values files in Git, *outside* the chart directory** (`values-prod.yaml`) — anything inside it gets packaged and shipped. Inject secrets separately, and never commit real ones (see [Secrets](../config-and-data/secret.md)).
 - **`helm template` or `--dry-run` before upgrading production**; the [`helm diff`](https://github.com/databus23/helm-diff) plugin shows the change against what's live.
-- **`helm upgrade --install --atomic --wait`** in CI — idempotent, and self-reverting on failure.
+- **Helm 3:** `helm upgrade --install --atomic --wait` in CI. **Helm 4:** use its `--rollback-on-failure` equivalent. Pin the Helm major version in CI.
 - **Never `kubectl edit` a Helm-managed object.** The next `helm upgrade` renders from the chart and reverts you. Change the values instead.
 - **Use `required` for values with no sane default** — a clear error beats a `nil pointer` one.
 - **Prefer well-maintained upstream charts** over rolling your own for common software.

@@ -1,0 +1,28 @@
+# Team-specific overrides for the reader-lab exercise.
+
+replicaCount: 3
+
+image:
+  tag: "1.27.3"
+
+# This list replaces the default env list; it does not merge item by item.
+env:
+  - name: APP_MODE
+    value: production
+  - name: TEAM
+    value: payments
+
+extraLabels:
+  owner: payments
+  environment: staging
+
+config:
+  enabled: true
+  data:
+    FEATURE_FLAG: "true"
+    LOG_LEVEL: debug
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi

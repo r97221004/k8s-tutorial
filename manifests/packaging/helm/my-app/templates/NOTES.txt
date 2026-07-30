@@ -17,6 +17,6 @@ Reach the app:
   curl http://localhost:8080
 {{- end }}
 
-Check the values that are actually in effect:
+Check all computed values, including chart defaults:
 
-  helm get values {{ .Release.Name }}
+  helm get values {{ .Release.Name }} --all
