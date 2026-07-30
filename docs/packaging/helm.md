@@ -338,6 +338,8 @@ Larger charts often add a few more entries. You do not need them to understand t
 
 When inventorying a chart, inspect both `templates/` **and** `crds/`; `ls templates/` alone cannot tell you every object Helm may create.
 
+`crds/` exists because Kubernetes only understands the object kinds it ships with out of the box — a CustomResourceDefinition teaches the apiserver a brand-new kind (cert-manager's `Certificate`, for example) before anything can create one. That's why files in `crds/` are never templated (no `{{ }}`) and always install first: the chart's own `templates/` might create objects of that new kind, and the apiserver has to already recognize the kind before it will accept them. It's also why Helm never touches `crds/` again after the first install — a CRD is cluster-wide and shared by anything using that kind, not scoped to this one release, so leaving it alone on `helm upgrade`/`helm uninstall` is a deliberate safety choice, not an oversight.
+
 ## The objects available in a template
 
 Inside `{{ }}`, `.` is the **root context** — an object with everything Helm knows. When you see a value appear out of nowhere in a chart, it came from one of these:
