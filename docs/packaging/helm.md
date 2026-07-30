@@ -170,10 +170,10 @@ It is the command beginners misread most, so it earns its own explanation:
 helm install demo manifests/packaging/helm/my-app
 ```
 
-- **Chart** — the thing you pointed at: `manifests/packaging/helm/my-app/`. A package of templated manifests plus default values, as a folder (or packaged into a `.tgz`). This is the reusable unit — one chart, installable as many times as you like.
-- **Values** — the knobs that fill in a chart's placeholders: the chart's own `values.yaml` (its defaults), plus anything you override with `-f`/`--set`. The `demo` install above used no `-f`, no `--set` — every setting came straight from `my-app/values.yaml` (`replicaCount: 2`, `image.repository: nginx`, …).
-- **Template** — one manifest file inside the chart, written with `{{ }}` placeholders instead of hardcoded values — e.g. `replicas: {{ .Values.replicaCount }}` in `templates/deployment.yaml`. A template plus a set of values is what gets rendered into one ordinary Kubernetes manifest.
-- **Release** — the name you gave *this particular installation*: `demo`. One chart, installed into a cluster, under a name, with its own revision history. Run `helm install demo2 manifests/packaging/helm/my-app` and you'd get a second, completely independent release of the *same* chart — two `Deployment`s, two `Service`s, tracked separately.
+- **Chart** — the thing you pointed at: `manifests/packaging/helm/my-app/`. A package of templated manifests plus default values, as a folder (or packaged into a `.tgz`). This is the reusable unit — one chart, installable as many times as you like. *Full tour: [Anatomy of a chart](#anatomy-of-a-chart).*
+- **Values** — the knobs that fill in a chart's placeholders: the chart's own `values.yaml` (its defaults), plus anything you override with `-f`/`--set`. The `demo` install above used no `-f`, no `--set` — every setting came straight from `my-app/values.yaml` (`replicaCount: 2`, `image.repository: nginx`, …). *Full detail: [Reading `values.yaml`](#reading-valuesyaml) and [Where values come from](#where-values-come-from).*
+- **Template** — one manifest file inside the chart, written with `{{ }}` placeholders instead of hardcoded values — e.g. `replicas: {{ .Values.replicaCount }}` in `templates/deployment.yaml`. A template plus a set of values is what gets rendered into one ordinary Kubernetes manifest. *Full detail: [How rendering actually works](#how-rendering-actually-works), next, then [the five things that trip readers up](#the-five-things-that-trip-readers-up) — the longest section in this chapter, and the one that teaches the actual skill.*
+- **Release** — the name you gave *this particular installation*: `demo`. One chart, installed into a cluster, under a name, with its own revision history. Run `helm install demo2 manifests/packaging/helm/my-app` and you'd get a second, completely independent release of the *same* chart — two `Deployment`s, two `Service`s, tracked separately. *Full detail: [Releases and revisions](#releases-and-revisions).*
 
 Put the four together and that's the whole model: **install a Chart, with some Values, whose Templates render into manifests, as a named Release.** One chart, many releases with different values, is how the same app runs unmodified across every environment — no copy-pasted YAML.
 
@@ -269,6 +269,36 @@ manifests/packaging/helm/
 | `Chart.lock` | Resolved subchart versions, like `package-lock.json` (absent here) |
 
 The two things beginners misread: `templates/` is not only for `kind:` resources (`_helpers.tpl` and `NOTES.txt` live there too), and `version` vs `appVersion` are different — bumping your chart's templates bumps `version`, shipping a new app image bumps `appVersion`.
+
+### Reading `values.yaml`
+
+`values.yaml` is **plain YAML — no `{{ }}`, no Helm-specific syntax.** If you can read any other Kubernetes manifest, you can already read this file; the only new skill is translating its *nesting* into the *dot-paths* templates use to reach it. Here's the top of the tutorial chart's own `values.yaml`:
+
+```yaml
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# ...
+service:
+  type: ClusterIP
+  port: 80
+```
+
+Indentation is nesting, same as any YAML: `repository` is a **key inside** `image`, not a sibling of it; `port` is a key inside `service`. A template reaches those values by chaining the same names onto `.Values` with dots, in the same order they're indented:
+
+```
+image:               →   .Values.image
+  repository: nginx  →   .Values.image.repository
+
+service:             →   .Values.service
+  port: 80           →   .Values.service.port
+```
+
+So `.Values.image.repository` in a template and `image: / repository:` in `values.yaml` are the *same* value, just written two different ways — one as a path for Go's template language, one as nested YAML for a human to edit. This is why you'll see charts casually write "set `image.repository`" in prose or in a table: that dotted string is just shorthand for "open `values.yaml`, find `image:`, then `repository:` underneath it." The same reading applies to `--set image.repository=foo` on the command line — same dots, same nesting, just typed on one line instead of indented across several.
 
 Larger charts often add a few more entries. You do not need them to understand this tutorial chart, but recognize them when you open a teammate's:
 
