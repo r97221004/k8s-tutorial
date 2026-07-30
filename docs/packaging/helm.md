@@ -283,6 +283,8 @@ manifests/packaging/helm/
 
 `values-prod.yaml` sits *outside* `my-app/` on purpose, and it's worth understanding why before you copy the layout: `helm package` bundles **everything inside the chart directory** into the `.tgz`. Put your production values in there and they ship to everyone who installs the chart. The chart is the artifact you distribute; your per-environment values are your own deployment config, so they live next to it, not in it.
 
+Using it doesn't mean moving it in, either. At install/upgrade time you pass it with `-f`, and Helm merges the two files **in memory, at that moment** — `values.yaml` is never edited, overwritten, or replaced on disk, and `values-prod.yaml` never gets copied into the chart directory. Run the exact same `-f` command a hundred times and `values.yaml` stays byte-for-byte identical every single time; only the *rendered output* changes. [Where values come from](#where-values-come-from) covers the full merge order.
+
 | File | What it's for |
 |---|---|
 | `Chart.yaml` | Name, `version` (the chart's version), `appVersion` (the app inside it), and `dependencies` (subcharts) |
