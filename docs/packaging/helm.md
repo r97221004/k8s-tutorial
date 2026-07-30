@@ -234,7 +234,32 @@ Two consequences worth internalizing:
 - **`helm template` shows the locally rendered result.** Any time a chart confuses you, render it and read the output instead of mentally simulating indentation and branches.
 - **The apiserver cannot help you debug a template.** A typo inside `{{ }}` is a Helm-side error you'll see locally, before anything reaches the cluster.
 
-For most application charts, that local output is exactly what you need. There is one important boundary: `helm template` fakes cluster-discovered information, so templates using `lookup` or branching on `.Capabilities` can render differently during a real install. Use `--kube-version` / `--api-versions` to simulate capabilities locally, or `--dry-run=server` when you need the target cluster's answer.
+For most application charts — including both charts in this tutorial — that local output is exactly what a real install would produce. But `helm template` has no real cluster to ask, so for two specific kinds of question it has to guess:
+
+- **"What Kubernetes version is this?"** A template can check with `.Capabilities.KubeVersion` — e.g. to use a newer API only on new-enough clusters. Neither tutorial chart does this, so there's no real path to point `helm template` at here — but you don't need one to see the effect. This is `<chart>` standing in for *any* chart with a template containing this one line:
+
+  ```yaml
+  kubeVersion: {{ .Capabilities.KubeVersion.Version }}
+  ```
+
+  Render it with no cluster at all, and Helm answers from a version number baked into the Helm binary itself:
+
+  ```bash
+  helm template demo <chart>
+  # kubeVersion: v1.31.0    ← Helm's own built-in guess, on this machine's Helm install
+  ```
+
+  Add one flag, still with no cluster, and the *exact same template* renders differently:
+
+  ```bash
+  helm template demo <chart> --kube-version 1.20.0
+  # kubeVersion: v1.20.0    ← same template, a different assumed answer
+  ```
+
+  Neither run touched a real cluster — the second one just told Helm to guess something else.
+- **"Does this API — or this object — exist?"** `.Capabilities.APIVersions.Has "apps/v1"` checks whether an API group is available; `lookup "v1" "Secret" ns name` reads a live object. With no cluster, Helm answers API-availability questions from a fixed built-in list of well-known stable APIs — `apps/v1` reads as available even with no cluster at all — but a CRD your *real* cluster has installed, which isn't on that built-in list, reads as unavailable locally even though it would work during a real install. `lookup` has no fallback list whatsoever: with no cluster to query, it always returns empty, regardless of whether the object actually exists on the target cluster.
+
+Neither of this tutorial's charts branches on `.Capabilities` or calls `lookup`, so none of this affects anything you've run so far — it only matters for charts that do. When it does matter: `--kube-version` / `--api-versions` let you tell `helm template` what to assume, still with no cluster; `--dry-run=server` skips guessing entirely and asks the target cluster directly.
 
 ## Anatomy of a chart
 
