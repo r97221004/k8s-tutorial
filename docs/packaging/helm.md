@@ -147,6 +147,16 @@ Before the vocabulary, a quick anchor: every Helm command used anywhere in this 
 
 Every one of these gets used and explained again in its own context later in the chapter — this table exists so you have somewhere to come back to, not so you absorb it right now.
 
+#### A closer look at `helm template`
+
+Two of its flags get confused for each other because they can sit on the same command line, but they control opposite ends of the pipeline:
+
+- **`-f` / `--set` control input** — which values fill in `{{ .Values.xxx }}`. They never reduce which files get rendered: `helm template demo <chart> -f values-prod.yaml` still renders every template in the chart (Deployment, Service, ConfigMap, …), just with `values-prod.yaml`'s numbers plugged in instead of the defaults.
+- **`--show-only <path>` controls output** — which of the rendered files you actually get printed. It's repeatable, so you can ask for several: `--show-only templates/deployment.yaml --show-only templates/service.yaml`. The path is relative to the chart root, matching what `ls templates/` shows.
+- The two compose freely, since one is about input and the other about output: `helm template demo <chart> -f values-prod.yaml --show-only templates/deployment.yaml` renders with production values, then prints only the Deployment.
+
+Default to no `--show-only` the first time you render an unfamiliar chart — the full output is what tells you it creates more objects than you expected. Reach for `--show-only` once you already know which file you're iterating on and just want to stop re-reading the other ones every time.
+
 #### A closer look at `helm list`
 
 It is the command beginners misread most, so it earns its own explanation:
