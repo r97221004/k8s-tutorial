@@ -659,7 +659,16 @@ That's the real trade-off: `with` saves repeating a long path several times insi
 
 **`range`** iterates. Over a list you get each item; over a map you get key and value.
 
-Start with a list — `.Values.ingress.hosts`, looking at just the `host` field:
+Start with a list — `.Values.ingress.hosts`, looking at just the `host` field. Here's the data being iterated, from `values.yaml`:
+
+```yaml
+ingress:
+  hosts:
+    - host: my-app.local
+      paths:
+        - path: /
+          pathType: Prefix
+```
 
 ```yaml
 {{- range .Values.ingress.hosts }}
@@ -672,6 +681,8 @@ Each pass rebinds `.` to that pass's element. With this chart's default values t
 ```yaml
 - my-app.local
 ```
+
+`.host` isn't a name you're free to pick — `host` has to match the key that's actually in the data (change `values.yaml` to `hostname:` and you'd write `.hostname`, or `.host` would silently render empty). The leading `.` is the part that's fixed: it's field-access syntax meaning "look this up on the current context," and it can't be dropped — write `host` alone and Go templates try to call it as a function instead, and error with `function "host" not defined`.
 
 A map needs two variables instead of one, because each entry carries both a key and a value — `.` alone could only hold one of them:
 
