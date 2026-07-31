@@ -487,6 +487,14 @@ Start with the plainest one in the file — `my-app.name` — just to see the sh
 
 One line: fall back to the chart's own name (`my-app`) unless `nameOverride` is set, capped at 63 characters. Nothing about `define` changed how that line works — it's the same `default | trunc | trimSuffix` chain you'd write inline anywhere else; the only new thing is that it's stored under a name instead of typed out at every call site.
 
+Calling it always takes the same shape: `include <name> <context>` — two arguments, never optional. You'll see the call two paragraphs down, inside `my-app.selectorLabels`: `include "my-app.name" .`. The first argument is the string name from `define`; the second is whatever context that snippet should see inside itself — `.` just happens to be the right answer almost every time (hand along whatever context you currently have). That argument slot is not decorative, though: delete it and Helm refuses to render, tracing all the way back through whichever chain of helpers called it:
+
+```
+Error: template: my-app/templates/service.yaml:6:8: executing "my-app/templates/service.yaml" at <include "my-app.labels" .>: error calling include: template: my-app/templates/_helpers.tpl:39:3: executing "my-app.labels" at <include "my-app.selectorLabels" .>: error calling include: template: my-app/templates/_helpers.tpl:51:27: executing "my-app.selectorLabels" at <include>: wrong number of args for include: want 2 got 1
+```
+
+`wrong number of args for include: want 2 got 1` is Go template complaining about a missing function argument, same as any language would — not a Helm-specific quirk, and not something `.` is merely conventional about.
+
 Now the one a real template actually pulls in — `my-app.selectorLabels` — which is one step busier: its own body calls the helper above, and `deployment.yaml` calls it in turn:
 
 ```yaml
