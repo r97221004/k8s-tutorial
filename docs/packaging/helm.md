@@ -476,7 +476,18 @@ Read `define` and `include` the way you'd read a function definition and a funct
 | `my-app.labels` | The full label set for every object, including the selector labels |
 | `my-app.selectorLabels` | Just the labels a selector matches on |
 
-Here's one of them, and how a template pulls it in:
+Start with the plainest one in the file — `my-app.name` — just to see the shape of a `define` with nothing else going on:
+
+```yaml
+{{/* in templates/_helpers.tpl */}}
+{{- define "my-app.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+```
+
+One line: fall back to the chart's own name (`my-app`) unless `nameOverride` is set, capped at 63 characters. Nothing about `define` changed how that line works — it's the same `default | trunc | trimSuffix` chain you'd write inline anywhere else; the only new thing is that it's stored under a name instead of typed out at every call site.
+
+Now the one a real template actually pulls in — `my-app.selectorLabels` — which is one step busier: its own body calls the helper above, and `deployment.yaml` calls it in turn:
 
 ```yaml
 {{/* in templates/_helpers.tpl */}}
