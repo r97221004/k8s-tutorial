@@ -519,7 +519,7 @@ flowchart LR
     style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
-That diagram shows *reuse across files*; zoom into what happens *inside one call*, and every `include` in the chart follows the same five steps:
+That diagram shows *reuse across files*; zoom into what happens *inside one call*:
 
 ```mermaid
 ---
@@ -535,30 +535,27 @@ config:
   themeCSS: |
     .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
-flowchart TD
+flowchart LR
     subgraph box["🧩 Inside a single include call"]
-        direction TD
-        def["📝 define 'my-app.selectorLabels'<br/>stored under this name, not run yet"]
-        call["📞 include '...' .<br/>look it up, hand over the current context"]
-        run["⚙️ snippet runs with that context<br/>.Release.Name etc. are now resolvable"]
-        str["📄 result comes back as plain text"]
-        pipe["➡️ | nindent 6<br/>newline + 6-space indent on every line"]
-        out["✅ text lands under matchLabels:"]
+        direction LR
+        def["📝 define<br/>stored, not run"]
+        inv["📞 include . <br/>hands over context"]
+        run["⚙️ runs, returns text"]
+        out["✅ nindent 6 →<br/>pasted under matchLabels:"]
 
-        def -.->|"looked up by name"| call
-        call --> run --> str --> pipe --> out
+        def -.->|"looked up by name"| inv --> run --> out
     end
 
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
     class def eng
-    class call,run,str,pipe ctrl
+    class inv,run ctrl
     class out tgt
     style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
-Trace it against the `deployment.yaml` call from above: `include "my-app.selectorLabels" .` finds that name in `_helpers.tpl`; `.` — the full current context, carrying `.Values`, `.Release`, `.Chart` — is handed to the snippet, which is the only reason `{{ .Release.Name }}` inside it resolves to anything; the snippet runs and produces two lines of plain text; `include` hands that text back as a string; `| nindent 6` prefixes a newline and indents every line 6 spaces; the result is pasted under `matchLabels:`. Forget to pass `.` (or pass the wrong scope — see the bullet below) and step three has nothing to work with, so `.Release.Name` silently renders empty instead of erroring.
+Trace it against the `deployment.yaml` call from above: `include "my-app.selectorLabels" .` finds that name in `_helpers.tpl`; `.` — the full current context, carrying `.Values`, `.Release`, `.Chart` — is handed to the snippet, which is the only reason `{{ .Release.Name }}` inside it resolves to anything; the snippet runs and returns two lines of plain text; `| nindent 6` prefixes a newline and indents every line 6 spaces; the result is pasted under `matchLabels:`. Forget to pass `.` (or pass the wrong scope — see the bullet below) and the "runs" step has nothing to work with, so `.Release.Name` silently renders empty instead of erroring.
 
 This isn't style for its own sake. As [Labels & Selectors](../core-objects/labels-selectors.md) explained, nothing here is wired by reference — the Deployment's `matchLabels`, the Pod template's `labels`, and the Service's `selector` all have to agree on the Pod's labels for any of it to connect. That's the same set of labels written in three places across two files, and a Deployment's `selector` is **immutable** after creation, so getting it wrong means deleting and recreating. One helper emitting all three makes them impossible to drift.
 
