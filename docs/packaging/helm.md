@@ -456,6 +456,8 @@ One thing that looks like a bug the first time: **`toYaml` sorts map keys alphab
 
 Real charts almost never write `name:` directly. They define a snippet once and pull it in everywhere. Our chart's `_helpers.tpl` defines five, and between them they account for nearly every `{{ }}` in the other templates — so when a chart's `metadata:` looks like nothing but `include` calls, this file is what you read:
 
+Read `define` and `include` the way you'd read a function definition and a function call. `{{- define "name" -}} … {{- end }}` stores a template snippet under that name — nothing renders yet, and nothing in `_helpers.tpl` produces output on its own just by sitting in the file. `include "name" .` is the call: look up that name, run it with whatever you hand it as the argument, and get the result back as text. A chart can `define` fifty helpers and render zero bytes from that file until something elsewhere `include`s one.
+
 | Helper | Produces |
 |---|---|
 | `my-app.name` | The chart's short name (`my-app`), or `nameOverride` if set |
@@ -516,6 +518,47 @@ flowchart LR
     class o1,o2 ctrl
     style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
+
+That diagram shows *reuse across files*; zoom into what happens *inside one call*, and every `include` in the chart follows the same five steps:
+
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
+flowchart TD
+    subgraph box["🧩 Inside a single include call"]
+        direction TD
+        def["📝 define 'my-app.selectorLabels'<br/>stored under this name, not run yet"]
+        call["📞 include '...' .<br/>look it up, hand over the current context"]
+        run["⚙️ snippet runs with that context<br/>.Release.Name etc. are now resolvable"]
+        str["📄 result comes back as plain text"]
+        pipe["➡️ | nindent 6<br/>newline + 6-space indent on every line"]
+        out["✅ text lands under matchLabels:"]
+
+        def -.->|"looked up by name"| call
+        call --> run --> str --> pipe --> out
+    end
+
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class def eng
+    class call,run,str,pipe ctrl
+    class out tgt
+    style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+```
+
+Trace it against the `deployment.yaml` call from above: `include "my-app.selectorLabels" .` finds that name in `_helpers.tpl`; `.` — the full current context, carrying `.Values`, `.Release`, `.Chart` — is handed to the snippet, which is the only reason `{{ .Release.Name }}` inside it resolves to anything; the snippet runs and produces two lines of plain text; `include` hands that text back as a string; `| nindent 6` prefixes a newline and indents every line 6 spaces; the result is pasted under `matchLabels:`. Forget to pass `.` (or pass the wrong scope — see the bullet below) and step three has nothing to work with, so `.Release.Name` silently renders empty instead of erroring.
 
 This isn't style for its own sake. As [Labels & Selectors](../core-objects/labels-selectors.md) explained, nothing here is wired by reference — the Deployment's `matchLabels`, the Pod template's `labels`, and the Service's `selector` all have to agree on the Pod's labels for any of it to connect. That's the same set of labels written in three places across two files, and a Deployment's `selector` is **immutable** after creation, so getting it wrong means deleting and recreating. One helper emitting all three makes them impossible to drift.
 
