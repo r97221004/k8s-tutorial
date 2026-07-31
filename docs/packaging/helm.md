@@ -428,6 +428,10 @@ A chart often wants to drop a whole block of user-supplied YAML into a manifest.
           {{- end }}
 ```
 
+That `.` inside `toYaml .` isn't the root context — `with .Values.resources` rebinds `.` to `.Values.resources` for everything inside the block, so `toYaml .` is shorthand for `toYaml .Values.resources`. Full explanation of that rebinding, and the `$`-for-root escape hatch, is in [`if`, `with`, and `range`](#4-if-with-and-range) below.
+
+`with` earns its keep here for more than the shorter `.`: it also skips the whole block — the `resources:` key included — when `.Values.resources` is unset or empty, so leaving `resources` out of a values file never emits a `resources:` key with nothing indented under it.
+
 Given `values.yaml`:
 
 ```yaml
