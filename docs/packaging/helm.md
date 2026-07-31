@@ -646,6 +646,17 @@ Helm treats `false`, `0`, `""`, an empty list/map, and `nil` as false — everyt
 
 Inside that block `.` is `.Values.nodeSelector`, not the root — which is the number-one gotcha in reading charts. If you need the root inside a `with` or `range`, use **`$`**, which always refers to it.
 
+`with` is never required — `if` alone can do the same skip-if-empty job, just with the full path repeated everywhere `.` would have been:
+
+```yaml
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+```
+
+That's the real trade-off: `with` saves repeating a long path several times inside the block, at the cost of `.` no longer meaning root — forget the `$` and something like `.Release.Name` silently renders empty instead of erroring. Some teams' style guides ban `with` outright for exactly this reason and pay the extra typing. Reach for `with` when the path is deep and reused three or more times inside the block *and* you're sure you won't need root context in there; default to `if` otherwise.
+
 **`range`** iterates. Over a map you get key and value; over a list you get each item:
 
 ```yaml
