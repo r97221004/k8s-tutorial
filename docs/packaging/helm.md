@@ -684,7 +684,13 @@ Each pass rebinds `.` to that pass's element. With this chart's default values t
 
 `.host` isn't a name you're free to pick — `host` has to match the key that's actually in the data (change `values.yaml` to `hostname:` and you'd write `.hostname`, or `.host` would silently render empty). The leading `.` is the part that's fixed: it's field-access syntax meaning "look this up on the current context," and it can't be dropped — write `host` alone and Go templates try to call it as a function instead, and error with `function "host" not defined`.
 
-A map needs two variables instead of one, because each entry carries both a key and a value — `.` alone could only hold one of them:
+A map needs two variables instead of one, because each entry carries both a key and a value — `.` alone could only hold one of them. Here's the `config` map being iterated, from `values.yaml`:
+
+```yaml
+config:
+  GREETING: hello from values.yaml
+  LOG_LEVEL: info
+```
 
 ```yaml
 data:
@@ -707,7 +713,19 @@ data:
 
 Go template sorts map keys alphabetically before iterating, so the rendered order is stable across runs — it won't reshuffle between two `helm template` calls.
 
-And here is `$` in action, from `templates/ingress.yaml` — inside two nested `range`s, `.` is the current path entry, so the root has to be reached explicitly:
+Nest two `range`s and this bites immediately. Stripped down to just the loop shape, with what `.` is at each line noted alongside:
+
+```gotemplate
+{{- range .Values.ingress.hosts }}   {{/* . = the current host, e.g. {host: my-app.local, paths: [...]} */}}
+  {{- range .paths }}                {{/* . rebinds again — now the current path, e.g. {path: /, pathType: Prefix} */}}
+    {{ .path }}                      {{/* works — . is the path item, which does have a path field */}}
+    {{ .Values.service.port }}       {{/* aborts the render — . has no Values field, so .Values is nil and .port on nil is a hard error */}}
+    {{ $.Values.service.port }}      {{/* works — $ is always root, no matter how many range levels deep */}}
+  {{- end }}
+{{- end }}
+```
+
+That's exactly the shape `templates/ingress.yaml` uses, just with the real fields filled in — two nested `range`s, `.` now the current path entry, root reached through `$`:
 
 ```yaml
               service:
