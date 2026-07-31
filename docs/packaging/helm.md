@@ -686,21 +686,19 @@ config:
   themeCSS: |
     .edgeLabel, .edgeLabel p, .edgeLabel span { color:#FFFFFF !important; }
 ---
-flowchart TD
+flowchart LR
     subgraph box["🎯 Scope stack: . moves, $ stays pinned to root"]
-        direction TB
-        root["Template starts<br/><b>.</b> = root context<br/><b>$</b> = root context"]
-        hosts["range .Values.ingress.hosts<br/><b>.</b> = current host<br/><b>$</b> = root context"]
-        paths["range .paths<br/><b>.</b> = current path<br/><b>$</b> = root context"]
-        use["Use .path and .pathType<br/>Use $.Values.service.port<br/>Pass $ to root-based helpers"]
+        direction LR
+        root["🏁 Template root<br/>. = $ = root"]
+        hosts["🔁 range hosts<br/>. = current host"]
+        paths["🔁 range .paths<br/>. = current path"]
 
-        root --> hosts --> paths --> use
+        root -->|"$ still root"| hosts -->|"$ still root"| paths
     end
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
-    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    class root,use ctrl
+    class root ctrl
     class hosts,paths eng
     style box fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
