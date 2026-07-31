@@ -375,6 +375,8 @@ Everything below is in [`manifests/packaging/helm/my-app/`](../../manifests/pack
 
 A `{{ if }}` on its own line still leaves that line's whitespace and newline in the output. YAML cares about whitespace, so charts are littered with `-` to chomp it: `{{-` removes whitespace *before* the tag, `-}}` removes it *after*.
 
+The exact mechanic: `{{-` deletes every contiguous whitespace character (space, tab, newline) immediately to its left, stopping the instant it hits a non-whitespace character — `-}}` does the same to the right. Newlines count as whitespace, so several blank lines in a row before a tag all get chomped to nothing, same as one. But it only reaches whitespace *touching* the tag: a space sitting inside ordinary text elsewhere on the line, like the one in `key: value`, is untouched because nothing chomps through non-whitespace to get to it.
+
 | Written | Meaning |
 |---|---|
 | `{{ .Values.x }}` | Substitute, touch no surrounding whitespace |
