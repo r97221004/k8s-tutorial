@@ -657,7 +657,23 @@ Inside that block `.` is `.Values.nodeSelector`, not the root — which is the n
 
 That's the real trade-off: `with` saves repeating a long path several times inside the block, at the cost of `.` no longer meaning root — forget the `$` and something like `.Release.Name` silently renders empty instead of erroring. Some teams' style guides ban `with` outright for exactly this reason and pay the extra typing. Reach for `with` when the path is deep and reused three or more times inside the block *and* you're sure you won't need root context in there; default to `if` otherwise.
 
-**`range`** iterates. Over a map you get key and value; over a list you get each item:
+**`range`** iterates. Over a list you get each item; over a map you get key and value.
+
+Start with a list — `.Values.ingress.hosts`, looking at just the `host` field:
+
+```yaml
+{{- range .Values.ingress.hosts }}
+- {{ .host }}
+{{- end }}
+```
+
+Each pass rebinds `.` to that pass's element. With this chart's default values there's one host, so there's one pass, and `.host` is `my-app.local` on it:
+
+```yaml
+- my-app.local
+```
+
+A map needs two variables instead of one, because each entry carries both a key and a value — `.` alone could only hold one of them:
 
 ```yaml
 data:
@@ -671,6 +687,14 @@ data:
   GREETING: "hello from values.yaml"
   LOG_LEVEL: "info"
 ```
+
+| | List | Map |
+|---|---|---|
+| Syntax | `range .Values.ingress.hosts` | `range $key, $value := .Values.config` |
+| Each pass gives you | One thing — the item itself, bound to `.` | Two things — key and value |
+| Why | No name to use as a key; the item's content *is* `.` | Each entry is a name → content pair; dropping the name loses information |
+
+Go template sorts map keys alphabetically before iterating, so the rendered order is stable across runs — it won't reshuffle between two `helm template` calls.
 
 And here is `$` in action, from `templates/ingress.yaml` — inside two nested `range`s, `.` is the current path entry, so the root has to be reached explicitly:
 
