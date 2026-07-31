@@ -801,19 +801,30 @@ The pipe sends the value on its left as the **last argument** to the function on
 {{ .Values.image.tag | default .Chart.AppVersion }}
 ```
 
-Read a longer pipeline from left to right:
+**`default`**'s call shape is `default FALLBACK VALUE` — fallback first, the value being checked second, which reads backwards until you remember the pipe form hands its left side in as the *last* argument, so `VALUE | default FALLBACK` puts them back in the order you'd expect. Either way: if `VALUE` is empty, `default` returns `FALLBACK`; otherwise it returns `VALUE` unchanged and `FALLBACK` is never touched. "Empty" is the same falsy list `if` uses — `""`, `0`, `false`, `nil`, an empty list/map. Concretely, from `deployment.yaml`:
 
 ```gotemplate
-{{ include "my-app.labels" . | nindent 4 }}
+{{ .Values.image.tag | default .Chart.AppVersion }}
 ```
 
-1. Call the helper with the current context.
-2. Take the returned string.
-3. Add a newline and indent it four spaces.
+This chart's `values.yaml` ships `image.tag: ""`, which is empty, so the rendered image tag falls back to whatever `appVersion` is set to in `Chart.yaml`. Set `image.tag: "1.25"` and `default` returns `"1.25"` — `Chart.AppVersion` is never even evaluated.
 
-Parentheses evaluate first. In the checksum expression, `print` builds a filename, `include` renders that file, then the pipe sends the rendered string to `sha256sum`.
+**`quote`** earns its spot on this list because a value straight out of `.Values` keeps whatever type it had in the YAML source — a boolean stays a boolean, a number stays a number. A ConfigMap's `data:` is supposed to be all strings (containers only ever see string environment variables), so printing a value unquoted can silently change its type:
 
-`required` is the polite way a chart demands input. Swap `default .Chart.AppVersion` for `required "image.tag must be set"` in `deployment.yaml`, leave `image.tag` empty, and the render stops with a message you can act on:
+```yaml
+# values.yaml
+config:
+  DEBUG: true
+```
+
+```gotemplate
+{{ $value }}            {{/* → DEBUG: true    — YAML reads this as a boolean */}}
+{{ $value | quote }}    {{/* → DEBUG: "true"  — YAML reads this as the string "true" */}}
+```
+
+Reach for `quote` any time a value might not already be a string — numbers and booleans are the two that bite most often.
+
+**`required`** is the polite way a chart demands input, instead of quietly falling back to something. Swap `default .Chart.AppVersion` for `required "image.tag must be set"` in `deployment.yaml`, leave `image.tag` empty, and the render stops with a message you can act on:
 
 ```
 Error: execution error at (my-app/templates/deployment.yaml:26:52): image.tag must be set
@@ -826,6 +837,55 @@ Error: template: my-app/templates/deployment.yaml:26:28: executing "my-app/templ
 ```
 
 `nil pointer evaluating interface {}.<key>` always means the same thing: **a parent key in the path doesn't exist.** Here `.Values.image` itself is missing, so there is nothing to look `repository` up on — the error names the child, but the missing thing is the parent. Note that `required` cannot rescue you from this: it checks the final value, so the nil dereference happens first.
+
+**`toYaml`** and **`nindent`**/**`indent`** already got a full section of their own — [`toYaml` and `nindent`](#2-toyaml-and-nindent--indentation-as-a-function-call) — not repeated here. One more reading-skill example while it's fresh, from `_helpers.tpl`, read left to right:
+
+```gotemplate
+{{ include "my-app.labels" . | nindent 4 }}
+```
+
+Call the helper with the current context, take the returned string, add a newline and indent it four spaces.
+
+**`printf`** formats a string — same idea as `printf` in C or `fmt.Sprintf` in Go. Each `%s` in the format string is a placeholder, filled in order by the arguments that follow it:
+
+```gotemplate
+{{ printf "%s-%s" .Release.Name $name }}
+```
+
+With `.Release.Name` = `demo` and `$name` = `my-app`, the two `%s` placeholders fill left to right, producing `demo-my-app` — this is the exact expression that builds the fallback name inside the `fullname` helper.
+
+**`sha256sum`** turns any string into a fixed-length fingerprint: the same input always produces the same hash, and changing even one character changes the whole thing. `deployment.yaml` combines it with `print` and `include` for the `checksum/config` annotation:
+
+```gotemplate
+checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+```
+
+Parentheses evaluate first: `print` builds the ConfigMap's file path, `include` renders that file to a string, then the pipe sends the rendered string to `sha256sum`. That's the point of hashing here: change any `config:` value, and the ConfigMap's rendered text changes, so its hash changes, so this annotation on the Pod template changes. Changing a Pod template annotation is what makes Kubernetes actually roll the Pods — a ConfigMap update by itself never restarts anything, so without this hash trick, edited config would sit there unread until something else happened to restart the Pods.
+
+**`b64enc`** base64-encodes a string — this tutorial's chart doesn't happen to use it, but it's worth knowing. Kubernetes `Secret` objects store their `data:` field as base64 — not encryption, just an encoding format the API requires — so a chart writing a Secret has to encode every value going in:
+
+```gotemplate
+data:
+  password: {{ .Values.password | b64enc }}
+```
+
+A `values.yaml` entry of `password: hunter2` becomes `password: aHVudGVyMg==` in the rendered Secret. That's not protection: anyone holding the Secret decodes it right back with one command (`echo aHVudGVyMg== | base64 -d`). `b64enc` satisfies the API's format requirement; it provides no actual secrecy on its own.
+
+**`tpl`** — also unused in this chart — re-runs Helm's template engine on a *value*, not on a template file. Without it, `{{ }}` markup typed into `values.yaml` renders as literal text, because by the time `values.yaml` is read, the chart's own template processing has already finished:
+
+```yaml
+# values.yaml
+extraLabel: "release-{{ .Release.Name }}"
+```
+
+```gotemplate
+{{ .Values.extraLabel }}         {{/* → literally "release-{{ .Release.Name }}" */}}
+{{ tpl .Values.extraLabel . }}   {{/* → "release-demo" */}}
+```
+
+`tpl` takes that string and feeds it back through the template engine with whatever context you hand it (`.` here), so any `{{ }}` inside the string actually renders instead of printing as-is. Charts use this to let *users* put dynamic values — a release name, a namespace — inside their own `values.yaml` overrides.
+
+**`trunc`** and **`trimSuffix`** round out the table, and are already covered too — the pair that caps generated names at Kubernetes' 63-character limit, seen throughout the [`fullname` helper](#3-_helperstpl-define-and-include).
 
 ### A compact decoder for larger charts
 
