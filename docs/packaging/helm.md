@@ -921,6 +921,15 @@ Two rules keep this manageable:
 - When you see `include`, find the matching `define` before guessing what it returns.
 - When you see `lookup` or `.Capabilities`, local rendering may not match the target cluster; inspect both branches and render with the appropriate cluster capabilities.
 
+Say that second rule bluntly, because it's the one that costs people an afternoon: **wherever those two keywords appear, plain `helm template` output is not to be trusted.** [How rendering actually works](#how-rendering-actually-works) explains why — with no cluster, `lookup` always comes back empty, so the "not found" branch always wins locally, and `.Capabilities` answers from a built-in list rather than from your target cluster. A chart that reuses an existing password when it finds one, and generates a fresh one otherwise, will generate a fresh one on *every* local render while doing the opposite on a real upgrade. So read both branches, and when it matters, stop guessing — either hand Helm the cluster facts, or ask the cluster itself:
+
+```bash
+helm template demo <chart> --kube-version 1.21 \
+  --api-versions networking.k8s.io/v1beta1/Ingress   # still no cluster; you supply the answers
+
+helm upgrade demo <chart> --dry-run=server           # real cluster answers, nothing applied
+```
+
 ## Two annotations worth recognizing
 
 **`checksum/config`** solves a problem you already hit in [ConfigMaps](../config-and-data/configmap.md): editing a ConfigMap does not restart the Pods that read it, so you had to run `kubectl rollout restart` by hand. Charts automate that — they hash the rendered ConfigMap into the Pod template, so a changed value changes the Pod spec, and the Deployment rolls on its own:
