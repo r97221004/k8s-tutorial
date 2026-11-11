@@ -1,0 +1,31 @@
+# Defaults for the chart-reading exercise. Read the templates before looking at the answers.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: ""
+  pullPolicy: IfNotPresent
+
+fullnameOverride: ""
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+
+# Lists are replaced wholesale by a values override.
+env:
+  - name: APP_MODE
+    value: demo
+  - name: RELEASE_NAME
+    value: ""
+
+extraLabels: {}
+
+config:
+  enabled: false
+  data: {}
+
+# An empty map is false inside `with`, so the resources block is omitted by default.
+resources: {}

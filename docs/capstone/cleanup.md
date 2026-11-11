@@ -40,7 +40,7 @@ kubectl get pv                        # released/orphaned PersistentVolumes?
 
 ## Reset the whole cluster
 
-To go all the way back to bare machines, tear the cluster down with the companion Ansible tutorial's uninstall play (it runs `kubeadm reset` and cleans up) — see **[r97221004/ansible-tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial#kubeadm-role)**. On a k3s fast-lane cluster, `/usr/local/bin/k3s-uninstall.sh` removes everything.
+To go all the way back to bare machines, tear the cluster down with the companion Ansible tutorial's uninstall play (it runs `kubeadm reset` and cleans up) — see **[r97221004/ansible-tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**. On a k3s fast-lane cluster, `/usr/local/bin/k3s-uninstall.sh` removes everything.
 
 ## Best practices
 

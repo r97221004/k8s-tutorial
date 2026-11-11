@@ -1,6 +1,19 @@
 apiVersion: v2
 name: my-app
-description: A tiny Helm chart for the Kubernetes tutorial
+description: A small but realistic Helm chart for the Kubernetes tutorial
 type: application
-version: 0.1.0
+
+# The chart's own version. Bump this when you change templates or default values.
+version: 0.2.0
+
+# The version of the application inside the chart. Used as the default image tag
+# (see values.yaml `image.tag`) and as the app.kubernetes.io/version label.
 appVersion: "1.27"
+
+# Charts this chart pulls in. Left commented so the tutorial chart stays offline-installable —
+# uncomment and run `helm dependency update` to fetch it into charts/ and write Chart.lock.
+# dependencies:
+#   - name: redis
+#     version: "20.x.x"
+#     repository: https://charts.bitnami.com/bitnami
+#     condition: redis.enabled

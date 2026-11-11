@@ -117,7 +117,7 @@ For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu
 
 **You'll need a cluster to follow along. Two ways to get one:**
 
-1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial#kubeadm-role)**, then read [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
+1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**, then read [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
 2. **Fast lane — just want to run the examples?** Spin up a real single-node cluster with k3s in one line and circle back to kubeadm later:
 
    ```bash
@@ -186,7 +186,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 
 **Part 5 — Packaging & Beyond**
 
-- [**Helm (intro)**](docs/packaging/helm.md) — the Kubernetes package manager.
+- [**Helm**](docs/packaging/helm.md) — the Kubernetes package manager, and how to read a chart.
 - [**Kustomize (intro)**](docs/packaging/kustomize.md) — overlay-based config.
 
 **Capstone**

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "my-app.fullname" . }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+data:
+  {{- /* `range` over a map gives key and value. `quote` matters: ConfigMap values must be
+       strings, so an unquoted `LOG_LEVEL: true` or a bare number would fail validation. */}}
+  {{- range $key, $value := .Values.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

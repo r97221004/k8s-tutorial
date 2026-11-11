@@ -1,0 +1,6 @@
+apiVersion: v2
+name: reader-lab
+description: A self-contained chart-reading exercise for the Helm tutorial
+type: application
+version: 0.1.0
+appVersion: "1.27"

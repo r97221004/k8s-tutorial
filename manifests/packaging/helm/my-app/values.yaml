@@ -1,8 +1,44 @@
+# Default values for my-app. Override with `-f my-values.yaml` or `--set key=value`.
+
 replicaCount: 2
 
 image:
   repository: nginx
-  tag: "1.27"
+  # Empty means "use Chart.yaml's appVersion" — see the `default` call in deployment.yaml.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Rename the chart's objects without forking the chart. Both empty = use the chart name.
+nameOverride: ""
+fullnameOverride: ""
 
 service:
+  type: ClusterIP
   port: 80
+
+ingress:
+  # Off by default: turning this on needs an Ingress controller in the cluster.
+  enabled: false
+  className: nginx
+  hosts:
+    - host: my-app.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Rendered into a ConfigMap and loaded as environment variables.
+config:
+  GREETING: hello from values.yaml
+  LOG_LEVEL: info
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Empty maps: the templates wrap these in `with`, so nothing is emitted unless you set them.
+podAnnotations: {}
+nodeSelector: {}

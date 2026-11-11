@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "reader-lab.fullname" . }}
+  labels:
+    {{- include "reader-lab.labels" (dict "root" . "extra" .Values.extraLabels) | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "reader-lab.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "reader-lab.labels" (dict "root" . "extra" .Values.extraLabels) | nindent 8 }}
+      {{- if .Values.config.enabled }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- end }}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          env:
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | default $.Release.Name | quote }}
+            {{- end }}
+          {{- if .Values.config.enabled }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "reader-lab.fullname" . }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

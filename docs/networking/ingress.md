@@ -216,4 +216,4 @@ The `web` Ingress stays up by default — the [Helm](../packaging/helm.md) chapt
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Helm (intro) →](../packaging/helm.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Helm →](../packaging/helm.md)

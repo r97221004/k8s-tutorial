@@ -74,4 +74,4 @@ They're not mutually exclusive — teams often template third-party apps with He
 
 ---
 
-[← Helm (intro)](helm.md) · [↑ Contents](../../README.md) · [Deploy a Two-Tier App →](../capstone/two-tier-app.md)
+[← Helm](helm.md) · [↑ Contents](../../README.md) · [Deploy a Two-Tier App →](../capstone/two-tier-app.md)
