@@ -94,7 +94,7 @@ kubectl rollout status deployment/web
 
 ## See readiness gate traffic (with k9s)
 
-Open [k9s](../getting-started/k9s.md), type `:pods`, and filter for `web`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints. Press `d` on a Pod to see the configured Readiness/Liveness/Startup probes in its describe view.
+Open [k9s](../cluster-setup/k9s.md), type `:pods`, and filter for `web`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints. Press `d` on a Pod to see the configured Readiness/Liveness/Startup probes in its describe view.
 
 Break readiness on purpose:
 

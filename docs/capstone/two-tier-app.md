@@ -116,7 +116,7 @@ kubectl rollout status deployment/todo-backend -n demo
 kubectl rollout status deployment/todo-frontend -n demo
 ```
 
-Or open [k9s](../getting-started/k9s.md), press `:ns` → `demo`, and watch the backend, frontend, and PVC.
+Or open [k9s](../cluster-setup/k9s.md), press `:ns` → `demo`, and watch the backend, frontend, and PVC.
 
 ## Verify the wiring
 

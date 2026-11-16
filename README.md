@@ -117,7 +117,7 @@ For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu
 
 **You'll need a cluster to follow along. Two ways to get one:**
 
-1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**, then read [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
+1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**, then read [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
 2. **Fast lane — just want to run the examples?** Spin up a real single-node cluster with k3s in one line and circle back to kubeadm later:
 
    ```bash
@@ -136,7 +136,7 @@ kubectl get nodes                 # one node, STATUS Ready
 kubectl get pods -n kube-system   # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
 ```
 
-If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) or fix your kubeconfig before continuing.
+If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md) or fix your kubeconfig before continuing.
 
 ## Table of Contents
 
@@ -144,10 +144,13 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 
 - [**What is Kubernetes?**](docs/getting-started/what-is-kubernetes.md) — declarative vs. imperative; the one idea behind everything.
 - [**Architecture Overview**](docs/getting-started/architecture.md) — every component, and why a kubeadm cluster is vanilla k8s.
-- [**Set Up a Cluster (kubeadm)**](docs/getting-started/setup-kubeadm.md) — build the cluster, then understand each piece the installer wires up.
-- [**kubectl 101**](docs/getting-started/kubectl-101.md) — the everyday commands you'll live in.
-- [**Anatomy of a Manifest**](docs/getting-started/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.
-- [**Inspect with k9s**](docs/getting-started/k9s.md) — a live terminal dashboard for your cluster.
+
+**Cluster Setup**
+
+- [**Set Up a Cluster (kubeadm)**](docs/cluster-setup/setup-kubeadm.md) — build the cluster, then understand each piece the installer wires up.
+- [**kubectl 101**](docs/cluster-setup/kubectl-101.md) — the everyday commands you'll live in.
+- [**Anatomy of a Manifest**](docs/cluster-setup/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.
+- [**Inspect with k9s**](docs/cluster-setup/k9s.md) — a live terminal dashboard for your cluster.
 
 **Part 1 — Core Objects**
 

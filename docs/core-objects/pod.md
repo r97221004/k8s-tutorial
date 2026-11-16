@@ -27,7 +27,7 @@ Most Pods hold exactly one container. The multi-container case is for tightly-co
 
 ## Your first Pod
 
-Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../getting-started/manifest-anatomy.md)):
+Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../cluster-setup/manifest-anatomy.md)):
 
 ▶ **Runnable manifest:** [`manifests/core-objects/nginx-pod.yaml`](../../manifests/core-objects/nginx-pod.yaml)
 
@@ -81,4 +81,4 @@ A standalone Pod has no safety net: delete it, or let its node fail, and it's si
 
 ---
 
-[← Inspect with k9s](../getting-started/k9s.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](labels-selectors.md)
+[← Inspect with k9s](../cluster-setup/k9s.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](labels-selectors.md)

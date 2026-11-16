@@ -76,7 +76,7 @@ If that prints `1 chart(s) linted, 0 chart(s) failed`, your setup is good enough
 
 ### 3. A cluster, for the hands-on lab
 
-Any cluster works — the [kubeadm one this guide builds](../getting-started/setup-kubeadm.md), or the k3s fast lane from the [README prerequisites](../../README.md#prerequisites). Verify with:
+Any cluster works — the [kubeadm one this guide builds](../cluster-setup/setup-kubeadm.md), or the k3s fast lane from the [README prerequisites](../../README.md#prerequisites). Verify with:
 
 ```bash
 kubectl get nodes    # one node, STATUS Ready
@@ -95,7 +95,7 @@ Two render modes are worth distinguishing:
 - **Internet access** — to install Helm, to pull `nginx:1.27` from Docker Hub for the lab, and for `helm repo add` in [Using someone else's chart](#using-someone-elses-chart). Air-gapped? The render-only half still works.
 - **bash or zsh** — a couple of examples use `diff <(…) <(…)` (process substitution), which `sh`/`dash` doesn't support.
 - **Cluster headroom** — the lab peaks at 3 nginx replicas requesting 300m CPU / 384Mi total, comfortable inside the 2 vCPU / 4 GB single-node lab the README describes.
-- **Optional:** [k9s](../getting-started/k9s.md) for the watch points below (`kubectl get -w` works too), and an Ingress controller *only* if you flip `ingress.enabled` on — the lab deliberately leaves it off.
+- **Optional:** [k9s](../cluster-setup/k9s.md) for the watch points below (`kubectl get -w` works too), and an Ingress controller *only* if you flip `ingress.enabled` on — the lab deliberately leaves it off.
 - Everything installs into the **`default` namespace**, like the rest of this guide.
 
 ## First run
@@ -1120,7 +1120,7 @@ helm list
 kubectl get deploy,svc,cm -l app.kubernetes.io/instance=demo
 ```
 
-The `app.kubernetes.io/instance` label is how you find everything belonging to one release — a habit worth keeping. In [k9s](../getting-started/k9s.md), `:deploy` ⏎ shows `demo-my-app` at `2/2`; leave it open for the next step.
+The `app.kubernetes.io/instance` label is how you find everything belonging to one release — a habit worth keeping. In [k9s](../cluster-setup/k9s.md), `:deploy` ⏎ shows `demo-my-app` at `2/2`; leave it open for the next step.
 
 Confirm the ConfigMap really reached the container as environment variables. The chart's Deployment pulls the whole ConfigMap in with `envFrom`, exactly as [Env Vars & Mounts](../config-and-data/env-and-mounts.md) covered — the only new thing here is that Helm generated both the ConfigMap and the reference to it:
 

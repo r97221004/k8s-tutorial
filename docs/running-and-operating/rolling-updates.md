@@ -27,7 +27,7 @@ kubectl rollout status deployment/web      # follow it to completion
 
 `kubectl rollout history` lists revision numbers. If you want human-readable notes there, annotate the Deployment with `kubernetes.io/change-cause` as part of your release process.
 
-Watch it in [k9s](../getting-started/k9s.md) (`:pods`): new `web-…` Pods appear and go `Ready` while old ones terminate — never all at once. Under the hood the Deployment is shifting Pods from the old [ReplicaSet](../core-objects/replicaset.md) to a new one.
+Watch it in [k9s](../cluster-setup/k9s.md) (`:pods`): new `web-…` Pods appear and go `Ready` while old ones terminate — never all at once. Under the hood the Deployment is shifting Pods from the old [ReplicaSet](../core-objects/replicaset.md) to a new one.
 
 ## Break one on purpose
 

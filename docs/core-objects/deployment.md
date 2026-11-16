@@ -106,7 +106,7 @@ pod/web-6f8c…-q8m2l    1/1     Running   0
 
 ## Watch self-healing (with k9s)
 
-This is the single best thing to *see* rather than read about. Launch [k9s](../getting-started/k9s.md):
+This is the single best thing to *see* rather than read about. Launch [k9s](../cluster-setup/k9s.md):
 
 ```bash
 k9s

@@ -41,7 +41,7 @@ Deployment ──▶ ReplicaSet (v1)  ──▶ Pods   ◀─ old version, scale
 
 **Almost never.** A bare ReplicaSet keeps Pods running but has *no* rollout machinery — change the image and nothing happens to existing Pods. Use a [Deployment](deployment.md) instead; it gives you the ReplicaSet plus version management for free.
 
-Knowing the ReplicaSet exists matters for **debugging**: when you `kubectl get rs` or look in [k9s](../getting-started/k9s.md) (`:rs`), an extra ReplicaSet stuck with non-zero Pods is a strong hint that a rollout is mid-flight or wedged.
+Knowing the ReplicaSet exists matters for **debugging**: when you `kubectl get rs` or look in [k9s](../cluster-setup/k9s.md) (`:rs`), an extra ReplicaSet stuck with non-zero Pods is a strong hint that a rollout is mid-flight or wedged.
 
 ## Best practices
 

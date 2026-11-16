@@ -30,7 +30,7 @@ kubectl describe pod crasher      # Events: "Back-off restarting failed containe
 kubectl delete -f manifests/running-and-operating/crashloop-pod.yaml
 ```
 
-In [k9s](../getting-started/k9s.md), a red `crasher` row jumps out; press `l` for logs, `d` for describe — same data, faster.
+In [k9s](../cluster-setup/k9s.md), a red `crasher` row jumps out; press `l` for logs, `d` for describe — same data, faster.
 
 ## Status cheat-sheet
 

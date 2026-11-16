@@ -75,7 +75,7 @@ DB_USER:      7 bytes
 
 The byte count lets you confirm a key exists and roughly validate its length without exposing the value.
 
-In [k9s](../getting-started/k9s.md), use the same habit:
+In [k9s](../cluster-setup/k9s.md), use the same habit:
 
 1. Launch `k9s`.
 2. Type `:secrets` and press Enter.

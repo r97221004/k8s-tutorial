@@ -81,7 +81,7 @@ sudo kubeadm certs check-expiration
 sudo kubeadm certs renew all
 ```
 
-> 💡 Prefer the live dashboard? [k9s](../getting-started/k9s.md) covers most of this with single keystrokes (`d` describe, `l` logs, `s` shell, `Ctrl-D` delete).
+> 💡 Prefer the live dashboard? [k9s](../cluster-setup/k9s.md) covers most of this with single keystrokes (`d` describe, `l` logs, `s` shell, `Ctrl-D` delete).
 
 ---
 

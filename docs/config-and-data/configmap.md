@@ -40,7 +40,7 @@ kubectl get configmap app-config -o yaml    # inspect it
 kubectl get configmap app-config -o jsonpath='{.data.APP_GREETING}'
 ```
 
-In [k9s](../getting-started/k9s.md), inspect the same object without printing every command:
+In [k9s](../cluster-setup/k9s.md), inspect the same object without printing every command:
 
 1. Launch `k9s`.
 2. Type `:configmaps` and press Enter.

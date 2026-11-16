@@ -21,7 +21,7 @@ Then match the symptom below.
 | **`CrashLoopBackOff`** | container starts then exits repeatedly | `logs --previous` for the real error; check command/config/env |
 | **`OOMKilled`** (in describe) | exceeded the memory limit | raise the memory [limit](../running-and-operating/resources.md) or fix the leak |
 | Pod **`Running` but `0/1`** | readiness probe failing | `describe` → probe events; fix the [health check](../running-and-operating/health-checks.md) or app |
-| Node **`NotReady`** | no/broken CNI, or kubelet down | `kubectl get pods -n kube-system` (flannel/CNI Running?); see [Set Up](../getting-started/setup-kubeadm.md) |
+| Node **`NotReady`** | no/broken CNI, or kubelet down | `kubectl get pods -n kube-system` (flannel/CNI Running?); see [Set Up](../cluster-setup/setup-kubeadm.md) |
 | **Service returns nothing** | selector matches no Pods (empty endpoints) | `kubectl get endpoints <svc>`; align Service `selector` with Pod [labels](../core-objects/labels-selectors.md) |
 | **Service name won't resolve** | wrong name/namespace, or CoreDNS down | use `svc.namespace`; check CoreDNS ([DNS](../networking/dns.md)) |
 | **Ingress 404 / not reachable** | no ingress controller, wrong host/path or `ingressClassName` | controller Running? host header matches a rule? ([Ingress](../networking/ingress.md)) |

@@ -85,7 +85,7 @@ kubectl get jobs -w             # a new Job appears each minute
 kubectl logs job/<job-name>     # read the logs from one CronJob run
 ```
 
-In [k9s](../getting-started/k9s.md), `:cronjobs` and `:jobs` let you watch each run spawn — a satisfying way to *see* the schedule fire.
+In [k9s](../cluster-setup/k9s.md), `:cronjobs` and `:jobs` let you watch each run spawn — a satisfying way to *see* the schedule fire.
 
 ## Best practices
 

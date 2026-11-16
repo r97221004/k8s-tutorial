@@ -146,7 +146,7 @@ kubectl exec deploy/web-config -- cat /etc/app-secret/DB_PASSWORD
 
 Printing `DB_PASSWORD` is only a lab verification step. In real clusters, avoid echoing secret values into terminals, screenshots, or logs.
 
-In [k9s](../getting-started/k9s.md), inspect the same Deployment from a few angles:
+In [k9s](../cluster-setup/k9s.md), inspect the same Deployment from a few angles:
 
 1. Type `:pods`, press `/`, and filter for `web-config`.
 2. Highlight the Pod and press `d` to describe it. The Events section shows warnings like `InvalidVariableNames` from `envFrom`, plus missing ConfigMap/Secret errors if a reference is wrong.

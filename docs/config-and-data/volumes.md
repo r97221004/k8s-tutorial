@@ -283,7 +283,7 @@ kubectl exec writer -- cat /data/log.txt   # 'persisted!' appears again, appende
 
 The writer's command appends (`>>`) rather than overwrites, so the new Pod adds a *second* `persisted!` line instead of replacing the file. Seeing two lines (not one) is the actual proof: if the volume had been wiped along with the old Pod, you'd only see one.
 
-In [k9s](../getting-started/k9s.md):
+In [k9s](../cluster-setup/k9s.md):
 
 1. Type `:pvc`, press `/`, and filter for `data`. Confirm it shows `Bound`, note the `STORAGECLASS`, and press `d` to describe it if it is stuck `Pending`.
 2. Type `:pv` — see the backing PersistentVolume, its `CLAIM`, and its `RECLAIM POLICY`.

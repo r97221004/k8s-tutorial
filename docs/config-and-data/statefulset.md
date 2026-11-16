@@ -127,7 +127,7 @@ pod/postgres-0   1/1   Running          ← ordinal name, not a random suffix
 persistentvolumeclaim/pgdata-postgres-0  Bound   ← its own dedicated volume
 ```
 
-In [k9s](../getting-started/k9s.md), `:sts` ⏎ shows the StatefulSet's `READY` column climb to `1/1`; `:pods` ⏎ lets you watch `postgres-0` move through `Pending` → `ContainerCreating` → `Running` (`0/1` while the `startupProbe`/`readinessProbe` are still warming up, then `1/1`). Press `l` on it to tail PostgreSQL's own boot log instead of polling `pg_isready` from your terminal.
+In [k9s](../cluster-setup/k9s.md), `:sts` ⏎ shows the StatefulSet's `READY` column climb to `1/1`; `:pods` ⏎ lets you watch `postgres-0` move through `Pending` → `ContainerCreating` → `Running` (`0/1` while the `startupProbe`/`readinessProbe` are still warming up, then `1/1`). Press `l` on it to tail PostgreSQL's own boot log instead of polling `pg_isready` from your terminal.
 
 With the headless Service, that same Pod also gets a stable DNS name:
 
@@ -156,7 +156,7 @@ kubectl exec postgres-0 -- psql -U appuser -d appuser -c \
 kubectl exec postgres-0 -- psql -U appuser -d appuser -c "SELECT * FROM statefulset_lab;"
 ```
 
-Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC**.
+Delete `postgres-0` and watch (in [k9s](../cluster-setup/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC**.
 
 ```bash
 kubectl delete pod postgres-0

@@ -40,7 +40,7 @@ You write `spec` (what you *want*). Kubernetes adds a **`status`** (what *is*) a
 kubectl get pod nginx -o yaml    # scroll down to see the status: block the cluster filled in
 ```
 
-That split — *you declare `spec`, the cluster reports `status`, controllers close the gap* — is the [declarative model](what-is-kubernetes.md) made concrete.
+That split — *you declare `spec`, the cluster reports `status`, controllers close the gap* — is the [declarative model](../getting-started/what-is-kubernetes.md) made concrete.
 
 ### Best practices
 

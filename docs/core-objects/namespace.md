@@ -31,7 +31,7 @@ kube-public       Active   1h
 kube-node-lease   Active   1h
 ```
 
-Everything you've created so far landed in `default`. The control plane you saw in [Set Up](../getting-started/setup-kubeadm.md) lives in `kube-system`.
+Everything you've created so far landed in `default`. The control plane you saw in [Set Up](../cluster-setup/setup-kubeadm.md) lives in `kube-system`.
 
 ## Using namespaces
 
@@ -56,7 +56,7 @@ That default sticks until you change it again. When a later command seems to "lo
 
 For namespaced objects, `kubectl -n dev` decides where an object goes when the manifest does **not** set `metadata.namespace`. If the manifest already says `metadata.namespace: dev`, `kubectl apply -f file.yaml` uses that namespace. Cluster-scoped objects ignore `-n` entirely.
 
-In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
+In [k9s](../cluster-setup/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
 
 ## Capping usage with a ResourceQuota
 
