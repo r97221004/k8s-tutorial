@@ -212,8 +212,8 @@ kubectl delete -f manifests/networking/api-echo.yaml --ignore-not-found
 kubectl delete -f manifests/networking/rewrite-demo.yaml --ignore-not-found
 ```
 
-The `web` Ingress stays up by default — the [Helm](../packaging/helm.md) chapter is self-contained and doesn't need it, so delete it too if you'd rather not leave it running: `kubectl delete -f manifests/networking/web-ingress.yaml --ignore-not-found`.
+The `web` Ingress stays up by default — later chapters don't need it, so delete it too if you'd rather not leave it running: `kubectl delete -f manifests/networking/web-ingress.yaml --ignore-not-found`.
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Helm →](../packaging/helm.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Kustomize (intro) →](../packaging/kustomize.md)

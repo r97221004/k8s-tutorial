@@ -4,7 +4,7 @@
 
 ---
 
-Kustomize solves the same "almost-identical manifests per environment" problem as [Helm](helm.md), but with a different philosophy: **no templating language**. You keep plain YAML as a **base**, then layer environment-specific **patches** (overlays) on top. It's built into `kubectl` (`-k`), so there's nothing extra to install.
+Kustomize solves the same "almost-identical manifests per environment" problem as [Helm](https://github.com/r97221004/helm-tutorial), but with a different philosophy: **no templating language**. You keep plain YAML as a **base**, then layer environment-specific **patches** (overlays) on top. It's built into `kubectl` (`-k`), so there's nothing extra to install.
 
 ## Base + overlays
 
@@ -70,8 +70,8 @@ They're not mutually exclusive — teams often template third-party apps with He
 
 - **Keep the base environment-agnostic**; put every environment difference in an overlay.
 - **Review `kubectl kustomize` output** before applying — see exactly what will be created.
-- **Prefer Kustomize for your own manifests** when differences are small; reach for [Helm](helm.md) when you need real packaging/distribution.
+- **Prefer Kustomize for your own manifests** when differences are small; reach for [Helm](https://github.com/r97221004/helm-tutorial) when you need real packaging/distribution.
 
 ---
 
-[← Helm](helm.md) · [↑ Contents](../../README.md) · [Deploy a Two-Tier App →](../capstone/two-tier-app.md)
+[← Ingress](../networking/ingress.md) · [↑ Contents](../../README.md) · [Cluster Lifecycle (kubeadm) →](../appendix/cluster-lifecycle.md)

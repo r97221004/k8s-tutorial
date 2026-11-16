@@ -17,7 +17,7 @@
 
 Many tutorials start you off on minikube or kind — quick to set up, but the components are mostly hidden. Here you stand up a real, upstream Kubernetes cluster with **[kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)** instead, learn it by taking every component apart — `kube-apiserver`, `etcd`, `kubelet`, the CNI — and then put it to work, watching the cluster live in **[k9s](https://k9scli.io)**.
 
-Every concept is paired with a runnable `kubectl apply` example, all building toward one concrete outcome: **deploying a two-tier app (web + database)** — configured with ConfigMaps/Secrets, persisted on a PVC, exposed through a Service + Ingress — then rolling out an update and tearing it back down.
+Every concept is paired with a runnable `kubectl apply` example — configure apps with ConfigMaps/Secrets, persist data on a PVC, expose them through a Service + Ingress, then roll out an update and tear it back down.
 
 > **No prior Kubernetes experience assumed.** New to k8s? Read top to bottom. Already know the basics? Jump straight to the [Table of Contents](#table-of-contents).
 
@@ -105,7 +105,6 @@ By the end you'll be able to:
 - **Keep apps healthy and current** — health probes, resource limits, scaling, and rolling updates with rollback.
 - **Control where Pods run and who can touch them** — taints/tolerations for placement, RBAC and NetworkPolicy for access control.
 - **Route traffic in** with an Ingress, and **debug** confidently when things break.
-- **Tie it all together** in the [capstone](docs/capstone/two-tier-app.md): a Vue + FastAPI Todo app — configured, persisted with SQLite on a PVC, exposed, updated, and torn down.
 
 Every section is hands-on: a manifest you `kubectl apply`, then watch take effect.
 
@@ -192,13 +191,9 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 
 **Part 5 — Packaging & Beyond**
 
-- [**Helm**](docs/packaging/helm.md) — the Kubernetes package manager, and how to read a chart.
 - [**Kustomize (intro)**](docs/packaging/kustomize.md) — overlay-based config.
 
-**Capstone**
-
-- [**Deploy Todo Board**](docs/capstone/two-tier-app.md) — Vue + FastAPI + SQLite, end to end.
-- [**Cleanup**](docs/capstone/cleanup.md) — tear it all back down.
+> 📦 **Helm** has its own companion tutorial: **[r97221004/helm-tutorial](https://github.com/r97221004/helm-tutorial)**.
 
 **Appendix**
 

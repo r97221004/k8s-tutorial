@@ -73,4 +73,4 @@ Prefer the companion Ansible uninstall flow when using this tutorial's kubeadm r
 
 ---
 
-[← Cleanup](../capstone/cleanup.md) · [↑ Contents](../../README.md) · [kubectl Cheat Sheet →](cheatsheet.md)
+[← Kustomize (intro)](../packaging/kustomize.md) · [↑ Contents](../../README.md) · [kubectl Cheat Sheet →](cheatsheet.md)
