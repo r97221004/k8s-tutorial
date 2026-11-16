@@ -10,38 +10,30 @@ Containers package an app with everything it needs, so it runs the same everywhe
 docker run -d -p 80:80 nginx:1.27
 ```
 
-The trouble starts when that app becomes **real**: more traffic, more services, more machines, and users who expect it to stay up.
+The trouble starts when that app becomes **real**: more traffic, more services, more machines, and users who expect it to stay up. A container crashes at 3 a.m. A whole server dies and takes its containers with it. Traffic doubles and someone has to SSH in and start more copies.
 
-### The problems that show up
-
-Picture running a web app and its database by hand across three servers:
-
-- **A container crashes at 3 a.m.** Someone has to notice and restart it. `--restart=always` helps, but only on that one machine.
-- **A whole server dies.** Its containers are gone. You need to decide where they go now, start them there, and update anything that pointed at the old IP.
-- **Traffic doubles.** You SSH into machines and start more copies, then check that none of them are already full.
-- **You ship a new version.** Stop old, start new — and hope nothing breaks in between. If it does, rolling back is manual too.
-- **Containers need to find each other.** IPs change every time a container restarts, so hard-coding them doesn't work.
-- **Config and passwords** end up copy-pasted into scripts and `docker run` flags on every host.
-
-Each problem is solvable with enough scripts. But the scripts grow, drift between servers, and only one person understands them.
+Each of those is solvable with enough scripts. But the scripts grow, drift between servers, and only one person understands them.
 
 > **The real problem isn't running containers — it's keeping them running correctly, across machines, as things change.**
 
-### What Kubernetes gives you
+### Can't we just use Docker?
 
-Kubernetes turns each of those chores into something you **declare once** and the cluster maintains for you:
+**Docker and Docker Compose are great for single containers and development environments.** Many of the features below exist in Docker too — but only **within one host**. Production workloads span many hosts, and that's where Kubernetes comes in:
 
-| Problem | What Kubernetes does | Where you'll learn it |
-|---------|----------------------|-----------------------|
-| Crashed container | **Self-healing** — restarts it, or replaces the Pod | [Deployment](../core-objects/deployment.md), [Health Checks](../running-and-operating/health-checks.md) |
-| Dead server | **Reschedules** the work onto healthy nodes | [Scheduling](../core-objects/scheduling.md) |
-| More traffic | **Scaling** — change `replicas: 3` to `replicas: 10` | [Deployment](../core-objects/deployment.md) |
-| New version | **Rolling updates** with one-command rollback | [Rolling Updates](../running-and-operating/rolling-updates.md) |
-| Finding other services | **Stable names and IPs** via Services and DNS | [Service](../core-objects/service.md), [DNS](../networking/dns.md) |
-| Config and secrets | **ConfigMaps and Secrets**, kept out of the image | [ConfigMap](../config-and-data/configmap.md), [Secret](../config-and-data/secret.md) |
-| Data that must survive | **Persistent volumes** that outlive the Pod | [Volumes](../config-and-data/volumes.md) |
+| Challenge | With Docker alone | With Kubernetes |
+|-----------|-------------------|-----------------|
+| **Scheduling** | You pick a server for each container | Declare [CPU/memory requests](../running-and-operating/resources.md); the [scheduler](../core-objects/scheduling.md) places Pods |
+| **Self-healing** | Restarts on one host; unhealthy containers aren't replaced | [Probes](../running-and-operating/health-checks.md) catch failures; Pods are replaced on any node |
+| **Load balancing** | Bring your own nginx/HAProxy | A [Service](../core-objects/service.md) spreads traffic across Pods |
+| **Scaling** | Start containers by hand | Change `replicas`, or [autoscale](../running-and-operating/scaling.md) on metrics |
+| **Service discovery** | Names resolve within one host | [Cluster DNS](../networking/dns.md) works from any node |
+| **Config & secrets** | Copied onto every host | [ConfigMaps](../config-and-data/configmap.md) and [Secrets](../config-and-data/secret.md), injected at deploy |
+| **Releases** | Stop old, start new, roll back by hand | [Rolling updates](../running-and-operating/rolling-updates.md) with one-command rollback |
+| **Data** | Volumes tied to one host | [PersistentVolumeClaims](../config-and-data/volumes.md) outlive the Pod |
 
-And because it's all YAML, your whole setup can live in **Git** — reviewed, versioned, and reproducible on any cluster.
+**What about Docker Swarm?** Swarm (and HashiCorp Nomad) can also run containers across many hosts. Kubernetes isn't the only orchestrator — but it has become the industry standard, with the largest ecosystem of tools, managed offerings, and jobs.
+
+How does Kubernetes keep all of this true without you watching it? That's the one idea behind everything, and it's the [next chapter](what-is-kubernetes.md).
 
 ### When you *don't* need Kubernetes
 
