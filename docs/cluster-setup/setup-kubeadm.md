@@ -83,7 +83,7 @@ After the Ansible run, confirm it's healthy:
 
 ```bash
 kubectl get nodes                 # the node should be Ready
-kubectl get pods -n kube-system   # apiserver, etcd, scheduler, controller-manager, coredns, flannel all Running
+kubectl get pods -A               # apiserver, etcd, scheduler, controller-manager, coredns, flannel all Running
 ```
 
 Or open [k9s](k9s.md) and type `:pods` ⏎, then `0` to show all namespaces — you'll see the whole control plane running as Pods in `kube-system`. That's the payoff of kubeadm: the "magic" is just Pods you can inspect.

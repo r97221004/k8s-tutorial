@@ -20,16 +20,16 @@ That's the right model for **per-node agents** — things that must touch each m
 
 ## See one you already have
 
-You don't need to create a DaemonSet to study one — your cluster already runs a couple in `kube-system`:
+You don't need to create a DaemonSet to study one — your cluster already runs a couple (`kube-proxy` in `kube-system`, flannel in its own `kube-flannel` namespace):
 
 ```bash
-kubectl get daemonset -n kube-system
+kubectl get daemonset -A
 ```
 
 ```
-NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
-kube-flannel-ds   1         1         1       1            1           <none>                   1h
-kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   1h
+NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-flannel   kube-flannel-ds   1         1         1       1            1           <none>                   1h
+kube-system    kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   1h
 ```
 
 `DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../cluster-setup/k9s.md) and type `:ds` to watch them.

@@ -60,7 +60,7 @@ Before starting Part 3, verify your cluster is reachable and healthy:
 
 ```bash
 kubectl get nodes                 # one node, STATUS Ready
-kubectl get pods -n kube-system   # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
+kubectl get pods -A               # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
 ```
 
 If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md) or fix your kubeconfig before continuing.
