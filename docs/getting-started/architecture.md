@@ -28,7 +28,7 @@ config:
 flowchart LR
     you(["👩‍💻 you<br/>kubectl · k9s"])
 
-    subgraph cp["🧠 Control Plane"]
+    subgraph cp["🧠 Control Plane<br/>runs on the control-plane node (a.k.a. master)"]
         direction TB
         api["🚪 kube-apiserver<br/>the front door"]
         etcd[("🗄️ etcd<br/>cluster state")]
