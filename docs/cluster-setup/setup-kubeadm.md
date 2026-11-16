@@ -6,6 +6,14 @@
 
 > ⚠️ **Build the cluster before starting this chapter.** The install steps aren't repeated here — they're fully covered in the companion Ansible tutorial, which provisions this exact single-node kubeadm cluster over SSH: **[r97221004/ansible-tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**. Run that first. Once the cluster is up, this section explains **what each piece it installed actually is**, so the cluster isn't a black box.
 
+> **Clear up a common beginner confusion first: "kubeadm" is not a different kind of Kubernetes.**
+>
+> - **Kubernetes** is the system itself (the components in [Architecture Overview](../getting-started/architecture.md)).
+> - **kubeadm** is just the official *installer* that assembles those components the standard way — so a "kubeadm cluster" **is** plain, upstream Kubernetes, exactly as the official docs (and the CKA exam) describe it.
+> - **k3s** is also Kubernetes, but a *repackaged lightweight distribution* with batteries-included defaults (Traefik, ServiceLB, local-path) baked in.
+>
+> Analogy: Kubernetes is the Linux kernel, **kubeadm** is a clean standard install, **k3s** is a pre-loaded distro like Ubuntu. We use kubeadm here precisely so nothing is hidden — you see every component for what it is.
+
 Unlike k3s (one install script), kubeadm wires the cluster up from parts. The Ansible role does it as a pipeline; this is what each step is **for**, so the cluster stops being a black box.
 
 If you're not using the Ansible role, use this page as the checklist for a manual kubeadm build. The short version is: prepare the kernel and swap settings, install/configure containerd, install matching `kubelet`/`kubeadm`/`kubectl` versions, run `kubeadm init` with the Pod CIDR your CNI expects, copy the admin kubeconfig, install flannel, remove the control-plane taint for a single-node lab, then verify the cluster.

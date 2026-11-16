@@ -21,85 +21,13 @@ Every concept is paired with a runnable `kubectl apply` example — configure ap
 
 > **No prior Kubernetes experience assumed.** New to k8s? Read top to bottom. Already know the basics? Jump straight to the [Table of Contents](#table-of-contents).
 
-**The single-node cluster you'll build by hand — control plane _and_ your app on one machine:**
-
-```mermaid
----
-config:
-  look: handDrawn
-  theme: default
-  themeVariables:
-    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
-    clusterBkg: '#FAFAFA'
-    clusterBorder: '#94A3B8'
-    lineColor: '#94A3B8'
-    edgeLabelBackground: '#475569'
-  themeCSS: |
-    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
----
-flowchart TB
-    you(["👩‍💻 you<br/>kubectl · k9s"])
-
-    subgraph host["🖥️ Your ONE node"]
-        direction TB
-
-        subgraph cp["🧠 Control Plane · static Pods"]
-            direction LR
-            sched["📌 kube-scheduler"]
-            kcm["🔁 kube-controller-manager"]
-            api["🚪 kube-apiserver<br/>the front door"]
-            etcd[("🗄️ etcd<br/>cluster state")]
-            sched --> api
-            kcm --> api
-            api <--> etcd
-        end
-
-        subgraph runtime["⚙️ Node Runtime"]
-            direction LR
-            kubelet["🤖 kubelet<br/>runs Pods on this node"]
-            cri["📦 containerd<br/>CRI runtime"]
-            proxy["🔀 kube-proxy<br/>Service routing"]
-        end
-
-        pods["🚀 your Pods<br/>web &amp; database"]
-
-        subgraph addons["🔌 Add-ons · also Pods"]
-            direction LR
-            cni["🌐 CNI · flannel<br/>pod networking"]
-            dns["📇 CoreDNS<br/>in-cluster DNS"]
-        end
-
-        kubelet --> cri --> pods
-        proxy -. routes traffic to .-> pods
-        cni -. networking .-> pods
-        dns -. DNS .-> pods
-    end
-
-    you --> api
-    api ==>|"schedule &amp; run"| kubelet
-
-    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
-    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
-    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    class you ctrl
-    class api eng
-    class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt
-    linkStyle 9 stroke:#D97706,stroke-width:3px
-    style host fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
-    style cp fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-    style runtime fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-    style addons fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-```
-
-> Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
-
-> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). k3s, by contrast, is a *repackaged lightweight distro* with batteries-included defaults baked in. Analogy: Kubernetes is the Linux kernel, kubeadm is a clean standard install, k3s is a pre-loaded distro like Ubuntu. More in [Architecture Overview](docs/getting-started/architecture.md).
+> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). k3s, by contrast, is a *repackaged lightweight distro* with batteries-included defaults baked in. Analogy: Kubernetes is the Linux kernel, kubeadm is a clean standard install, k3s is a pre-loaded distro like Ubuntu. More in [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md).
 
 ## What You'll Learn
 
 By the end you'll be able to:
 
-- **Read the architecture** and say what each component does — control plane vs. node (see the [diagram above](#kubernetes-in-practice)).
+- **Read the architecture** and say what each component does — control plane vs. data plane (see [Architecture Overview](docs/getting-started/architecture.md)).
 - **Deploy and expose apps** with the core objects: Pods, Deployments, Services.
 - **Separate config from images** with ConfigMaps and Secrets, and **persist data** with PersistentVolumeClaims.
 - **Keep apps healthy and current** — health probes, resource limits, scaling, and rolling updates with rollback.

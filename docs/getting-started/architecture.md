@@ -1,25 +1,92 @@
 # Architecture Overview
 
-> The component map to carry through the whole tutorial — and why "kubeadm" is not a different kind of Kubernetes.
+> The component map to carry through the whole tutorial: a control plane that decides, and worker nodes that run.
 
 ---
 
-> **Clear up a common beginner confusion first: "kubeadm" is not a different kind of Kubernetes.**
->
-> - **Kubernetes** is the system itself (the components below).
-> - **kubeadm** is just the official *installer* that assembles those components the standard way — so a "kubeadm cluster" **is** plain, upstream Kubernetes, exactly as the official docs (and the CKA exam) describe it.
-> - **k3s** is also Kubernetes, but a *repackaged lightweight distribution* with batteries-included defaults (Traefik, ServiceLB, local-path) baked in.
->
-> Analogy: Kubernetes is the Linux kernel, **kubeadm** is a clean standard install, **k3s** is a pre-loaded distro like Ubuntu. We use kubeadm here precisely so nothing is hidden — you see every component for what it is.
+A Kubernetes cluster has two halves:
 
-See the [single-node diagram on the home page](../../README.md) for the big picture. A cluster has two halves: a **control plane** (the brain that decides what should run) and one or more **nodes** (the muscle that actually runs it). On our single node, both live on the same machine. In a multi-node cluster, control-plane nodes and worker nodes are usually separated.
+- **The control plane** — the brain. It stores the desired state and decides what should run where.
+- **The data plane** — the muscle. One or more **worker nodes** that actually pull images and run your containers.
 
-The control plane makes decisions and records desired state; the kubelet and container runtime on a node are what actually run your app containers.
+Here's a typical multi-node cluster:
 
-Each half gets its own chapter:
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#94A3B8'
+    lineColor: '#94A3B8'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
+flowchart LR
+    you(["👩‍💻 you<br/>kubectl · k9s"])
 
-- **[The Control Plane](control-plane.md)** — `kube-apiserver`, `etcd`, `kube-scheduler`, `kube-controller-manager`.
-- **[The Data Plane](data-plane.md)** — `kubelet`, `containerd`, `kube-proxy`, plus add-ons (CNI, CoreDNS).
+    subgraph cp["🧠 Control Plane"]
+        direction TB
+        api["🚪 kube-apiserver<br/>the front door"]
+        etcd[("🗄️ etcd<br/>cluster state")]
+        sched["📌 kube-scheduler"]
+        kcm["🔁 kube-controller-manager"]
+        ccm["☁️ cloud-controller-manager<br/>optional"]
+        sched --> api
+        kcm --> api
+        ccm -.-> api
+        api <--> etcd
+    end
+
+    subgraph dp["💪 Data Plane"]
+        direction TB
+        subgraph w1["Worker Node 1"]
+            direction LR
+            k1["🤖 kubelet"] --> r1["📦 containerd"] --> p1["🚀 Pods"]
+            x1["🔀 kube-proxy"]
+        end
+        subgraph w2["Worker Node 2"]
+            direction LR
+            k2["🤖 kubelet"] --> r2["📦 containerd"] --> p2["🚀 Pods"]
+            x2["🔀 kube-proxy"]
+        end
+    end
+
+    you --> api
+    api ==> k1
+    api ==> k2
+    api --> x1
+    api --> x2
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    classDef opt fill:#0F172A,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:5 5,color:#FFFFFF
+    class you ctrl
+    class api eng
+    class etcd,sched,kcm,k1,r1,p1,x1,k2,r2,p2,x2 tgt
+    class ccm opt
+
+    style cp fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style dp fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+    style w1 fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style w2 fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+```
+
+Two things to notice:
+
+- **Everything goes through `kube-apiserver`.** You, the scheduler, the controllers, every kubelet — none of them talk to each other directly. The apiserver is the only component that reads and writes `etcd`.
+- **Only Pods run on worker nodes.** Objects like Deployments, Services, and Ingresses are records stored in `etcd`; the containers they describe are what land on nodes.
+
+> 📝 **In this lab, it's all one machine.** We build a **single-node** cluster: the control plane and your Pods share one node. The components are exactly the same — they just don't have separate machines to spread across.
+
+### Two names worth knowing
+
+- **"Master node"** is the old name for a control-plane node. You'll still see it in older docs and blog posts; Kubernetes now says **control plane**.
+- **`cloud-controller-manager`** is optional. On a cloud provider (AWS, GCP, Azure), it creates real cloud resources for you — load balancers, disks, routes. Our kubeadm lab has no cloud, so it isn't there. That's why a `type: LoadBalancer` Service [stays `<pending>`](../core-objects/service.md#a-note-on-loadbalancer-vanilla-kubeadm) here unless you add a provider.
 
 ### What happens on `kubectl apply`
 
@@ -34,9 +101,16 @@ Tracing one command ties it all together:
 6. kubelet                          reports "Running" back to the apiserver → you see it in kubectl/k9s
 ```
 
-Notice the pattern: **you never command components directly.** You write your desired state to the apiserver, and independent controllers watch and converge toward it. That single idea is the whole of Kubernetes.
+Notice the pattern: **you never command components directly.** Each step is the [control loop](what-is-kubernetes.md#the-control-loop) from the previous chapter, running inside a real component — each one watches the apiserver and converges toward the desired state.
 
 The same split shows up in every object: you write `spec` (what you want), while controllers and kubelets report `status` (what is true now).
+
+### Go deeper
+
+Each half gets its own chapter:
+
+- **[The Control Plane](control-plane.md)** — `kube-apiserver`, `etcd`, `kube-scheduler`, `kube-controller-manager`.
+- **[The Data Plane](data-plane.md)** — `kubelet`, `containerd`, `kube-proxy`, plus add-ons (CNI, CoreDNS).
 
 ---
 
