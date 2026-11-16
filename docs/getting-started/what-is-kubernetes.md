@@ -15,4 +15,4 @@ That single idea — _declare the goal, let controllers converge on it_ — is t
 
 ---
 
-[↑ Contents](../../README.md) · [Architecture Overview →](architecture.md)
+[← Why Use Kubernetes?](why-kubernetes.md) · [↑ Contents](../../README.md) · [Architecture Overview →](architecture.md)

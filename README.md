@@ -142,8 +142,11 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 
 **Getting Started**
 
+- [**Why Use Kubernetes?**](docs/getting-started/why-kubernetes.md) — the problems of running containers by hand, and when you don't need k8s.
 - [**What is Kubernetes?**](docs/getting-started/what-is-kubernetes.md) — declarative vs. imperative; the one idea behind everything.
-- [**Architecture Overview**](docs/getting-started/architecture.md) — every component, and why a kubeadm cluster is vanilla k8s.
+- [**Architecture Overview**](docs/getting-started/architecture.md) — the big picture, and why a kubeadm cluster is vanilla k8s.
+- [**The Control Plane**](docs/getting-started/control-plane.md) — apiserver, etcd, scheduler, controller-manager: the brain.
+- [**The Data Plane**](docs/getting-started/data-plane.md) — kubelet, containerd, kube-proxy, and add-ons: the muscle.
 
 **Cluster Setup**
 

@@ -16,47 +16,10 @@ See the [single-node diagram on the home page](../../README.md) for the big pict
 
 The control plane makes decisions and records desired state; the kubelet and container runtime on a node are what actually run your app containers.
 
-### The control plane — decides
+Each half gets its own chapter:
 
-- **`kube-apiserver`** — the front door. *Every* request (yours via `kubectl`, and every component's) goes through its REST API. Nothing talks to anything else directly.
-- **`etcd`** — the cluster's memory: a key-value store holding the desired and current state of every object. It is the cluster state store, not a database for your application data. If `etcd` is the source of truth, the apiserver is the only one allowed to read/write it.
-- **`kube-scheduler`** — watches for Pods with no node assigned and picks a node for each (based on resources, constraints, etc.). It chooses *where* a Pod should run; it does not start containers.
-- **`kube-controller-manager`** — runs many **control loops** that reconcile reality toward desired state (e.g. "Deployment wants 3 Pods, only 2 exist → make one more"). Deployment, ReplicaSet, Job, Node, and EndpointSlice controllers all live under this umbrella.
-
-On a kubeadm control plane, these components run as **static Pods**: manifest files on disk under `/etc/kubernetes/manifests/` that the local kubelet starts directly. They are still Pods you can inspect, but they are not managed by Deployments. The kubelet's static Pod mechanism keeps them running.
-
-### The node — runs
-
-- **`kubelet`** — the agent on each node. It watches the apiserver for Pods assigned to its node and tells the container runtime to start/stop them, then reports status back.
-- **`containerd`** — the **container runtime** that actually pulls images and runs containers (via the CRI, the Container Runtime Interface).
-- **`kube-proxy`** — programs node networking rules (iptables/IPVS/nftables, depending on mode) so [Service](../core-objects/service.md) traffic forwards to the right Pods.
-
-### Add-ons (themselves Pods)
-
-- **CNI (flannel)** — gives every Pod an IP and routes Pod-to-Pod traffic (across nodes, on a real cluster). CNIs usually run as DaemonSets. NetworkPolicy enforcement also depends on the CNI; flannel handles connectivity, but does not enforce NetworkPolicies by itself.
-- **CoreDNS** — in-cluster DNS, so Pods can find Services by name (see [Service Discovery & DNS](../networking/dns.md)).
-
-### See it live
-
-Once the cluster is running, these commands map the architecture to real processes and Pods:
-
-```bash
-kubectl get pods -n kube-system                  # control plane + add-ons
-kubectl get pods -n kube-system -o wide          # which node each Pod runs on
-sudo ls /etc/kubernetes/manifests                # static Pod manifests from kubeadm
-systemctl status kubelet                         # node agent
-sudo crictl ps                                   # containers running under containerd
-```
-
-If `crictl` is not installed or configured on your host yet, skip that line for now; the Kubernetes-level commands above are enough for this chapter.
-
-| Component | Where you usually see it in this lab |
-|-----------|--------------------------------------|
-| apiserver / scheduler / controller-manager / etcd | static Pods in `kube-system`, backed by files in `/etc/kubernetes/manifests/` |
-| kubelet | systemd service on the node |
-| containerd | systemd service plus containers visible through `crictl` |
-| kube-proxy / flannel | DaemonSet Pods in `kube-system` |
-| CoreDNS | Deployment Pods in `kube-system` |
+- **[The Control Plane](control-plane.md)** — `kube-apiserver`, `etcd`, `kube-scheduler`, `kube-controller-manager`.
+- **[The Data Plane](data-plane.md)** — `kubelet`, `containerd`, `kube-proxy`, plus add-ons (CNI, CoreDNS).
 
 ### What happens on `kubectl apply`
 
@@ -77,4 +40,4 @@ The same split shows up in every object: you write `spec` (what you want), while
 
 ---
 
-[← What is Kubernetes?](what-is-kubernetes.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](../cluster-setup/setup-kubeadm.md)
+[← What is Kubernetes?](what-is-kubernetes.md) · [↑ Contents](../../README.md) · [The Control Plane →](control-plane.md)
