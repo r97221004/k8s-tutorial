@@ -8,7 +8,7 @@ More load? Run more copies. Because a [Deployment](../core-objects/deployment.md
 
 ## Before you start
 
-Start from the Part 3 `web` Deployment:
+Start from the Part 5 `web` Deployment:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml
@@ -51,7 +51,7 @@ If `kubectl top nodes` fails or the HPA shows `<unknown>` targets, metrics-serve
 
 > **requests, not limits, drive the HPA.** If CPU sits at 50% target, set sensible requests first or autoscaling misbehaves.
 
-There's also the **VerticalPodAutoscaler** (resize a Pod's requests) and **Cluster Autoscaler** (add nodes) — beyond this guide, see [Further Reading](../appendix/further-reading.md).
+There's also the **VerticalPodAutoscaler** (resize a Pod's requests) and **Cluster Autoscaler** (add nodes) — both are beyond this guide.
 
 > 📝 **Multi-node note:** scaling a Deployment to 5 replicas here lands all 5 on the one node. On a multi-node cluster the scheduler spreads them across machines for real high availability — and a dead node's Pods get rescheduled elsewhere (something a single node can't demonstrate).
 

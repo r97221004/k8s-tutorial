@@ -128,7 +128,7 @@ For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu
 
    k3s is great for running the manifests quickly, but its defaults are not identical to bare kubeadm: it may include built-in storage, ingress, and load-balancer helpers that vanilla kubeadm does not. When this guide calls that out, trust the kubeadm behavior as the main lesson.
 
-Before starting Part 1, verify your cluster is reachable and healthy:
+Before starting Part 3, verify your cluster is reachable and healthy:
 
 ```bash
 kubectl get nodes                 # one node, STATUS Ready
@@ -139,7 +139,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 
 ## Table of Contents
 
-**Getting Started**
+**Part 1 — Getting Started**
 
 - [**Why Use Kubernetes?**](docs/getting-started/why-kubernetes.md) — the problems of running containers by hand, and when you don't need k8s.
 - [**What is Kubernetes?**](docs/getting-started/what-is-kubernetes.md) — declarative vs. imperative; the one idea behind everything.
@@ -147,14 +147,14 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 - [**The Control Plane**](docs/getting-started/control-plane.md) — apiserver, etcd, scheduler, controller-manager: the brain.
 - [**The Data Plane**](docs/getting-started/data-plane.md) — kubelet, containerd, kube-proxy, and add-ons: the muscle.
 
-**Cluster Setup**
+**Part 2 — Cluster Setup**
 
 - [**Set Up a Cluster (kubeadm)**](docs/cluster-setup/setup-kubeadm.md) — build the cluster, then understand each piece the installer wires up.
 - [**kubectl 101**](docs/cluster-setup/kubectl-101.md) — the everyday commands you'll live in.
 - [**Anatomy of a Manifest**](docs/cluster-setup/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.
 - [**Inspect with k9s**](docs/cluster-setup/k9s.md) — a live terminal dashboard for your cluster.
 
-**Part 1 — Core Objects**
+**Part 3 — Core Objects**
 
 - [**Pod**](docs/core-objects/pod.md) — the smallest thing Kubernetes runs.
 - [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
@@ -166,7 +166,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 2 — Configuration & Data**
+**Part 4 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -174,7 +174,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 3 — Running & Operating**
+**Part 5 — Running & Operating**
 
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
@@ -184,20 +184,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 4 — Networking & Access**
+**Part 6 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
-
-**Part 5 — Packaging & Beyond**
-
-- [**Kustomize (intro)**](docs/packaging/kustomize.md) — overlay-based config.
-
-> 📦 **Helm** has its own companion tutorial: **[r97221004/helm-tutorial](https://github.com/r97221004/helm-tutorial)**.
-
-**Appendix**
-
-- [**Cluster Lifecycle (kubeadm)**](docs/appendix/cluster-lifecycle.md) — upgrades, etcd backup, certs, and reset.
-- [**kubectl Cheat Sheet**](docs/appendix/cheatsheet.md) — one-page reference.
-- [**Troubleshooting**](docs/appendix/troubleshooting.md) — symptom → cause → fix.
-- [**Further Reading**](docs/appendix/further-reading.md) — advanced topics beyond this guide.

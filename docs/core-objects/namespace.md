@@ -158,7 +158,7 @@ kubectl api-resources --namespaced=false
 - ✅ **Names** — `web` in `dev` and `web` in `prod` are different objects.
 - ✅ **A scope for `ResourceQuota`, `LimitRange`, and RBAC** — cap resources or restrict access per namespace.
 - ✅ **DNS** — the `web` Service you created in `dev` is reachable cross-namespace as `web.dev.svc.cluster.local` (see [Service Discovery & DNS](../networking/dns.md)).
-- ❌ **Not a security boundary by default** — without a [NetworkPolicy](../appendix/further-reading.md), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
+- ❌ **Not a security boundary by default** — without a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
 - ❌ **Not for every little thing** — cluster-wide objects (Nodes, PersistentVolumes, Namespaces themselves) aren't namespaced.
 
 ## Best practices
@@ -182,7 +182,7 @@ Then delete the lab namespace. This removes the `web` Deployment, Service, Resou
 kubectl delete namespace dev
 ```
 
-To fully reset after Part 1, also remove the `web` Service and Deployment left in `default`:
+To fully reset after Part 3, also remove the `web` Service and Deployment left in `default`:
 
 ```bash
 kubectl delete -f manifests/core-objects/web-service.yaml --ignore-not-found

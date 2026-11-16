@@ -216,4 +216,4 @@ The `web` Ingress stays up by default — later chapters don't need it, so delet
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [Kustomize (intro) →](../packaging/kustomize.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md)

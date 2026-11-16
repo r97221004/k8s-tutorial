@@ -49,7 +49,6 @@ In [k9s](../cluster-setup/k9s.md), a red `crasher` row jumps out; press `l` for 
 - **Start with `describe` → Events**, then `logs` (add `--previous` for restarts). Resist random `delete`/restart before you've read the cause.
 - **`kubectl exec -it <pod> -- sh`** to inspect from inside (env vars, mounted files, reach a dependency).
 - **`kubectl get events`** when something cluster-wide is off (scheduling, node pressure).
-- See the [Troubleshooting appendix](../appendix/troubleshooting.md) for a fuller symptom→fix table.
 
 ---
 

@@ -21,7 +21,7 @@ You might expect Kubernetes to run *containers* directly. It doesn't — it runs
 - **can share storage** — the same volumes are mountable by every container in the Pod;
 - **live and die together** — they're always scheduled onto the **same node** and started/stopped as a unit.
 
-Most Pods hold exactly one container. The multi-container case is for tightly-coupled helpers (a logging "sidecar", a proxy) that must sit right next to the main app — see [init containers & sidecars](../appendix/further-reading.md).
+Most Pods hold exactly one container. The multi-container case is for tightly-coupled helpers (a logging "sidecar", a proxy) that must sit right next to the main app — see [init containers & sidecars](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/).
 
 > **The key idea:** the Pod — not the container — is Kubernetes' unit of scheduling, networking, and lifecycle.
 
