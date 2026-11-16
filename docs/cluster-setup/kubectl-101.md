@@ -4,9 +4,23 @@
 
 ---
 
-`kubectl` is your remote control for the cluster. Every command is really an HTTP call to the [`kube-apiserver`](../getting-started/control-plane.md) using the credentials in your **kubeconfig** (`~/.kube/config`). Learn a handful of verbs and flags and you can drive everything.
+Time to put [The kubectl CLI](../getting-started/kubectl-cli.md) to work. Learn a handful of verbs and flags and you can drive everything.
 
 > Getting `connection refused` or `the server doesn't have a resource type`? Your kubeconfig probably isn't in place yet — see the [copy-the-kubeconfig step](setup-kubeadm.md) (kubeadm) or the k3s `export KUBECONFIG=…` line in the [README](../../README.md#prerequisites).
+
+### See the API calls
+
+Start by proving that `kubectl` really is just an API client. Raise the verbosity and it prints every HTTP request it makes:
+
+```bash
+kubectl get pods -v=6
+```
+
+```
+... GET https://<apiserver>:6443/api/v1/namespaces/default/pods?limit=500 200 OK in 12 milliseconds
+```
+
+That's the whole trick: a `GET` to the apiserver's REST API, authenticated with your kubeconfig.
 
 ### The verbs you'll use all day
 
@@ -19,7 +33,7 @@ kubectl logs <pod>               # a container's stdout/stderr  (add -f to follo
 kubectl exec -it <pod> -- sh     # run a command / get a shell inside a container
 ```
 
-> **`apply` vs `create`:** prefer `apply -f` — it's *declarative* (run it again after editing the file and Kubernetes reconciles the difference). `create` is one-shot and errors if the object already exists.
+> **`apply` vs `create`:** prefer `apply -f` — you can run it again after editing the file. `create` is [imperative](../getting-started/kubectl-cli.md#three-kinds-of-commands) and errors if the object already exists.
 
 ### Flags that save you
 

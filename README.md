@@ -74,6 +74,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 - [**Architecture Overview**](docs/getting-started/architecture.md) — the big picture, and why a kubeadm cluster is vanilla k8s.
 - [**The Control Plane**](docs/getting-started/control-plane.md) — apiserver, etcd, scheduler, controller-manager: the brain.
 - [**The Data Plane**](docs/getting-started/data-plane.md) — kubelet, containerd, kube-proxy, and add-ons: the muscle.
+- [**The kubectl CLI**](docs/getting-started/kubectl-cli.md) — how kubectl talks to the cluster, and the three kinds of commands.
 
 **Part 2 — Cluster Setup**
 

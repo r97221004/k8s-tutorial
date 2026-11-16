@@ -92,4 +92,4 @@ Or open [k9s](k9s.md) and type `:pods` ⏎, then `0` to show all namespaces — 
 
 ---
 
-[← The Data Plane](../getting-started/data-plane.md) · [↑ Contents](../../README.md) · [kubectl 101 →](kubectl-101.md)
+[← The kubectl CLI](../getting-started/kubectl-cli.md) · [↑ Contents](../../README.md) · [kubectl 101 →](kubectl-101.md)

@@ -68,4 +68,4 @@ In [k9s](../cluster-setup/k9s.md), type `:nodes` ⏎ and press `d` on your node 
 
 ---
 
-[← The Control Plane](control-plane.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](../cluster-setup/setup-kubeadm.md)
+[← The Control Plane](control-plane.md) · [↑ Contents](../../README.md) · [The kubectl CLI →](kubectl-cli.md)
