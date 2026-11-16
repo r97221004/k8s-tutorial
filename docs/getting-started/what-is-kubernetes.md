@@ -50,18 +50,29 @@ config:
   theme: default
   themeVariables:
     fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    lineColor: '#FFFFFF'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
 flowchart LR
-    desired["📄 desired state<br/>replicas: 3"]
     observe["👀 observe<br/>actual Pods"]
+    desired["📄 desired state<br/>replicas: 3"]
     diff{"⚖️ diff"}
     act["🔧 act<br/>create 1 Pod"]
 
-    desired --> diff
     observe --> diff
+    desired --> diff
     diff -->|"differs"| act
-    diff -->|"same"| observe
     act -->|"check again"| observe
+    diff -->|"same"| observe
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class desired ctrl
+    class diff eng
+    class observe,act tgt
 ```
 
 **Observe** what's actually running, **diff** it against what you declared, **act** to close the gap — then check again. Most of the time the two match, and the loop simply keeps watching. This is called **reconciliation**, and every object in this guide is driven by a loop like this.
