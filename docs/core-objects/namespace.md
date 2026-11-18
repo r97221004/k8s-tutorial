@@ -182,7 +182,7 @@ Then delete the lab namespace. This removes the `web` Deployment, Service, Resou
 kubectl delete namespace dev
 ```
 
-To fully reset after Part 3, also remove the `web` Service and Deployment left in `default`:
+To fully reset after Core Objects, also remove the `web` Service and Deployment left in `default`:
 
 ```bash
 kubectl delete -f manifests/core-objects/web-service.yaml --ignore-not-found

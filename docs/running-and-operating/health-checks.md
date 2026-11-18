@@ -21,7 +21,7 @@ The crucial distinction: **readiness controls traffic; liveness controls restart
 
 ## Before you start
 
-Use the known-good `web` Deployment for Part 5:
+Use the known-good `web` Deployment for Running & Operating:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml

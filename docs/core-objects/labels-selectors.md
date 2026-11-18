@@ -6,7 +6,7 @@
 
 ## Before you start
 
-No objects are required for this chapter. If you just finished [Pod](pod.md), the standalone `nginx` Pod should already be deleted.
+No objects are required for this chapter. If you just finished [Pods](../pods/what-is-a-pod.md), the standalone `nginx` Pod should already be deleted.
 
 You can read this chapter before creating any new objects. The next chapters use labels constantly, so this is the small idea that makes Deployments and Services feel much less mysterious.
 
@@ -83,4 +83,4 @@ A Service or Deployment `selector` can match on just one or two of these (e.g. `
 
 ---
 
-[← Pod](pod.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
+[← From Dockerfile to Pod](../pods/from-dockerfile-to-pod.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)

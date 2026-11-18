@@ -14,7 +14,7 @@ kubectl delete -f manifests/core-objects/web-deployment.yaml --ignore-not-found
 
 ## Why you don't deploy Pods directly
 
-A bare [Pod](pod.md) has no safety net: if it crashes hard or its node dies, nothing brings it back. You also can't scale it, and updating its image means deleting and recreating it by hand — with downtime.
+A bare [Pod](../pods/what-is-a-pod.md) has no safety net: if it crashes hard or its node dies, nothing brings it back. You also can't scale it, and updating its image means deleting and recreating it by hand — with downtime.
 
 A **Deployment** fixes all of that. You declare a *desired state* — "run 3 replicas of this Pod template" — and a controller continuously works to make it true. This is the [declarative model](../getting-started/what-is-kubernetes.md) in action:
 
@@ -71,7 +71,7 @@ spec:
 **Reading it top to bottom:**
 
 - `replicas: 3` — how many copies you want running.
-- `template:` — the blueprint the Deployment stamps out, copy by copy. It's just the [Pod](pod.md) spec you already know (without a name — each Pod gets an auto-generated one like `web-6f8c…-2kx9q`).
+- `template:` — the blueprint the Deployment stamps out, copy by copy. It's just the [Pod](../pods/what-is-a-pod.md) spec you already know (without a name — each Pod gets an auto-generated one like `web-6f8c…-2kx9q`).
 - `selector.matchLabels` — how the Deployment finds the Pods it owns. **It must equal the template's `labels`**, which is why `app: web` appears in both the `selector` and the `template`. Mismatch them and the Deployment won't recognize its own Pods — a classic first-timer trip-up.
 - `resources` — reserves a little CPU/memory for each Pod; don't fuss over the exact numbers yet ([Resource Requests & Limits](../running-and-operating/resources.md) explains them).
 

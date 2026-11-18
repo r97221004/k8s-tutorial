@@ -1,4 +1,4 @@
-# Anatomy of a Manifest
+# Creating Pods
 
 > Every Kubernetes object is the same four fields — learn them once and all YAML looks familiar.
 
@@ -8,7 +8,7 @@ Here's the good news that makes Kubernetes YAML far less scary: **every object h
 
 ### The four fields
 
-Take the [Pod](../core-objects/pod.md) manifest you already met:
+Take the [Pod](what-is-a-pod.md) manifest you already met:
 
 ▶ **Runnable manifest:** [`manifests/core-objects/nginx-pod.yaml`](../../manifests/core-objects/nginx-pod.yaml)
 
@@ -51,4 +51,4 @@ That split — *you declare `spec`, the cluster reports `status`, controllers cl
 
 ---
 
-[← kubectl 101](kubectl-101.md) · [↑ Contents](../../README.md)
+[← The Pod Lifecycle](pod-lifecycle.md) · [↑ Contents](../../README.md) · [Working with Pods →](working-with-pods.md)

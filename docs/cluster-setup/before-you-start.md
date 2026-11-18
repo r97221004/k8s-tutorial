@@ -1,10 +1,10 @@
 # Before You Start
 
-> Everything you need in place before Part 3: a kubeadm cluster, a shell on its node, and this repository.
+> Everything you need in place before [Pods](../pods/what-is-a-pod.md): a kubeadm cluster, a shell on its node, and this repository.
 
 ---
 
-You won't install Kubernetes by hand. The companion Ansible tutorial automates the install, and this page walks you through running it, then checks the cluster is ready. Work through it once, and every hands-on example from [Pod](../core-objects/pod.md) onward will run as written.
+You won't install Kubernetes by hand. The companion Ansible tutorial automates the install, and this page walks you through running it, then checks the cluster is ready. Work through it once, and every hands-on example from [Pod](../pods/what-is-a-pod.md) onward will run as written.
 
 ### 1. Build the cluster
 

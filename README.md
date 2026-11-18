@@ -61,9 +61,16 @@ Two machines, plus basic shell and container familiarity:
 - [**Before You Start**](docs/cluster-setup/before-you-start.md) — a checklist: a kubeadm cluster, a shell on its node, this repo, and what a bare kubeadm cluster lacks.
 - [**Inspect with k9s**](docs/cluster-setup/k9s.md) — a live terminal dashboard for your cluster.
 
-**Part 3 — Core Objects**
+**Part 3 — Pods**
 
-- [**Pod**](docs/core-objects/pod.md) — the smallest thing Kubernetes runs.
+- [**What Is a Pod**](docs/pods/what-is-a-pod.md) — the smallest thing Kubernetes runs.
+- [**The Pod Lifecycle**](docs/pods/pod-lifecycle.md) — the phases a Pod moves through, and what restarts its containers. *(coming soon)*
+- [**Creating Pods**](docs/pods/creating-pods.md) — `apiVersion`/`kind`/`metadata`/`spec`, and how to write a Pod manifest.
+- [**Working with Pods**](docs/pods/working-with-pods.md) — inspect, debug, and clean up Pods with kubectl.
+- [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image and run it as a Pod. *(coming soon)*
+
+**Part 4 — Core Objects**
+
 - [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 - [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
 - [**ReplicaSet**](docs/core-objects/replicaset.md) — what actually maintains the replica count.
@@ -73,7 +80,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 4 — Configuration & Data**
+**Part 5 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -81,7 +88,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 5 — Running & Operating**
+**Part 6 — Running & Operating**
 
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
@@ -91,14 +98,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 6 — Networking & Access**
+**Part 7 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
-
-**Part 7 — Staging (temporary)**
-
-> Chapters parked here while deciding whether, and where, they fit back into the guide.
-
-- [**kubectl 101**](docs/staging/kubectl-101.md) — the everyday commands you'll live in.
-- [**Anatomy of a Manifest**](docs/staging/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.

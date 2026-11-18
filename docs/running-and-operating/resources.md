@@ -8,7 +8,7 @@ Every container can declare two numbers for CPU and memory: a **request** (what 
 
 ## Before you start
 
-Apply the Part 5 `web` Deployment so the examples below have resources to inspect:
+Apply the Running & Operating `web` Deployment so the examples below have resources to inspect:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml

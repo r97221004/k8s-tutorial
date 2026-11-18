@@ -1,4 +1,4 @@
-# Pod
+# What Is a Pod
 
 > The smallest thing Kubernetes runs — one (or a few) containers that share a network and storage, scheduled together onto one node.
 
@@ -27,7 +27,7 @@ Most Pods hold exactly one container. The multi-container case is for tightly-co
 
 ## Your first Pod
 
-Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../staging/manifest-anatomy.md)):
+Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Creating Pods](creating-pods.md)):
 
 ▶ **Runnable manifest:** [`manifests/core-objects/nginx-pod.yaml`](../../manifests/core-objects/nginx-pod.yaml)
 
@@ -77,8 +77,8 @@ kubectl delete pod nginx
 
 ## You rarely create bare Pods
 
-A standalone Pod has no safety net: delete it, or let its node fail, and it's simply **gone** — nothing recreates it. In practice you almost never write `kind: Pod` by hand. Instead a controller like a [Deployment](deployment.md) creates and manages Pods for you — keeping the desired number running, replacing dead ones, and rolling out new versions. Understanding the bare Pod first is what makes those controllers make sense.
+A standalone Pod has no safety net: delete it, or let its node fail, and it's simply **gone** — nothing recreates it. In practice you almost never write `kind: Pod` by hand. Instead a controller like a [Deployment](../core-objects/deployment.md) creates and manages Pods for you — keeping the desired number running, replacing dead ones, and rolling out new versions. Understanding the bare Pod first is what makes those controllers make sense.
 
 ---
 
-[← Inspect with k9s](../cluster-setup/k9s.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](labels-selectors.md)
+[← Inspect with k9s](../cluster-setup/k9s.md) · [↑ Contents](../../README.md) · [The Pod Lifecycle →](pod-lifecycle.md)

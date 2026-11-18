@@ -8,7 +8,7 @@ More load? Run more copies. Because a [Deployment](../core-objects/deployment.md
 
 ## Before you start
 
-Start from the Part 5 `web` Deployment:
+Start from the Running & Operating `web` Deployment:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml

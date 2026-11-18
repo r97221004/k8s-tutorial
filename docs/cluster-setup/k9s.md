@@ -46,4 +46,4 @@ You'll come back to k9s in nearly every chapter — e.g. watching a [Deployment]
 
 ---
 
-[← Before You Start](before-you-start.md) · [↑ Contents](../../README.md) · [Pod →](../core-objects/pod.md)
+[← Before You Start](before-you-start.md) · [↑ Contents](../../README.md) · [What Is a Pod →](../pods/what-is-a-pod.md)

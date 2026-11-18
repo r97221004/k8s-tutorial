@@ -1,4 +1,4 @@
-# kubectl 101
+# Working with Pods
 
 > The one CLI you'll live in — talk to the API server to create, inspect, and debug everything.
 
@@ -68,4 +68,4 @@ A **context** bundles *which cluster*, *which user*, and *which namespace*. On t
 
 ---
 
-[← Ingress](../networking/ingress.md) · [↑ Contents](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)
+[← Creating Pods](creating-pods.md) · [↑ Contents](../../README.md) · [From Dockerfile to Pod →](from-dockerfile-to-pod.md)

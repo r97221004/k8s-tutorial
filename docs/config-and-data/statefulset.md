@@ -253,9 +253,9 @@ This is still a tutorial-sized lab, not a hardened production posture — real p
 - **Size `volumeClaimTemplates` carefully** — they're created per replica and usually persist even after the StatefulSet is deleted (so data isn't lost by accident).
 - **Pin production images and storage deliberately** — this lab uses `postgres:16` and the default StorageClass for portability, but production manifests should pin image versions/digests and choose an explicit storage class.
 
-## Reset after Part 4
+## Reset after Configuration & Data
 
-If you're moving on to Part 5 and want a clean default namespace, remove the config examples and the StatefulSet:
+If you're moving on to Running & Operating and want a clean default namespace, remove the config examples and the StatefulSet:
 
 ```bash
 kubectl delete -f manifests/config-and-data/web-with-config.yaml --ignore-not-found

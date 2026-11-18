@@ -216,4 +216,4 @@ The `web` Ingress stays up by default — later chapters don't need it, so delet
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [kubectl 101 →](../staging/kubectl-101.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md)
