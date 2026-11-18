@@ -64,7 +64,7 @@ Two machines, plus basic shell and container familiarity:
 **Part 3 — Pods**
 
 - [**What Is a Pod**](docs/pods/what-is-a-pod.md) — the smallest thing Kubernetes runs.
-- [**The Pod Lifecycle**](docs/pods/pod-lifecycle.md) — the phases a Pod moves through, and what restarts its containers. *(coming soon)*
+- [**The Pod Lifecycle**](docs/pods/pod-lifecycle.md) — the phases a Pod moves through, and what restarts its containers.
 - [**Creating Pods**](docs/pods/creating-pods.md) — `apiVersion`/`kind`/`metadata`/`spec`, and how to write a Pod manifest.
 - [**Working with Pods**](docs/pods/working-with-pods.md) — inspect, debug, and clean up Pods with kubectl.
 - [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image and run it as a Pod. *(coming soon)*
