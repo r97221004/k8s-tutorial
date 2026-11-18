@@ -218,7 +218,7 @@ Then in k9s:
    kubectl rollout restart deployment/web-config
    ```
 
-   In k9s: go to `:deployments`, highlight `web-config`, and press `Ctrl-R`.
+   In k9s: go to `:deployments`, highlight `web-config`, press `r`, and confirm.
 
    **Option B — delete the Pod:** The Deployment notices the Pod is gone and immediately creates a replacement. There is a brief gap while the new Pod starts.
 

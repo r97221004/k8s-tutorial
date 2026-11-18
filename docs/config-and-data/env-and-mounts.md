@@ -186,7 +186,7 @@ To watch Secret/env-var restart behavior in k9s:
 2. Type `:secrets`, describe `app-secret`, and notice `DB_PASSWORD` has a new byte count.
 3. Go back to `:pods` and press `s` on the existing Pod. The mounted Secret file refreshes after the kubelet syncs the volume; checking `/etc/app-secret/DB_PASSWORD` is a lab-only verification step.
 4. Check `printenv DB_PASSWORD` in that same shell: the env var is still the old value.
-5. Restart the Deployment so env vars are re-read. In k9s, type `:deployments`, highlight `web-config`, and press `Ctrl-R`. For a quick lab-only replacement, go back to `:pods`, highlight the `web-config-...` Pod, and press `Ctrl-D`.
+5. Restart the Deployment so env vars are re-read. In k9s, type `:deployments`, highlight `web-config`, press `r`, and confirm. For a quick lab-only replacement, go back to `:pods`, highlight the `web-config-...` Pod, and press `Ctrl-D`.
 
 ## env vars vs files — which to use
 
