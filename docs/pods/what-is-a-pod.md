@@ -40,7 +40,7 @@ config:
 flowchart TB
     subgraph pod["📦 Pod · one IP: 10.244.0.12"]
         direction TB
-        subgraph net["🔗 shared network · talk over localhost"]
+        subgraph net["🔗 localhost · works only inside this Pod"]
             app["🐳 app container<br/>:80"]
             helper["🐳 helper container<br/>:9000"]
         end
@@ -48,12 +48,14 @@ flowchart TB
         mount[("💾 persistent volume<br/>mounted into the Pod")]
     end
     disk[("☁️ storage<br/>outlives the Pod")]
+    outside["🖥️ outside the Pod<br/>node or another Pod"]
 
     app --> scratch
     app --> mount
     helper --> scratch
     helper --> mount
     mount --> disk
+    app <-.->|"10.244.0.12:80"| outside
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
@@ -61,6 +63,7 @@ flowchart TB
     class app eng
     class helper tgt
     class scratch,mount,disk ctrl
+    class outside tgt
 
     style pod fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
     style net fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
@@ -94,17 +97,17 @@ Two consequences you'll meet later:
 
 ## What you can configure per container
 
-A Pod lets you configure each of its containers in a lot of ways. You don't need any of these yet; this list is a map of where each one is covered:
+A Pod lets you configure each of its containers in a lot of ways. You don't need any of these yet; later chapters cover each one:
 
-| Setting | What it controls | Covered in |
-|---|---|---|
-| Image | Which container image to run | [From Dockerfile to Pod](from-dockerfile-to-pod.md) |
-| Ports | Which ports the container listens on | [Service → Ports decoded](../core-objects/service.md#ports-decoded) |
-| Environment variables | Config passed in as env vars | [Environment Variables & Mounts](../config-and-data/env-and-mounts.md) |
-| Volume mounts | Files and storage mounted into the container | [Volumes & PersistentVolumes](../config-and-data/volumes.md) |
-| Probes | How Kubernetes checks the container is healthy, and what it does when it isn't | [Health Checks](../running-and-operating/health-checks.md) |
-| Resources | How much CPU and memory it reserves and may use | [Resource Requests & Limits](../running-and-operating/resources.md) |
-| Security context | Which user it runs as, and what it's allowed to do | Shown in use in [StatefulSet → Hardening this lab](../config-and-data/statefulset.md#hardening-this-lab) |
+| Setting | What it controls |
+|---|---|
+| Image | Which container image to run |
+| Ports | Which ports the container listens on |
+| Environment variables | Config passed in as env vars |
+| Volume mounts | Files and storage mounted into the container |
+| Probes | How Kubernetes checks the container is healthy, and what it does when it isn't |
+| Resources | How much CPU and memory it reserves and may use |
+| Security context | Which user it runs as, and what it's allowed to do |
 
 ## Try it
 
