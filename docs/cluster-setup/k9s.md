@@ -12,7 +12,11 @@ Once you have more than a couple of objects, running `kubectl get … -w` over a
 
 Install k9s **on the node**, next to `kubectl`, since that's where you work (see [Before You Start](before-you-start.md#2-work-on-the-node)).
 
-The easiest way is the Ansible tutorial's **[kube_tools role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kube-tools.md)**. Run its `install_kube_tools.yml` playbook from your laptop, the same way you ran the kubeadm one, and it drops the k9s binary into `/usr/local/bin` on the node.
+The easiest way is the Ansible tutorial's **[kube_tools role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kube-tools.md)**. From the `ansible-tutorial` directory on your laptop, run it the same way you ran the kubeadm playbook, and it drops the k9s binary into `/usr/local/bin` on the node:
+
+```bash
+ansible-playbook -i ansible/inventory/azure.ini ansible/playbooks/install_kube_tools.yml
+```
 
 To install it by hand instead, SSH into the node and grab the binary from k9s' [GitHub releases](https://github.com/derailed/k9s/releases):
 
