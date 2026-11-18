@@ -31,6 +31,7 @@ kubectl apply -f file.yaml       # create/update from a manifest (declarative)
 kubectl delete -f file.yaml      # remove what a manifest created
 kubectl logs <pod>               # a container's stdout/stderr  (add -f to follow)
 kubectl exec -it <pod> -- sh     # run a command / get a shell inside a container
+kubectl port-forward pod/<pod> 8080:80   # reach the Pod at http://localhost:8080 from the node
 ```
 
 > **`apply` vs `create`:** prefer `apply -f` — you can run it again after editing the file. `create` is [imperative](../getting-started/kubectl-cli.md#three-kinds-of-commands) and errors if the object already exists.
