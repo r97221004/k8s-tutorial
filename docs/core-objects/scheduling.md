@@ -90,7 +90,7 @@ In a normal multi-node cluster, the control-plane node is reserved for the clust
 node-role.kubernetes.io/control-plane:NoSchedule
 ```
 
-That is why the setup chapter removes the taint for this single-node lab: without worker nodes, normal app Pods would have nowhere to go.
+That is why you removed the taint in [Before You Start](../cluster-setup/before-you-start.md#3-let-the-one-node-run-your-pods) for this single-node lab: without worker nodes, normal app Pods would have nowhere to go.
 
 ## Hands-on: make a Pod Pending
 

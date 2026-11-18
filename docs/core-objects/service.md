@@ -123,7 +123,7 @@ If `kubectl get pods -l app=web` returns nothing, fix the Service `selector` or 
 | **NodePort** | `nodeIP:30000–32767` | quick external access in a lab / no load balancer |
 | **LoadBalancer** | an external IP | cloud production (the cloud provisions a real LB) |
 
-Try reaching the ClusterIP from inside, and via NodePort from your machine:
+Try reaching the ClusterIP from inside the cluster, then via a NodePort from the node itself:
 
 ```bash
 # From inside the cluster (ClusterIP works here):

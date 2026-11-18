@@ -8,7 +8,7 @@ Exposing every [Service](../core-objects/service.md) with its own NodePort or Lo
 
 ## Ingress needs a controller
 
-An `Ingress` object is just *rules* — inert until something enforces them. That something is an **ingress controller** (ingress-nginx, Traefik, …) running in the cluster. k3s bundles Traefik; **vanilla kubeadm ships none**, so install one first:
+An `Ingress` object is just *rules* — inert until something enforces them. That something is an **ingress controller** (ingress-nginx, Traefik, …) running in the cluster. **Vanilla kubeadm ships none**, so install one first:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.14.5/deploy/static/provider/baremetal/deploy.yaml
@@ -216,4 +216,4 @@ The `web` Ingress stays up by default — later chapters don't need it, so delet
 
 ---
 
-[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md)
+[← Service Discovery & DNS](dns.md) · [↑ Contents](../../README.md) · [kubectl 101 →](../staging/kubectl-101.md)

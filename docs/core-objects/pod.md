@@ -27,7 +27,7 @@ Most Pods hold exactly one container. The multi-container case is for tightly-co
 
 ## Your first Pod
 
-Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../cluster-setup/manifest-anatomy.md)):
+Notice the four fields every object has — `apiVersion`, `kind`, `metadata`, `spec` (see [Anatomy of a Manifest](../staging/manifest-anatomy.md)):
 
 ▶ **Runnable manifest:** [`manifests/core-objects/nginx-pod.yaml`](../../manifests/core-objects/nginx-pod.yaml)
 

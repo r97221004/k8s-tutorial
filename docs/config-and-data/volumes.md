@@ -184,7 +184,7 @@ There are two ways a PVC gets a PV:
 
 Most tutorials use dynamic provisioning because it keeps the app manifest focused on the claim, not the storage backend. Static PVs are useful when the storage already exists or needs hand-tuned settings.
 
-> **⚠️ Vanilla kubeadm has no default StorageClass.** Unlike k3s (which bundles `local-path`), bare kubeadm ships no storage provisioner — PVCs stay `Pending` indefinitely without one. Fix it once before running the exercise below:
+> **⚠️ Vanilla kubeadm has no default StorageClass.** Bare kubeadm ships no storage provisioner — PVCs stay `Pending` indefinitely without one. Fix it once before running the exercise below:
 >
 > ```bash
 > kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml

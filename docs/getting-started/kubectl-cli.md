@@ -4,7 +4,7 @@
 
 ---
 
-`kubectl` (say "kube-control" or "kube-cuttle") is the command-line tool you'll use for almost everything in this guide. This chapter is the mental model; you'll run the commands for real in [kubectl 101](../cluster-setup/kubectl-101.md), once your cluster is up.
+`kubectl` (say "kube-control" or "kube-cuttle") is the command-line tool you'll use for almost everything in this guide. This chapter is the mental model; you'll run the commands for real in [kubectl 101](../staging/kubectl-101.md), once your cluster is up.
 
 ### It's just an API client
 
@@ -62,8 +62,8 @@ The last two rows are the [imperative vs. declarative](what-is-kubernetes.md#imp
 
 > 💡 If you ever want to change something imperatively, ask yourself whether it should be in a file instead. If anyone else — or future you — needs to reproduce it, the answer is yes.
 
-Next, you'll build the cluster that all of this talks to.
+Next, make sure you have a cluster for all of this to talk to.
 
 ---
 
-[← The Data Plane](data-plane.md) · [↑ Contents](../../README.md) · [Set Up a Cluster (kubeadm) →](../cluster-setup/setup-kubeadm.md)
+[← The Data Plane](data-plane.md) · [↑ Contents](../../README.md) · [Before You Start →](../cluster-setup/before-you-start.md)

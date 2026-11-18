@@ -51,4 +51,4 @@ That split — *you declare `spec`, the cluster reports `status`, controllers cl
 
 ---
 
-[← kubectl 101](kubectl-101.md) · [↑ Contents](../../README.md) · [Inspect with k9s →](k9s.md)
+[← kubectl 101](kubectl-101.md) · [↑ Contents](../../README.md)

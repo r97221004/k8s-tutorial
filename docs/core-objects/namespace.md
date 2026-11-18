@@ -31,7 +31,7 @@ kube-public       Active   1h
 kube-node-lease   Active   1h
 ```
 
-Everything you've created so far landed in `default`. The control plane you saw in [Set Up](../cluster-setup/setup-kubeadm.md) lives in `kube-system`.
+Everything you've created so far landed in `default`. The control plane you saw in [The Control Plane](../getting-started/control-plane.md) lives in `kube-system`.
 
 ## Using namespaces
 

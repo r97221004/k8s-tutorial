@@ -6,7 +6,7 @@
 
 Time to put [The kubectl CLI](../getting-started/kubectl-cli.md) to work. Learn a handful of verbs and flags and you can drive everything.
 
-> Getting `connection refused` or `the server doesn't have a resource type`? Your kubeconfig probably isn't in place yet — see the [copy-the-kubeconfig step](setup-kubeadm.md) (kubeadm) or the k3s `export KUBECONFIG=…` line in the [README](../../README.md#prerequisites).
+> Getting `connection refused` or `the server doesn't have a resource type`? Your kubeconfig probably isn't in place yet — see [Work on the node](../cluster-setup/before-you-start.md#2-work-on-the-node).
 
 ### See the API calls
 
@@ -64,8 +64,8 @@ A **context** bundles *which cluster*, *which user*, and *which namespace*. On t
 - **Drive the cluster with `apply -f` and manifests in Git**, not ad-hoc imperative commands — so state is reproducible.
 - **Reach for `describe` and `get events` first** when something's wrong (see [Debugging](../running-and-operating/debugging.md)).
 - Use **`--dry-run=client -o yaml`** to *generate* manifests instead of writing them from scratch.
-- For fast, visual browsing of all this, use [k9s](k9s.md) — it's `kubectl get/describe/logs` as a live dashboard.
+- For fast, visual browsing of all this, use [k9s](../cluster-setup/k9s.md) — it's `kubectl get/describe/logs` as a live dashboard.
 
 ---
 
-[← Set Up a Cluster (kubeadm)](setup-kubeadm.md) · [↑ Contents](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)
+[← Ingress](../networking/ingress.md) · [↑ Contents](../../README.md) · [Anatomy of a Manifest →](manifest-anatomy.md)

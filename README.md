@@ -21,7 +21,7 @@ Every concept is paired with a runnable `kubectl apply` example — configure ap
 
 > **No prior Kubernetes experience assumed.** New to k8s? Read top to bottom. Already know the basics? Jump straight to the [Table of Contents](#table-of-contents).
 
-> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). k3s, by contrast, is a *repackaged lightweight distro* with batteries-included defaults baked in. Analogy: Kubernetes is the Linux kernel, kubeadm is a clean standard install, k3s is a pre-loaded distro like Ubuntu. More in [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md).
+> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). Analogy: Kubernetes is the Linux kernel, and kubeadm is a clean, standard install of it.
 
 ## What You'll Learn
 
@@ -38,32 +38,12 @@ Every section is hands-on: a manifest you `kubectl apply`, then watch take effec
 
 ## Prerequisites
 
-A Linux host (or WSL2 / a VM), `kubectl` installed, and basic shell + container familiarity.
+Two machines, plus basic shell and container familiarity:
 
-For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu is the assumed happy path in the companion Ansible role). A single-node lab is comfortable with **2 vCPU, 4 GB RAM, and 20 GB disk**. Start from a clean host if you can; old container runtimes, stale kubeconfigs, or half-removed clusters make first-time Kubernetes debugging unnecessarily noisy.
+- **A control machine** (your laptop) with Ansible and SSH. It runs the playbook that builds the cluster; see the Ansible tutorial's [Install Ansible](https://github.com/r97221004/ansible-tutorial/blob/master/docs/getting-started/install-ansible.md).
+- **A target Linux VM** that becomes the single cluster node. You need SSH access and `sudo` on it. The companion Ansible tutorial uses **Ubuntu 22.04** (an Azure VM works well). A single-node lab is comfortable with **2 vCPU, 4 GB RAM, and 20 GB disk**. Start from a clean host if you can; old container runtimes, stale kubeconfigs, or half-removed clusters make first-time Kubernetes debugging unnecessarily noisy.
 
-**You'll need a cluster to follow along. Two ways to get one:**
-
-1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**, then read [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
-2. **Fast lane — just want to run the examples?** Spin up a real single-node cluster with k3s in one line and circle back to kubeadm later:
-
-   ```bash
-   curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
-   export KUBECONFIG=/etc/rancher/k3s/k3s.yaml   # so plain kubectl just works
-   ```
-
-   This is convenient for a throwaway lab, but it still runs a remote install script as root. For anything beyond a local practice VM, inspect the script first or use your platform's normal package/install process.
-
-   k3s is great for running the manifests quickly, but its defaults are not identical to bare kubeadm: it may include built-in storage, ingress, and load-balancer helpers that vanilla kubeadm does not. When this guide calls that out, trust the kubeadm behavior as the main lesson.
-
-Before starting Part 3, verify your cluster is reachable and healthy:
-
-```bash
-kubectl get nodes                 # one node, STATUS Ready
-kubectl get pods -A               # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
-```
-
-If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/setup-kubeadm.md) or fix your kubeconfig before continuing.
+**You'll need a cluster to follow along.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**. You don't install `kubectl` or anything else Kubernetes-related on your laptop: the role installs it all on the VM, and you work from there over SSH. Then work through [Before You Start](docs/cluster-setup/before-you-start.md) before Part 3 to make sure the cluster is ready for the examples.
 
 ## Table of Contents
 
@@ -78,9 +58,7 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 
 **Part 2 — Cluster Setup**
 
-- [**Set Up a Cluster (kubeadm)**](docs/cluster-setup/setup-kubeadm.md) — build the cluster, then understand each piece the installer wires up.
-- [**kubectl 101**](docs/cluster-setup/kubectl-101.md) — the everyday commands you'll live in.
-- [**Anatomy of a Manifest**](docs/cluster-setup/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.
+- [**Before You Start**](docs/cluster-setup/before-you-start.md) — a checklist: a kubeadm cluster, a shell on its node, this repo, and what a bare kubeadm cluster lacks.
 - [**Inspect with k9s**](docs/cluster-setup/k9s.md) — a live terminal dashboard for your cluster.
 
 **Part 3 — Core Objects**
@@ -117,3 +95,10 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/cluster-setup/s
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
+
+**Part 7 — Staging (temporary)**
+
+> Chapters parked here while deciding whether, and where, they fit back into the guide.
+
+- [**kubectl 101**](docs/staging/kubectl-101.md) — the everyday commands you'll live in.
+- [**Anatomy of a Manifest**](docs/staging/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.

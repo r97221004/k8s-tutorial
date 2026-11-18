@@ -53,7 +53,7 @@ In [k9s](../cluster-setup/k9s.md), type `:pods` ⏎, press `0` to show all names
 - **Run a highly available control plane in production** — at least three control-plane nodes, so losing one machine doesn't freeze the cluster.
 - **Run `etcd` with an odd number of members** (3 or 5). `etcd` is *distributed*: it only accepts writes while a majority (quorum) agrees, so 3 members survive 1 failure and 5 survive 2. A 4th member adds no extra tolerance.
 - **Back up `etcd` regularly** — it *is* the cluster. Everything else can be rebuilt from it.
-- **Keep app workloads off control-plane nodes.** kubeadm taints them for this reason. Our single-node lab removes that taint on purpose, since there's nowhere else to run — see [Set Up a Cluster](../cluster-setup/setup-kubeadm.md).
+- **Keep app workloads off control-plane nodes.** kubeadm taints them for this reason. Our single-node lab removes that taint on purpose, since there's nowhere else to run — see [Before You Start](../cluster-setup/before-you-start.md#3-let-the-one-node-run-your-pods).
 
 ---
 

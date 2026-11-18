@@ -10,23 +10,24 @@ Once you have more than a couple of objects, running `kubectl get … -w` over a
 
 ### Install
 
-Prefer your package manager where available:
+Install k9s **on the node**, next to `kubectl`, since that's where you work (see [Before You Start](before-you-start.md#2-work-on-the-node)).
+
+The easiest way is the Ansible tutorial's **[kube_tools role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kube-tools.md)**. Run its `install_kube_tools.yml` playbook from your laptop, the same way you ran the kubeadm one, and it drops the k9s binary into `/usr/local/bin` on the node.
+
+To install it by hand instead, SSH into the node and grab the binary from k9s' [GitHub releases](https://github.com/derailed/k9s/releases):
 
 ```bash
-brew install k9s        # macOS / Linuxbrew
-# or apt/dnf if your distro packages it
+curl -fsSLO https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
+sudo tar -xzf k9s_Linux_amd64.tar.gz -C /usr/local/bin k9s
+k9s version
 ```
 
-No package available? Grab a binary directly from k9s' [GitHub releases](https://github.com/derailed/k9s/releases), or use the install script:
+(On an ARM VM, use `k9s_Linux_arm64.tar.gz` instead.)
+
+Then launch it:
 
 ```bash
-curl -sS https://webi.sh/k9s | sh
-```
-
-> ⚠️ **Piping a remote script into `sh` is convenient but skips inspection.** Only use it if a package manager or release binary isn't an option.
-
-```bash
-k9s        # launch — it uses your current kubeconfig/context automatically
+k9s        # uses your current kubeconfig/context automatically
 ```
 
 ### Getting around
@@ -46,10 +47,10 @@ k9s is keyboard-driven. The essentials:
 
 ### Try it
 
-Launch `k9s`, press `:pods` ⏎ then `0`. You'll see every Pod in the cluster — including the [control plane running in `kube-system`](setup-kubeadm.md). Highlight one and press `d` to describe it, `l` for its logs. This is the same information as `kubectl describe`/`logs`, just faster to move around.
+Launch `k9s`, press `:pods` ⏎ then `0`. You'll see every Pod in the cluster — including the [control plane running in `kube-system`](../getting-started/control-plane.md). Highlight one and press `d` to describe it, `l` for its logs. This is the same information as `kubectl describe`/`logs`, just faster to move around.
 
 You'll come back to k9s in nearly every chapter — e.g. watching a [Deployment](../core-objects/deployment.md) heal a deleted Pod, or a [rolling update](../running-and-operating/rolling-updates.md) swap Pods one by one.
 
 ---
 
-[← Anatomy of a Manifest](manifest-anatomy.md) · [↑ Contents](../../README.md) · [Pod →](../core-objects/pod.md)
+[← Before You Start](before-you-start.md) · [↑ Contents](../../README.md) · [Pod →](../core-objects/pod.md)
