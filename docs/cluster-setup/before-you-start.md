@@ -43,8 +43,6 @@ The first run takes several minutes, because `kubeadm init` pulls the control-pl
 ansible-playbook -i ansible/inventory/azure.ini ansible/playbooks/install_kube_tools.yml
 ```
 
-If you'd rather install it by hand, see [Inspect with k9s](k9s.md#install).
-
 Both playbooks use `sudo` on the VM. Cloud VMs such as Azure usually allow it without a password; if yours asks for one, add `--ask-become-pass` to each `ansible-playbook` command. Both are also safe to re-run: the kubeadm playbook skips `kubeadm init` on a cluster that already exists.
 
 ### 2. Work on the node
