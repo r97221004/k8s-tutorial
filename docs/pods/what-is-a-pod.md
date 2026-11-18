@@ -40,26 +40,30 @@ config:
 flowchart TB
     subgraph pod["📦 Pod · one IP: 10.244.0.12"]
         direction TB
-        app["🐳 app container<br/>listens on :80"]
-        helper["🐳 helper container<br/>listens on :9000"]
-        scratch[("📁 emptyDir volume<br/>deleted with the Pod")]
-        app <-->|"localhost"| helper
-        app --> scratch
-        helper --> scratch
+        subgraph net["🔗 shared network · talk over localhost"]
+            app["🐳 app container<br/>:80"]
+            helper["🐳 helper container<br/>:9000"]
+        end
+        scratch[("📁 emptyDir<br/>deleted with the Pod")]
+        mount[("💾 persistent volume<br/>mounted into the Pod")]
     end
-    pvc[("💾 PersistentVolume<br/>outlives the Pod")]
-    other["📦 another Pod<br/>10.244.0.13"]
+    disk[("☁️ storage<br/>outlives the Pod")]
 
-    app --> pvc
-    other -->|"10.244.0.12:80"| app
+    app --> scratch
+    app --> mount
+    helper --> scratch
+    helper --> mount
+    mount --> disk
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
     class app eng
     class helper tgt
-    class scratch,pvc ctrl
-    class other tgt
+    class scratch,mount,disk ctrl
+
+    style pod fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+    style net fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
 ```
 
 - **One network identity.** Every container in the Pod shares the same IP address and the same set of ports. They reach each other over `localhost`, as if they were processes on one machine. The flip side: two containers in one Pod **can't listen on the same port**. If both try to bind `:80`, the second fails with `address already in use`.
