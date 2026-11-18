@@ -111,7 +111,7 @@ A Pod lets you configure each of its containers in a lot of ways. You don't need
 
 ## Try it
 
-You'll write Pods as YAML manifests in [Creating Pods](creating-pods.md). For now, create one with a single command:
+Create a Pod with a single command. ([Creating Pods](creating-pods.md) covers this command and its options in detail.)
 
 ```bash
 kubectl run web --image=nginx:1.27
