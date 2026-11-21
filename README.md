@@ -71,7 +71,7 @@ Two machines, plus basic shell and container familiarity:
 
 **Part 4 — Object Management**
 
-- [**Object Management**](docs/object-management/object-management.md) — three ways to create and change objects. *(coming soon)*
+- [**Object Management**](docs/object-management/object-management.md) — three ways to create and change objects, and when to use each.
 - [**Manifest Files**](docs/object-management/manifest-files.md) — the YAML that describes an object. *(coming soon)*
 - [**Imperative Commands**](docs/object-management/imperative-commands.md) — one-off kubectl commands, and where they stop scaling. *(coming soon)*
 - [**Generating Manifests**](docs/object-management/generating-manifests.md) — let kubectl write the YAML with `--dry-run=client -o yaml`. *(coming soon)*

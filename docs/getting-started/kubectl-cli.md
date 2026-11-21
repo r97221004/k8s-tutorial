@@ -60,6 +60,8 @@ The last two rows are the [imperative vs. declarative](what-is-kubernetes.md#imp
 - **Imperative** is handy for quick experiments: `kubectl scale deployment web --replicas=5`. But nothing records what you did.
 - **Declarative** is what this guide uses: edit the YAML, run `kubectl apply -f`, and keep the file in Git. Run `kubectl diff -f` first to see exactly what would change.
 
+There's also a middle ground, files driven by imperative commands (`create -f`, `replace -f`). [Object Management](../object-management/object-management.md) compares all three approaches, and the rest of Part 4 tries each one hands-on.
+
 > 💡 If you ever want to change something imperatively, ask yourself whether it should be in a file instead. If anyone else — or future you — needs to reproduce it, the answer is yes.
 
 Next, make sure you have a cluster for all of this to talk to.
