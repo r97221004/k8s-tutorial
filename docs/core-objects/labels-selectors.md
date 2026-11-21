@@ -83,4 +83,4 @@ A Service or Deployment `selector` can match on just one or two of these (e.g. `
 
 ---
 
-[← From Dockerfile to Pod](../pods/from-dockerfile-to-pod.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
+[← Multiple Objects in One File](../object-management/multiple-objects-per-file.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)

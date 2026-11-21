@@ -69,7 +69,18 @@ Two machines, plus basic shell and container familiarity:
 - [**Working with Pods**](docs/pods/working-with-pods.md) — inspect, debug, and clean up Pods with kubectl.
 - [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image, push it to Docker Hub, and run it as a Pod.
 
-**Part 4 — Core Objects**
+**Part 4 — Object Management**
+
+- [**Object Management**](docs/object-management/object-management.md) — three ways to create and change objects. *(coming soon)*
+- [**Manifest Files**](docs/object-management/manifest-files.md) — the YAML that describes an object. *(coming soon)*
+- [**Imperative Commands**](docs/object-management/imperative-commands.md) — one-off kubectl commands, and where they stop scaling. *(coming soon)*
+- [**Generating Manifests**](docs/object-management/generating-manifests.md) — let kubectl write the YAML with `--dry-run=client -o yaml`. *(coming soon)*
+- [**Imperative Commands with Files**](docs/object-management/imperative-object-configuration.md) — `create -f` and `replace -f`, and why they fall short. *(coming soon)*
+- [**Declarative Object Management**](docs/object-management/declarative-management.md) — `kubectl apply` and `diff`. *(coming soon)*
+- [**From Imperative to Declarative**](docs/object-management/imperative-to-declarative.md) — hand command-created objects over to `apply`. *(coming soon)*
+- [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — separate manifests with `---`. *(coming soon)*
+
+**Part 5 — Core Objects**
 
 - [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 - [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
@@ -80,7 +91,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 5 — Configuration & Data**
+**Part 6 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -88,7 +99,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 6 — Running & Operating**
+**Part 7 — Running & Operating**
 
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
@@ -98,7 +109,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 7 — Networking & Access**
+**Part 8 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.

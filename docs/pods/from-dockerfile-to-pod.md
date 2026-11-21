@@ -310,4 +310,4 @@ The image stays on Docker Hub, so you can run it again any time.
 
 ---
 
-[← Working with Pods](working-with-pods.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](../core-objects/labels-selectors.md)
+[← Working with Pods](working-with-pods.md) · [↑ Contents](../../README.md) · [Object Management →](../object-management/object-management.md)
