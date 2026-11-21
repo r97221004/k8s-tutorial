@@ -9,6 +9,9 @@ Thumbs.db
 .agents/
 .codex/
 
+# Dependencies installed while trying the example apps locally
+node_modules/
+
 # Local kube artifacts you might create while following the tutorial
 kubeconfig
 *.kubeconfig

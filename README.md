@@ -67,7 +67,7 @@ Two machines, plus basic shell and container familiarity:
 - [**The Pod Lifecycle**](docs/pods/pod-lifecycle.md) — the phases a Pod moves through, and what restarts its containers.
 - [**Creating Pods**](docs/pods/creating-pods.md) — check the cluster, create a Pod with `kubectl run`, and confirm it's running.
 - [**Working with Pods**](docs/pods/working-with-pods.md) — inspect, debug, and clean up Pods with kubectl.
-- [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image and run it as a Pod. *(coming soon)*
+- [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image, push it to Docker Hub, and run it as a Pod.
 
 **Part 4 — Core Objects**
 
