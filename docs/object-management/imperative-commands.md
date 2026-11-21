@@ -51,7 +51,7 @@ service/color-api exposed
 | `--port=80` | The port the Service itself listens on, inside the cluster. |
 | `--target-port=8080` | The port on the Pod that traffic is forwarded to: where color-api listens. |
 
-See which node port it was given:
+See what it was given:
 
 ```bash
 kubectl get svc color-api
@@ -62,7 +62,29 @@ NAME        TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
 color-api   NodePort   10.102.148.199   <none>        80:31545/TCP   5s
 ```
 
-`80:31545` means: port `80` inside the cluster, and port `31545` on every node (yours will differ, somewhere in 30000–32767). Now open `http://<YOUR_VM_IP>:31545` in your **laptop's** browser. No `port-forward`, no SSH tunnel: the page loads straight from the node.
+`80:31545` means: port `80` on the Service's own IP, and port `31545` on every node (yours will differ, somewhere in 30000–32767). So a NodePort Service gives you **two ways in**:
+
+| Access | IP | Port | Reachable from |
+|---|---|---|---|
+| **ClusterIP** | `10.102.148.199` (the `CLUSTER-IP` column) | `80` (`--port`) | Inside the cluster only: Pods, and the node itself |
+| **NodePort** | `<Node-IP>` (any node's address) | `31545` | Anywhere that can reach a node, including your laptop |
+
+Both end up at the same place, port `8080` in the Pod (`--target-port`). Each IP goes with its own port: `10.102.148.199:31545` gets you nothing.
+
+**The ClusterIP, from inside the cluster.** On the node:
+
+```bash
+curl http://10.102.148.199/api       # {"color":"blue","hostname":"color-api"}
+```
+
+Unlike a Pod IP, the ClusterIP stays the same for as long as the Service exists, however often its Pods are replaced. Better still, a Service gets a **DNS name**. In [Working with Pods](../pods/working-with-pods.md#4-pod-ip--name-why-you-cant-connect-yet), `http://web` failed from another Pod because a Pod's name isn't in DNS. A Service's name is:
+
+```bash
+kubectl run tmp --rm -it --image=busybox:1.36 --restart=Never -- wget -qO- http://color-api/api
+# {"color":"blue","hostname":"color-api"}
+```
+
+**The NodePort, from your laptop.** Open `http://<YOUR_VM_IP>:31545` in your **laptop's** browser. No `port-forward`, no SSH tunnel: the page loads straight from the node.
 
 > **Page won't load?** `curl http://localhost:31545` on the node first. If that works, something between your laptop and the VM is blocking the port: a firewall on the VM (for example `ufw`), or, on a cloud VM, a security group that doesn't allow the 30000–32767 range.
 
