@@ -161,7 +161,7 @@ The `-t` gives the image its name, in the form `<user>/<repository>:<tag>`. The 
 docker image ls <YOUR_DOCKERHUB_USER>/color-api    # SIZE: about 250MB, almost all of it the Node.js base image
 ```
 
-Every node that runs this Pod downloads that much, which is why a small base image matters.
+That's the unpacked size on disk. Images travel compressed, so a node pulls about a quarter of that (you'll see the exact figure in the Pod's Events later). Every node that runs the Pod pays that download, which is why a small base image matters.
 
 > **On an Apple Silicon Mac (M1/M2/…)?** Docker builds for `arm64` by default, but your node is almost certainly `amd64`. Build for the node's architecture instead, or the Pod will crash with `exec format error`:
 >
@@ -220,13 +220,15 @@ kubectl describe pod color-api
 
 ```text
 Events:
-  Type    Reason     Age   From               Message
-  Normal  Scheduled  20s   default-scheduler  Successfully assigned default/color-api to node-1
-  Normal  Pulling    19s   kubelet            Pulling image "<YOUR_DOCKERHUB_USER>/color-api:1.0.0"
-  Normal  Pulled     12s   kubelet            Successfully pulled image "<YOUR_DOCKERHUB_USER>/color-api:1.0.0" ...
-  Normal  Created    12s   kubelet            Created container color-api
-  Normal  Started    12s   kubelet            Started container color-api
+  Type    Reason     Age    From               Message
+  Normal  Scheduled  2m14s  default-scheduler  Successfully assigned default/color-api to node-1
+  Normal  Pulling    2m14s  kubelet            spec.containers{color-api}: Pulling image "<YOUR_DOCKERHUB_USER>/color-api:1.0.0"
+  Normal  Pulled     119s   kubelet            spec.containers{color-api}: Successfully pulled image "<YOUR_DOCKERHUB_USER>/color-api:1.0.0" in 15.617s (15.617s including waiting). Image size: 63382254 bytes.
+  Normal  Created    119s   kubelet            spec.containers{color-api}: Created container: color-api
+  Normal  Started    118s   kubelet            spec.containers{color-api}: Started container color-api
 ```
+
+`Pulled` tells you how long the download took and how big it was: about 63MB, the compressed size.
 
 Then talk to it, using the tools from [Working with Pods](working-with-pods.md):
 
