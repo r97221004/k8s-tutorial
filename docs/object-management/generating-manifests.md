@@ -6,12 +6,14 @@
 
 Writing a manifest from memory means remembering every field name, every level of indentation, and which `apiVersion` goes with which `kind`. You don't have to. The imperative commands from the [previous chapter](imperative-commands.md) already know how to build an object from a few flags. You can ask them to **print** the object instead of creating it.
 
+This chapter uses plain `nginx`, so every command works as-is, with no image of your own.
+
 ## The trick: `--dry-run=client -o yaml`
 
-Take the `kubectl run` you already know, and add two flags:
+Take a `kubectl run` command, and add two flags:
 
 ```bash
-kubectl run color-api --image=<YOUR_DOCKERHUB_USER>/color-api:1.0.0 --port=8080 --labels=app=color-api \
+kubectl run nginx --image=nginx:1.27 --port=80 --labels=app=nginx \
   --dry-run=client -o yaml
 ```
 
@@ -26,14 +28,14 @@ kind: Pod
 metadata:
   creationTimestamp: null
   labels:
-    app: color-api
-  name: color-api
+    app: nginx
+  name: nginx
 spec:
   containers:
-  - image: <YOUR_DOCKERHUB_USER>/color-api:1.0.0
-    name: color-api
+  - image: nginx:1.27
+    name: nginx
     ports:
-    - containerPort: 8080
+    - containerPort: 80
     resources: {}
   dnsPolicy: ClusterFirst
   restartPolicy: Always
@@ -43,11 +45,11 @@ status: {}
 `apiVersion`, `kind`, the nesting, the list syntax: all correct, and you didn't type any of it. Redirect it into a file to keep it:
 
 ```bash
-kubectl run color-api --image=<YOUR_DOCKERHUB_USER>/color-api:1.0.0 --port=8080 --labels=app=color-api \
-  --dry-run=client -o yaml > /tmp/color-api-pod.yaml
+kubectl run nginx --image=nginx:1.27 --port=80 --labels=app=nginx \
+  --dry-run=client -o yaml > /tmp/nginx-pod.yaml
 ```
 
-(It goes to `/tmp` so it doesn't land next to the repo's own copy in `manifests/object-management/`.)
+(It goes to `/tmp` so it doesn't clutter the repo.)
 
 > List items aren't indented under their parent here (`containers:` then `- image:` at the same column). That's valid YAML, just a different style from the manifests in this guide. Both mean exactly the same thing.
 
@@ -65,37 +67,37 @@ The generated file works as-is, but a few lines are noise. Delete them before yo
 Delete them in your editor, or in one go:
 
 ```bash
-sed -i '/creationTimestamp: null/d; /resources: {}/d; /status: {}/d' /tmp/color-api-pod.yaml
+sed -i '/creationTimestamp: null/d; /resources: {}/d; /status: {}/d' /tmp/nginx-pod.yaml
 ```
 
 Then check the result the way [Manifest Files](manifest-files.md#catch-mistakes-before-they-reach-the-cluster) showed. The API server validates it without creating anything:
 
 ```bash
-kubectl create --dry-run=server -f /tmp/color-api-pod.yaml
+kubectl create --dry-run=server -f /tmp/nginx-pod.yaml
 ```
 
 ```
-pod/color-api created (server dry run)
+pod/nginx created (server dry run)
 ```
 
-What's left is the same Pod as [`color-api-pod.yaml`](../../manifests/object-management/color-api-pod.yaml) in the repo, plus the two default lines (`dnsPolicy`, `restartPolicy`) that the repo's copy leaves out. Generate, tidy, check: that's the whole loop.
+Generate, tidy, check: that's the whole loop.
 
 ## Other kinds of objects
 
-Most `kubectl create <kind>` commands support the same two flags. For the Service from the previous chapter, though, `kubectl expose` has a catch:
+Most `kubectl create <kind>` commands support the same two flags. For a Service, though, the `kubectl expose` from the previous chapter has a catch:
 
 ```bash
-kubectl expose pod color-api --type=NodePort --port=80 --target-port=8080 --dry-run=client -o yaml
+kubectl expose pod nginx --type=NodePort --port=80 --dry-run=client -o yaml
 ```
 
 ```
-Error from server (NotFound): pods "color-api" not found
+Error from server (NotFound): pods "nginx" not found
 ```
 
 `expose` reads the **live** Pod to copy its labels and ports, so the Pod has to exist first, even for a dry run. To generate a Service before anything is running, use `kubectl create service` instead:
 
 ```bash
-kubectl create service nodeport color-api --tcp=80:8080 --dry-run=client -o yaml
+kubectl create service nodeport nginx --tcp=80:80 --dry-run=client -o yaml
 ```
 
 ```yaml
@@ -104,22 +106,22 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    app: color-api
-  name: color-api
+    app: nginx
+  name: nginx
 spec:
   ports:
-  - name: 80-8080
+  - name: 80-80
     port: 80
     protocol: TCP
-    targetPort: 8080
+    targetPort: 80
   selector:
-    app: color-api
+    app: nginx
   type: NodePort
 status:
   loadBalancer: {}
 ```
 
-`--tcp=80:8080` is `port:targetPort`. The selector is always `app: <the name you gave>`, so it only finds your Pods if they carry that label. Here they do. Apart from the generated port `name` and the noise lines, this is [`color-api-svc.yaml`](../../manifests/object-management/color-api-svc.yaml).
+`--tcp=80:80` is `port:targetPort`: the Service's port first, then the container's. Both are 80 here because nginx listens on 80; for an app listening on 8080, you'd write `--tcp=80:8080`. The selector is always `app: <the name you gave>`, so it only finds your Pods if they carry that label. Here they do: the Pod above is labeled `app=nginx`.
 
 Some generators you'll use in later chapters:
 
@@ -135,17 +137,25 @@ Some generators you'll use in later chapters:
 
 You've seen two other ways to get YAML out of kubectl. Both give you far more than you want:
 
-| Command | Lines for the color-api Pod | What's extra |
+| Command | Lines for the nginx Pod | What's extra |
 |---|---|---|
 | `--dry-run=client -o yaml` | 17 | Just a few empty fields |
 | `--dry-run=server -o yaml` | 65 | A `uid`, and every default the API server filled in |
-| `kubectl get pod color-api -o yaml` | 100+ | All of that, plus the scheduler's `nodeName` and the whole `status` ([Manifest Files](manifest-files.md#what-the-cluster-added)) |
+| `kubectl get pod nginx -o yaml` | 100+ | All of that, plus the scheduler's `nodeName` and the whole `status` ([Manifest Files](manifest-files.md#what-the-cluster-added)) |
 
-`--dry-run=server` is for **checking** a file, as in [Manifest Files](manifest-files.md#catch-mistakes-before-they-reach-the-cluster). `--dry-run=client` is for **generating** one.
+`--dry-run=server` is for **checking** a file, as you did above. `--dry-run=client` is for **generating** one.
 
 ## When there's no generator
 
 Generators only cover the flags their command offers. Anything beyond that, such as a probe, a volume, or a second container, you add by hand. Generate the skeleton first, then fill in the rest with [`kubectl explain`](manifest-files.md#look-up-any-field-with-kubectl-explain) to look up each field.
+
+## Clean up
+
+Nothing was created in the cluster. Just remove the file:
+
+```bash
+rm /tmp/nginx-pod.yaml
+```
 
 ## Best practices
 
