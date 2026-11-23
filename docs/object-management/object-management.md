@@ -64,7 +64,7 @@ kubectl delete -f color-config.yaml     # delete what the file describes
 
 **Where it falls short:**
 
-- **You have to pick the operation.** `create` fails if the object exists, `replace` fails if it doesn't. That works for one file, but not for a directory of objects where some exist and some don't.
+- **You have to pick the operation.** `create` fails if the object exists, `replace` fails if it doesn't (for most kinds; [Imperative Commands with Files](imperative-object-configuration.md) covers the exception). That works for one file, but not for a directory of objects where some exist and some don't.
 - **You have to know the schema.** Writing the YAML means knowing each object's fields (the next chapters help with that).
 - **`replace` throws away changes made elsewhere.** It overwrites the **whole** object with your file, so anything changed outside the file is lost. See the example below.
 - **`replace` needs the complete object.** The cluster fills in fields your file doesn't have. On a Pod, those include the node it was scheduled to, so `kubectl replace` on a Pod is rejected as an attempt to change its (immutable) spec.

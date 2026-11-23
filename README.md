@@ -75,7 +75,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Manifest Files**](docs/object-management/manifest-files.md) — the four fields every object has, and what the cluster adds.
 - [**Imperative Commands**](docs/object-management/imperative-commands.md) — build and expose an app with commands alone, and see what that leaves out.
 - [**Generating Manifests**](docs/object-management/generating-manifests.md) — let kubectl write the YAML with `--dry-run=client -o yaml`, then tidy it up.
-- [**Imperative Commands with Files**](docs/object-management/imperative-object-configuration.md) — `create -f` and `replace -f`, and why they fall short. *(coming soon)*
+- [**Imperative Commands with Files**](docs/object-management/imperative-object-configuration.md) — `create -f`, `replace -f`, and `delete -f`, and where they fall short.
 - [**Declarative Object Management**](docs/object-management/declarative-management.md) — `kubectl apply` and `diff`. *(coming soon)*
 - [**From Imperative to Declarative**](docs/object-management/imperative-to-declarative.md) — hand command-created objects over to `apply`. *(coming soon)*
 - [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — separate manifests with `---`. *(coming soon)*
