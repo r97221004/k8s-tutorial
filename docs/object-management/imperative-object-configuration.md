@@ -120,9 +120,10 @@ Your port change is in. The teammate's `team=web` label is **gone**: it wasn't i
 
 ### It doesn't work on Pods, with your own file
 
-Now try replacing the Pod with its file, **unchanged**:
+Now a realistic task: upgrade nginx from `1.27` to `1.28`. Change the image in your file, and replace:
 
 ```bash
+sed -i 's/image: nginx:1.27$/image: nginx:1.28/' /tmp/nginx/nginx-pod.yaml
 kubectl replace -f /tmp/nginx/nginx-pod.yaml
 ```
 
@@ -130,9 +131,7 @@ kubectl replace -f /tmp/nginx/nginx-pod.yaml
 The Pod "nginx" is invalid: spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`, ...
 ```
 
-You changed nothing, and it still fails. The diff printed under the error shows why: it marks `NodeName`, `ServiceAccountName`, and the token `Volumes` as removed. As [Manifest Files](manifest-files.md#what-the-cluster-added) showed, the cluster filled in fields your file doesn't have, like `nodeName` and the service account volume. Replacing the live Pod with your file would remove them, which counts as changing the Pod's immutable spec.
-
-(It does work if you start from the full live object instead: save `kubectl get pod nginx -o yaml`, change only the `image`, and `replace` accepts it. But that file is a snapshot of one live Pod, not a manifest you'd keep.)
+Read that error closely: `spec.containers[*].image` is on the list of fields you **may** change, and the image is all you changed. It's rejected anyway. The diff printed under the error shows why: it marks `NodeName`, `ServiceAccountName`, and the token `Volumes` as removed. As [Manifest Files](manifest-files.md#what-the-cluster-added) showed, the cluster filled in fields your file doesn't have. Replacing the live Pod with your file would remove them, and *that* counts as changing the Pod's immutable spec. You'd get the same error with a completely unchanged file. It only works if you start from the full live object instead: save `kubectl get pod nginx -o yaml`, change the `image` there, and `replace` accepts it. But that file is a snapshot of one live Pod, not a manifest you'd keep.
 
 The escape hatch is `--force`, which **deletes** the object and creates it again from the file:
 
@@ -145,18 +144,27 @@ pod "nginx" deleted
 pod/nginx replaced
 ```
 
-That works, but it's a brand-new Pod: new `uid`, new IP, and nothing serving while the old one is gone.
+Wait for the new Pod to start, then check the version:
+
+```bash
+kubectl wait --for=condition=Ready pod/nginx --timeout=60s
+kubectl exec nginx -- nginx -v       # nginx version: nginx/1.28.x
+```
+
+The upgrade went through, but not as an update: it's a brand-new Pod, with a new `uid` and a new IP, and nothing was serving while the old one was gone. Compare `kubectl set image` in [Imperative Commands](imperative-commands.md#3-change), which changed the image **in place**, in the same Pod.
 
 ### It fails when there's nothing to replace
 
-Try to replace a Pod that was never created. Rename it to `nginx-2` on the fly, and pipe the result to `replace` (`-f -` reads the manifest from stdin):
+Try to replace a Pod that was never created. Make a copy of the Pod file named `nginx-2` (outside `/tmp/nginx/`, so it stays out of the directory commands), and replace with it:
 
 ```bash
-sed 's/^  name: nginx$/  name: nginx-2/' /tmp/nginx/nginx-pod.yaml | kubectl replace -f -
+cp /tmp/nginx/nginx-pod.yaml /tmp/nginx-2.yaml
+sed -i 's/^  name: nginx$/  name: nginx-2/' /tmp/nginx-2.yaml     # rename the Pod, not the container
+kubectl replace -f /tmp/nginx-2.yaml
 ```
 
 ```
-Error from server (NotFound): error when replacing "STDIN": pods "nginx-2" not found
+Error from server (NotFound): error when replacing "/tmp/nginx-2.yaml": pods "nginx-2" not found
 ```
 
 `replace` only updates. So `create` needs the object to be missing, `replace` needs it to be present, and you have to know which is true before you run either.
@@ -177,6 +185,10 @@ service "nginx" deleted
 ```
 
 Run it again, now that nothing is left:
+
+```bash
+kubectl delete -f /tmp/nginx/
+```
 
 ```
 Error from server (NotFound): error when deleting "/tmp/nginx/nginx-pod.yaml": pods "nginx" not found
@@ -202,7 +214,7 @@ What you want is a command that looks at the file and the live object, and works
 Everything in the cluster is already deleted. Remove the copies:
 
 ```bash
-rm -rf /tmp/nginx
+rm -rf /tmp/nginx /tmp/nginx-2.yaml
 ```
 
 ## Best practices
