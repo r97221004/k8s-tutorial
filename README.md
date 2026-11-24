@@ -78,7 +78,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Imperative Commands with Files**](docs/object-management/imperative-object-configuration.md) — `create -f`, `replace -f`, and `delete -f`, and where they fall short.
 - [**Declarative Object Management**](docs/object-management/declarative-management.md) — `kubectl apply` and `diff`, and how apply decides what to change.
 - [**From Imperative to Declarative**](docs/object-management/imperative-to-declarative.md) — hand objects made with commands over to `apply`, safely.
-- [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — separate manifests with `---`. *(coming soon)*
+- [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — put an app's objects in one file with `---`, in the right order.
 
 **Part 5 — Core Objects**
 
