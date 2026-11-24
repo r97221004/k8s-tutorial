@@ -95,9 +95,6 @@ Two machines, plus basic shell and container familiarity:
 
 **Part 6 — Core Objects**
 
-- [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
-- [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
-- [**ReplicaSet**](docs/core-objects/replicaset.md) — what actually maintains the replica count.
 - [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.

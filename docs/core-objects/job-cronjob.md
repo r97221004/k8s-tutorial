@@ -13,7 +13,7 @@ kubectl delete -f manifests/core-objects/pi-job.yaml --ignore-not-found
 kubectl delete -f manifests/core-objects/hello-cronjob.yaml --ignore-not-found
 ```
 
-Everything so far runs **forever** — a [Deployment](deployment.md) restarts a Pod that exits, because a web server stopping is a failure. But some work is *supposed* to finish: a database migration, a batch import, a nightly report. For that you want a workload that runs **to completion** and then stops. That's a **Job**.
+Everything so far runs **forever** — a [Deployment](../replicasets-deployments/introduction-to-deployments.md) restarts a Pod that exits, because a web server stopping is a failure. But some work is *supposed* to finish: a database migration, a batch import, a nightly report. For that you want a workload that runs **to completion** and then stops. That's a **Job**.
 
 ## Job — run once, to completion
 

@@ -4,7 +4,7 @@
 
 ---
 
-Change a [Deployment](../core-objects/deployment.md)'s Pod template — usually a new image — and Kubernetes rolls it out **gradually**: spin up new Pods, wait for them to be [ready](health-checks.md), then retire old ones, a few at a time. Done right, users never see downtime. And if the new version is bad, you roll back in one command.
+Change a [Deployment](../replicasets-deployments/introduction-to-deployments.md)'s Pod template — usually a new image — and Kubernetes rolls it out **gradually**: spin up new Pods, wait for them to be [ready](health-checks.md), then retire old ones, a few at a time. Done right, users never see downtime. And if the new version is bad, you roll back in one command.
 
 ## Before you start
 
@@ -27,7 +27,7 @@ kubectl rollout status deployment/web      # follow it to completion
 
 `kubectl rollout history` lists revision numbers. If you want human-readable notes there, annotate the Deployment with `kubernetes.io/change-cause` as part of your release process.
 
-Watch it in [k9s](../cluster-setup/k9s.md) (`:pods`): new `web-…` Pods appear and go `Ready` while old ones terminate — never all at once. Under the hood the Deployment is shifting Pods from the old [ReplicaSet](../core-objects/replicaset.md) to a new one.
+Watch it in [k9s](../cluster-setup/k9s.md) (`:pods`): new `web-…` Pods appear and go `Ready` while old ones terminate — never all at once. Under the hood the Deployment is shifting Pods from the old [ReplicaSet](../replicasets-deployments/what-are-replicasets.md) to a new one.
 
 ## Break one on purpose
 

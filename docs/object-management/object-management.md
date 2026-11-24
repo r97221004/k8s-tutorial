@@ -88,7 +88,7 @@ kubectl delete -f color-api.yaml
 **Where it falls short:**
 
 - **Hardest to learn.** To predict the result, you need to understand how `apply` merges your file with the live object.
-- **Partial updates can surprise you.** Deleting a line from the file isn't the same as "stop managing this field". For example, delete `replicas: 3` from a [Deployment](../core-objects/deployment.md)'s file because an autoscaler should own it now, and the next `apply` *removes* the field, so the Deployment falls back to the default of 1 replica. [Declarative Object Management](declarative-management.md) explains the merge rules behind this.
+- **Partial updates can surprise you.** Deleting a line from the file isn't the same as "stop managing this field". For example, delete `replicas: 3` from a [Deployment](../replicasets-deployments/introduction-to-deployments.md)'s file because an autoscaler should own it now, and the next `apply` *removes* the field, so the Deployment falls back to the default of 1 replica. [Declarative Object Management](declarative-management.md) explains the merge rules behind this.
 - **The file isn't the whole picture.** Because changes made elsewhere are kept, the live object can hold things your file doesn't mention. `kubectl diff` shows you the gap.
 
 ## The difference that matters: changes made elsewhere

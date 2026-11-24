@@ -38,7 +38,7 @@ kubectl get pods -o wide         # extra columns: node, Pod IP
 kubectl get pod web -o yaml      # the object's full manifest (incl. status)
 kubectl get pods -A              # across ALL namespaces (-A = --all-namespaces)
 kubectl get pods -n kube-system  # a specific namespace
-kubectl get pods -l run=web      # filter by label (kubectl run added run=web; see Labels & Selectors)
+kubectl get pods -l run=web      # filter by label (kubectl run added run=web)
 kubectl get pods -w              # watch: stream changes live (Ctrl+C to stop)
 ```
 
@@ -212,7 +212,7 @@ kubectl delete pod web
 kubectl run web --image=nginx:1.27 --port=80 --env=MODE=demo
 ```
 
-Doing that by hand gets old fast. A [Deployment](../core-objects/deployment.md) does the delete-and-replace for you, which is one reason you'll rarely create bare Pods once you get there.
+Doing that by hand gets old fast. A [Deployment](../replicasets-deployments/introduction-to-deployments.md) does the delete-and-replace for you, which is one reason you'll rarely create bare Pods once you get there.
 
 ## Clean up
 

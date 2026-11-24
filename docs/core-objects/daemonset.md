@@ -8,7 +8,7 @@
 
 You only need the cluster components from setup. This chapter observes existing DaemonSets in `kube-system`; it does not create new app resources.
 
-A [Deployment](deployment.md) says *"run N copies, anywhere there's room."* A **DaemonSet** says something different: *"run exactly one copy on every node."* As nodes join the cluster, they automatically get the Pod; as they leave, it goes with them.
+A [Deployment](../replicasets-deployments/introduction-to-deployments.md) says *"run N copies, anywhere there's room."* A **DaemonSet** says something different: *"run exactly one copy on every node."* As nodes join the cluster, they automatically get the Pod; as they leave, it goes with them.
 
 That's the right model for **per-node agents** — things that must touch each machine:
 
@@ -39,7 +39,7 @@ kube-system    kube-proxy        1         1         1       1            1     
 ## When (not) to use one
 
 - ✅ A per-node agent (logs, metrics, networking, storage).
-- ❌ A regular app — use a [Deployment](deployment.md). You want "N replicas for capacity/availability", not "one per machine".
+- ❌ A regular app — use a [Deployment](../replicasets-deployments/introduction-to-deployments.md). You want "N replicas for capacity/availability", not "one per machine".
 
 ## Scoping to specific nodes
 

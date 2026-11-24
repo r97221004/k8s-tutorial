@@ -8,4 +8,4 @@
 
 ---
 
-[← Scaling Deployments](scaling-deployments.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](../core-objects/labels-selectors.md)
+[← Scaling Deployments](scaling-deployments.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](../core-objects/scheduling.md)

@@ -17,7 +17,7 @@ kubectl config set-context --current --namespace=default
 
 You might expect Kubernetes to run *containers* directly. It doesn't: it runs **Pods**. A Pod is a thin wrapper around one or more containers, and it represents **one running instance** of your application.
 
-That last part shapes how you scale. If one copy of your web server isn't enough, you don't add more containers to its Pod. You run **more Pods**, each one a complete, independent copy. Later, a [Deployment](../core-objects/deployment.md) will do exactly that for you: `replicas: 3` means three Pods.
+That last part shapes how you scale. If one copy of your web server isn't enough, you don't add more containers to its Pod. You run **more Pods**, each one a complete, independent copy. Later, a [Deployment](../replicasets-deployments/introduction-to-deployments.md) will do exactly that for you: `replicas: 3` means three Pods.
 
 > **The key idea:** the Pod, not the container, is Kubernetes' unit of scheduling, networking, and lifecycle.
 
@@ -139,7 +139,7 @@ The Pod disappears, and no replacement ever shows up.
 
 ## You rarely create bare Pods
 
-That last step is the catch. A standalone Pod has no safety net: delete it, or let its node fail, and it's simply **gone**, because nothing is watching over it. In practice you almost never run bare Pods. Instead, a controller like a [Deployment](../core-objects/deployment.md) creates and manages Pods for you: it keeps the desired number running, replaces dead ones, and rolls out new versions. Understanding the bare Pod first is what makes those controllers make sense.
+That last step is the catch. A standalone Pod has no safety net: delete it, or let its node fail, and it's simply **gone**, because nothing is watching over it. In practice you almost never run bare Pods. Instead, a controller like a [Deployment](../replicasets-deployments/introduction-to-deployments.md) creates and manages Pods for you: it keeps the desired number running, replaces dead ones, and rolls out new versions. Understanding the bare Pod first is what makes those controllers make sense.
 
 ---
 

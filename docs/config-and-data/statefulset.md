@@ -4,7 +4,7 @@
 
 ---
 
-A [Deployment](../core-objects/deployment.md) treats its Pods as **interchangeable** — random names, shared storage, any order. Perfect for stateless web apps. But a database replica is *not* interchangeable: it has its own data and its own identity. A **StatefulSet** is the controller for workloads where each Pod must be distinct and durable.
+A [Deployment](../replicasets-deployments/introduction-to-deployments.md) treats its Pods as **interchangeable** — random names, shared storage, any order. Perfect for stateless web apps. But a database replica is *not* interchangeable: it has its own data and its own identity. A **StatefulSet** is the controller for workloads where each Pod must be distinct and durable.
 
 The PostgreSQL example below is a lab for learning StatefulSet mechanics, not a production database recommendation. Real production databases need backup/restore, upgrade, failover, monitoring, and storage choices beyond this intro.
 
@@ -244,7 +244,7 @@ This is still a tutorial-sized lab, not a hardened production posture — real p
 ## When (not) to use one
 
 - ✅ Databases, message queues, anything where each replica owns data or needs a stable identity.
-- ❌ Stateless apps — use a [Deployment](../core-objects/deployment.md). StatefulSets are heavier and slower to roll out; don't reach for one just because your app *uses* a database. (Often the right answer is: **stateless app as a Deployment** talking to a **managed database** outside the cluster.)
+- ❌ Stateless apps — use a [Deployment](../replicasets-deployments/introduction-to-deployments.md). StatefulSets are heavier and slower to roll out; don't reach for one just because your app *uses* a database. (Often the right answer is: **stateless app as a Deployment** talking to a **managed database** outside the cluster.)
 
 ## Best practices
 

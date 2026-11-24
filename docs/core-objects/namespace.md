@@ -129,7 +129,7 @@ kubectl describe resourcequota dev-quota -n dev   # USED vs HARD for each resour
 kubectl describe limitrange dev-defaults -n dev    # default requests/limits
 ```
 
-Once a quota tracks CPU/memory, every Pod in that namespace needs `resources.requests`/`limits`. The [Deployment](deployment.md) example declares them directly; the LimitRange provides defaults for simpler Pods that do not. Without either one, the apiserver rejects the Pod because it cannot count it against the quota.
+Once a quota tracks CPU/memory, every Pod in that namespace needs `resources.requests`/`limits`. The [Deployment](../replicasets-deployments/introduction-to-deployments.md) example declares them directly; the LimitRange provides defaults for simpler Pods that do not. Without either one, the apiserver rejects the Pod because it cannot count it against the quota.
 
 Try pushing past the cap:
 

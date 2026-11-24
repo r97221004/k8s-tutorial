@@ -81,7 +81,7 @@ ingresses     ing          networking.k8s.io/v1   true         Ingress
 |---|---|
 | `name` | Required. Unique among objects of the same kind in a namespace. |
 | `namespace` | Which [namespace](../core-objects/namespace.md) it lives in. Leave it out to use your current one. |
-| `labels` | Key-value pairs for finding and grouping objects. Selectors match on them (see [Labels & Selectors](../core-objects/labels-selectors.md)). |
+| `labels` | Key-value pairs for finding and grouping objects. Selectors match on them (see [What Are ReplicaSets](../replicasets-deployments/what-are-replicasets.md)). |
 | `annotations` | Key-value pairs for extra information, meant for tools and people, not for selecting. |
 
 The cluster also **adds** fields to `metadata` when it stores the object, such as a unique `uid` and a `creationTimestamp`. You'll see them below.

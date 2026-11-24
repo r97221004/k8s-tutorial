@@ -25,7 +25,7 @@ kubectl wait --for=condition=Ready pod/color-api --timeout=60s
 
 | Command | Creates |
 |---|---|
-| `kubectl create deployment web --image=nginx:1.27 --replicas=3` | a [Deployment](../core-objects/deployment.md) |
+| `kubectl create deployment web --image=nginx:1.27 --replicas=3` | a [Deployment](../replicasets-deployments/introduction-to-deployments.md) |
 | `kubectl create configmap color-config --from-literal=COLOR=blue` | a [ConfigMap](../config-and-data/configmap.md) |
 | `kubectl create secret generic db --from-literal=password=s3cret` | a [Secret](../config-and-data/secret.md) |
 | `kubectl create namespace dev` | a [Namespace](../core-objects/namespace.md) |
@@ -104,7 +104,7 @@ kubectl scale pod color-api --replicas=2
 Error from server (NotFound): the server could not find the requested resource
 ```
 
-The message is confusing, but the cause is simple: a Pod has no replica count. Only controllers like a [Deployment](../core-objects/deployment.md) can be scaled. And as you saw in [Working with Pods](../pods/working-with-pods.md#8-changing-a-pod), most of a Pod's spec, like its environment variables, can't be changed at all after it's created.
+The message is confusing, but the cause is simple: a Pod has no replica count. Only controllers like a [Deployment](../replicasets-deployments/introduction-to-deployments.md) can be scaled. And as you saw in [Working with Pods](../pods/working-with-pods.md#8-changing-a-pod), most of a Pod's spec, like its environment variables, can't be changed at all after it's created.
 
 ## 4. Where it falls short
 

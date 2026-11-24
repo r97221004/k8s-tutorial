@@ -37,7 +37,7 @@ kubectl apply -f web.yaml   # one file, one command
 - **Imperative**: each command changes the system one step at a time. You own every step — including noticing when something breaks.
 - **Declarative**: you describe the end state in a file and hand it over with `kubectl apply`. You own the goal; the cluster owns the steps.
 
-A nice side effect: applying the same file twice changes nothing the second time. That makes the file safe to re-apply and natural to keep in Git. You'll write the full version in the [Deployment](../core-objects/deployment.md) chapter.
+A nice side effect: applying the same file twice changes nothing the second time. That makes the file safe to re-apply and natural to keep in Git. You'll write the full version in the [Deployment](../replicasets-deployments/introduction-to-deployments.md) chapter.
 
 ### The control loop
 
