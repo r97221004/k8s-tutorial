@@ -82,7 +82,7 @@ Two machines, plus basic shell and container familiarity:
 
 **Part 5 — ReplicaSets & Deployments**
 
-- [**What Are ReplicaSets**](docs/replicasets-deployments/what-are-replicasets.md) — keep N identical Pods running, and replace any that disappear. *(coming soon)*
+- [**What Are ReplicaSets**](docs/replicasets-deployments/what-are-replicasets.md) — keep N identical Pods running, and find them with labels and selectors.
 - [**Creating and Managing ReplicaSets**](docs/replicasets-deployments/creating-replicasets.md) — write one, watch it create, heal, and scale Pods. *(coming soon)*
 - [**ReplicaSets Can't Update Pods**](docs/replicasets-deployments/replicaset-updates.md) — why changing the Pod template leaves running Pods untouched. *(coming soon)*
 - [**ReplicaSets and Existing Pods**](docs/replicasets-deployments/replicaset-existing-pods.md) — how the selector adopts Pods the ReplicaSet didn't create. *(coming soon)*
