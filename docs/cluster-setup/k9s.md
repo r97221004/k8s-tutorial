@@ -42,7 +42,7 @@ You don't need to memorize this table. Press `?` on any screen and k9s lists wha
 
 In k9s, press `:pods` ⏎ then `0`. You'll see every Pod in the cluster — including the [control plane running in `kube-system`](../getting-started/control-plane.md). Move the highlight with the arrow keys (or `j`/`k`), then press `d` on a Pod to describe it, or `l` for its logs. This is the same information as `kubectl describe`/`logs`, just faster to move around.
 
-You'll come back to k9s in nearly every chapter — e.g. watching a [Deployment](../replicasets-deployments/introduction-to-deployments.md) heal a deleted Pod, or a [rolling update](../running-and-operating/rolling-updates.md) swap Pods one by one.
+You'll come back to k9s in nearly every chapter — e.g. watching a [Deployment](../replicasets-deployments/introduction-to-deployments.md) heal a deleted Pod, or a [rolling update](../replicasets-deployments/updating-pod-template.md) swap Pods one by one.
 
 ---
 

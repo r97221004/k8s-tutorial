@@ -75,4 +75,4 @@ Leave Metrics Server installed if you want `kubectl top` and future HPA examples
 
 ---
 
-[← Resource Requests & Limits](resources.md) · [↑ Contents](../../README.md) · [Rolling Update & Rollback →](rolling-updates.md)
+[← Resource Requests & Limits](resources.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)

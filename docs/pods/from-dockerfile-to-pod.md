@@ -281,7 +281,7 @@ The `color-api=` part names the container to update (`kubectl run` names it afte
 curl http://$POD_IP:8080/          # <h1 style="color:blue;">Hello from color-api v2!</h1>...
 ```
 
-Updating one bare Pod by hand like this works, but there's a gap while the container restarts, and you'd have to repeat it for every Pod. A [Deployment](../replicasets-deployments/introduction-to-deployments.md) rolls out a new image across many Pods with no downtime. See [Rolling Updates](../running-and-operating/rolling-updates.md).
+Updating one bare Pod by hand like this works, but there's a gap while the container restarts, and you'd have to repeat it for every Pod. A [Deployment](../replicasets-deployments/introduction-to-deployments.md) rolls out a new image across many Pods with no downtime. See [Updating the Pod Template](../replicasets-deployments/updating-pod-template.md).
 
 ## 7. When it goes wrong
 

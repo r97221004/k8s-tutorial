@@ -89,7 +89,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Introduction to Deployments**](docs/replicasets-deployments/introduction-to-deployments.md) — the object that manages ReplicaSets for you, and how it upgrades Pods safely.
 - [**Creating and Managing Deployments**](docs/replicasets-deployments/creating-deployments.md) — read a Deployment's status, and see why you manage it, not its ReplicaSet.
 - [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — upgrade the image, watch the Pods get replaced, and see which changes trigger a rollout.
-- [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — how old and new ReplicaSets hand over, and how to roll back. *(coming soon)*
+- [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — revision history, change causes, rollbacks, and controlling the pace of a rollout.
 - [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count with kubectl or the manifest. *(coming soon)*
 - [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover. *(coming soon)*
 
@@ -114,7 +114,6 @@ Two machines, plus basic shell and container familiarity:
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
-- [**Rolling Update & Rollback**](docs/running-and-operating/rolling-updates.md) — zero-downtime releases, instant undo.
 - [**Graceful Shutdown & Disruptions**](docs/running-and-operating/graceful-shutdown.md) — SIGTERM, preStop, drains, and PDBs.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
