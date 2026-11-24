@@ -194,4 +194,4 @@ From here on, this guide writes every object as a manifest and applies it.
 
 ---
 
-[← From Imperative to Declarative](imperative-to-declarative.md) · [↑ Contents](../../README.md) · [Labels & Selectors →](../core-objects/labels-selectors.md)
+[← From Imperative to Declarative](imperative-to-declarative.md) · [↑ Contents](../../README.md) · [What Are ReplicaSets →](../replicasets-deployments/what-are-replicasets.md)

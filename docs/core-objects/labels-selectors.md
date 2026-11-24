@@ -83,4 +83,4 @@ A Service or Deployment `selector` can match on just one or two of these (e.g. `
 
 ---
 
-[← Multiple Objects in One File](../object-management/multiple-objects-per-file.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)
+[← Troubleshooting Failed Rollouts](../replicasets-deployments/troubleshooting-rollouts.md) · [↑ Contents](../../README.md) · [Deployment →](deployment.md)

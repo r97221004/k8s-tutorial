@@ -80,7 +80,20 @@ Two machines, plus basic shell and container familiarity:
 - [**From Imperative to Declarative**](docs/object-management/imperative-to-declarative.md) — hand objects made with commands over to `apply`, safely.
 - [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — put an app's objects in one file with `---`, in the right order.
 
-**Part 5 — Core Objects**
+**Part 5 — ReplicaSets & Deployments**
+
+- [**What Are ReplicaSets**](docs/replicasets-deployments/what-are-replicasets.md) — keep N identical Pods running, and replace any that disappear. *(coming soon)*
+- [**Creating and Managing ReplicaSets**](docs/replicasets-deployments/creating-replicasets.md) — write one, watch it create, heal, and scale Pods. *(coming soon)*
+- [**ReplicaSets Can't Update Pods**](docs/replicasets-deployments/replicaset-updates.md) — why changing the Pod template leaves running Pods untouched. *(coming soon)*
+- [**ReplicaSets and Existing Pods**](docs/replicasets-deployments/replicaset-existing-pods.md) — how the selector adopts Pods the ReplicaSet didn't create. *(coming soon)*
+- [**Introduction to Deployments**](docs/replicasets-deployments/introduction-to-deployments.md) — the object that manages ReplicaSets for you. *(coming soon)*
+- [**Creating and Managing Deployments**](docs/replicasets-deployments/creating-deployments.md) — create one, and see the ReplicaSet and Pods it makes. *(coming soon)*
+- [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — change the template, and watch the Pods get replaced. *(coming soon)*
+- [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — how old and new ReplicaSets hand over, and how to roll back. *(coming soon)*
+- [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count with kubectl or the manifest. *(coming soon)*
+- [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover. *(coming soon)*
+
+**Part 6 — Core Objects**
 
 - [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
 - [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
@@ -91,7 +104,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 6 — Configuration & Data**
+**Part 7 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -99,7 +112,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 7 — Running & Operating**
+**Part 8 — Running & Operating**
 
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
@@ -109,7 +122,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 8 — Networking & Access**
+**Part 9 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
