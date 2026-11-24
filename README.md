@@ -88,7 +88,7 @@ Two machines, plus basic shell and container familiarity:
 - [**ReplicaSets and Existing Pods**](docs/replicasets-deployments/replicaset-existing-pods.md) — how a selector adopts Pods it didn't create, and releases ones that stop matching.
 - [**Introduction to Deployments**](docs/replicasets-deployments/introduction-to-deployments.md) — the object that manages ReplicaSets for you, and how it upgrades Pods safely.
 - [**Creating and Managing Deployments**](docs/replicasets-deployments/creating-deployments.md) — read a Deployment's status, and see why you manage it, not its ReplicaSet.
-- [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — change the template, and watch the Pods get replaced. *(coming soon)*
+- [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — upgrade the image, watch the Pods get replaced, and see which changes trigger a rollout.
 - [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — how old and new ReplicaSets hand over, and how to roll back. *(coming soon)*
 - [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count with kubectl or the manifest. *(coming soon)*
 - [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover. *(coming soon)*
