@@ -109,18 +109,18 @@ config:
 flowchart LR
     subgraph s1["1 · start"]
         direction TB
-        a1["📋 old RS · 1.27<br/>📦📦📦"]
+        a1["📋 old RS · 1.27<br/>✅✅✅"]
         b1["📋 new RS · 1.28<br/>(none yet)"]
     end
     subgraph s2["2 · midway"]
         direction TB
-        a2["📋 old RS · 1.27<br/>📦📦"]
-        b2["📋 new RS · 1.28<br/>📦📦"]
+        a2["📋 old RS · 1.27<br/>✅✅"]
+        b2["📋 new RS · 1.28<br/>✅⏳"]
     end
     subgraph s3["3 · done"]
         direction TB
         a3["📋 old RS · 1.27<br/>(0 Pods, kept)"]
-        b3["📋 new RS · 1.28<br/>📦📦📦"]
+        b3["📋 new RS · 1.28<br/>✅✅✅"]
     end
     s1 --> s2 --> s3
 
@@ -133,6 +133,8 @@ flowchart LR
     style s2 fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
     style s3 fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
+
+✅ is a ready Pod, ⏳ one that's still starting. Midway there are **four** Pods, one more than `replicas: 3`, but only **three** are ready: the Deployment starts one extra Pod first, and removes an old one only once a new one is ready. That's how it upgrades without ever having fewer than three Pods serving.
 
 Here's what actually happened on a real cluster, upgrading the three nginx Pods. Each cell is the number of Pods that ReplicaSet has, and how many of them are ready:
 
