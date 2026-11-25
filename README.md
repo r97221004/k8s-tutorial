@@ -91,7 +91,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — upgrade the image, watch the Pods get replaced, and see which changes trigger a rollout.
 - [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — revision history, change causes, rollbacks, and controlling the pace of a rollout.
 - [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count, see why scaling isn't a rollout, and hand the count to an autoscaler.
-- [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover. *(coming soon)*
+- [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover.
 
 **Part 6 — Core Objects**
 
