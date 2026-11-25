@@ -70,11 +70,21 @@ Five addresses on port `8080`: the five color-api Pods, found by the selector. `
 
 ## 2. Point the traffic generator at the ClusterIP
 
-A Pod's `args` can't be changed once it's running (most of a [Pod's spec is immutable](../pods/working-with-pods.md#8-changing-a-pod)), so delete the old traffic generator and make a new one. Start from a fresh copy and fill in the Service's IP. The Service listens on port `80`, the default for `http://`, so the URL needs no port:
+A Pod's `args` can't be changed once it's running (most of a [Pod's spec is immutable](../pods/working-with-pods.md#8-changing-a-pod)), so delete the old traffic generator:
 
 ```bash
 kubectl delete pod traffic-generator --ignore-not-found
+```
+
+Save the Service's IP:
+
+```bash
 CLUSTER_IP=$(kubectl get svc color-api-clusterip -o jsonpath='{.spec.clusterIP}')
+```
+
+Then fill it into a fresh copy of the manifest. The Service listens on port `80`, the default for `http://`, so the URL needs no port:
+
+```bash
 cp manifests/services/traffic-generator.yaml /tmp/services/
 sed -i \
   -e "s/<YOUR_DOCKERHUB_USER>/$DOCKERHUB_USER/" \
