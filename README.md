@@ -100,7 +100,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Deploying Color API and Traffic Generator**](docs/services/deploying-color-api.md) — run both apps without a Service, and see what goes wrong.
 - [**ClusterIP Services**](docs/services/clusterip-services.md) — a stable in-cluster address, load balancing across Pods, and why the name beats the IP.
 - [**NodePort Services**](docs/services/nodeport-services.md) — open a port on every node, and reach color-api from your laptop through the cloud firewall.
-- [**ExternalName Services**](docs/services/externalname-services.md) — give an outside hostname an in-cluster Service name. *(coming soon)*
+- [**ExternalName Services**](docs/services/externalname-services.md) — give an outside hostname an in-cluster Service name, and see where that alias stops working.
 
 **Part 7 — Core Objects**
 
