@@ -8,4 +8,4 @@
 
 ---
 
-[← Reaching NodePorts from Outside](nodeport-from-outside.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](../core-objects/scheduling.md)
+[← NodePort Services](nodeport-services.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](../core-objects/scheduling.md)

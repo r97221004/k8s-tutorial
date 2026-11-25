@@ -192,8 +192,7 @@ kubectl delete svc lb-demo
 | [Traffic Generator](traffic-generator.md) | Build a small app that keeps calling color-api, and prints which Pod answered |
 | [Deploying Color API and Traffic Generator](deploying-color-api.md) | Run both as Deployments |
 | [ClusterIP Services](clusterip-services.md) | Connect them inside the cluster, and watch requests spread across Pods |
-| [NodePort Services](nodeport-services.md) | Open color-api to traffic from outside |
-| [Reaching NodePorts from Outside](nodeport-from-outside.md) | Get through from your laptop |
+| [NodePort Services](nodeport-services.md) | Open color-api to traffic from outside, and reach it from your laptop |
 | [ExternalName Services](externalname-services.md) | Give an outside hostname an in-cluster name |
 
 ## Best practices
