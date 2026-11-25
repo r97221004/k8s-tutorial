@@ -1,188 +1,132 @@
 # ExternalName Services
 
-> Give an outside hostname an in-cluster Service name, and swap what's behind it without touching the clients.
+> Give an outside hostname an in-cluster name, so it can move without your apps noticing.
 
 ---
 
-Every Service so far has sent traffic to Pods. An **ExternalName** Service sends traffic nowhere. It has no selector, no Pods, no ClusterIP, and kube-proxy ignores it. It's a single DNS record: ask the cluster's DNS for the Service's name, and it answers "that's another name for `google.com`".
+Every Service so far has sent traffic to Pods. An **ExternalName** Service sends traffic nowhere. It has no selector, no Pods, no ClusterIP, and kube-proxy ignores it. It's a single DNS record that says "this name is another name for that one".
 
-That sounds like very little, and it is. Its value is in **where the name lives**: your apps talk to an in-cluster name, and what that name points to is one field in one Service, which you can change without touching them.
+That sounds like very little, and it is. Its value is in **where the name is decided**.
 
-## Before you start
+## Why you'd want one
 
-You need `color-api-clusterip` from [ClusterIP Services](clusterip-services.md) for step 5. If you've cleaned up, or opened a new terminal since, set it up again:
-
-```bash
-DOCKERHUB_USER=your-dockerhub-user      # ← change this to your username
-mkdir -p /tmp/services
-cp manifests/services/color-api-deployment.yaml /tmp/services/
-sed -i "s/<YOUR_DOCKERHUB_USER>/$DOCKERHUB_USER/" /tmp/services/color-api-deployment.yaml
-kubectl apply -f /tmp/services/color-api-deployment.yaml
-kubectl apply -f manifests/services/color-api-clusterip.yaml
-kubectl rollout status deployment/color-api-deployment
-```
-
-The cluster also needs to reach the internet, to resolve and call `google.com`.
-
-## 1. Create the Service
-
-[`manifests/services/my-external-svc.yaml`](../../manifests/services/my-external-svc.yaml):
+Say your apps use a database that runs outside the cluster, at `db.example.com`. You could write that hostname into every app's configuration. Or you could give it an in-cluster name:
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-external-svc
+  name: external-db
 spec:
   type: ExternalName
-  externalName: google.com    # a DNS name, not an IP; no selector, no ports
+  externalName: db.example.com
 ```
 
-Compare it with [`color-api-clusterip.yaml`](../../manifests/services/color-api-clusterip.yaml): no `selector`, because there are no Pods to find, and no `ports`, because nothing is forwarded. Just a type and a name. You'll change the name in step 5, so work on a copy:
+The apps connect to `external-db`. One day the database moves to `new-db.example.com`. With the hostname in every app, that's a change to every app. With the Service, it's a change to **one field**:
+
+```yaml
+spec:
+  type: ExternalName
+  externalName: new-db.example.com
+```
+
+The apps still connect to `external-db`, and their configuration doesn't change. Each part has one job:
+
+| Part | Knows | Changes when the database moves? |
+|---|---|---|
+| **Your apps** | Only the in-cluster name, `external-db` | No |
+| **The Service** | Which outside name `external-db` stands for | Yes: one field |
+| **The cluster's DNS** | How to answer for `external-db`: with a CNAME to the outside name | No: it follows the Service |
+
+That's **decoupling**: the apps depend on a name the cluster controls, not on wherever the database happens to live. It's why ExternalName is useful even though it has no ClusterIP, no load balancing, and no proxying.
+
+You don't need a real database to see how it works, because the Service never touches the database. All of it happens in DNS.
+
+## 1. Create the Service
+
+The manifest is [`manifests/services/external-db.yaml`](../../manifests/services/external-db.yaml), the one above. You'll move the database in step 3, so work on a copy:
 
 ```bash
-cp manifests/services/my-external-svc.yaml /tmp/services/
-kubectl apply -f /tmp/services/my-external-svc.yaml
-kubectl get svc my-external-svc
+mkdir -p /tmp/services
+cp manifests/services/external-db.yaml /tmp/services/
+kubectl apply -f /tmp/services/external-db.yaml
+kubectl get svc external-db
 ```
 
 ```text
-NAME              TYPE           CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-my-external-svc   ExternalName   <none>       google.com    <none>    0s
+NAME          TYPE           CLUSTER-IP   EXTERNAL-IP      PORT(S)   AGE
+external-db   ExternalName   <none>       db.example.com   <none>    0s
 ```
 
-`CLUSTER-IP` is `<none>`: there's no virtual IP and nothing for kube-proxy to route. `EXTERNAL-IP` shows the name it points to. And there are no endpoints either, because there's no selector to fill them:
+Compare it with [`color-api-clusterip.yaml`](../../manifests/services/color-api-clusterip.yaml):
 
-```bash
-kubectl get endpointslice -l kubernetes.io/service-name=my-external-svc
-```
-
-```text
-No resources found in default namespace.
-```
+- **No `selector`**, because there are no Pods to find. So there are no endpoints either: `kubectl get endpointslice -l kubernetes.io/service-name=external-db` finds nothing.
+- **No `ports`**, because nothing is forwarded.
+- **`CLUSTER-IP` is `<none>`**: there's no virtual IP and nothing for kube-proxy to route. `EXTERNAL-IP` shows the name it stands for.
 
 ## 2. Look it up
 
-Ask the cluster's DNS for the name, from a throwaway Pod. Use the full name, as in [ClusterIP Services](clusterip-services.md#5-how-the-name-works): busybox's `nslookup` doesn't always apply the search domains to a short one.
+Ask the cluster's DNS for the name, from a throwaway Pod. This one uses `dig`, from the image the [Kubernetes DNS debugging guide](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/) uses. `+short` prints only the answer. `dig` doesn't apply the search domains, so give it the full name from [ClusterIP Services](clusterip-services.md#5-how-the-name-works):
 
 ```bash
-kubectl run dns-test --rm -i --image=busybox:1.36 --restart=Never -- \
-  nslookup my-external-svc.default.svc.cluster.local
+kubectl run dns-test --rm -i --restart=Never \
+  --image=registry.k8s.io/e2e-test-images/jessie-dnsutils:1.3 -- \
+  dig +short external-db.default.svc.cluster.local
 ```
 
 ```text
-Server:		10.96.0.10
-Address:	10.96.0.10:53
-
-my-external-svc.default.svc.cluster.local	canonical name = google.com
-Name:	google.com
-Address: 142.250.196.110
-...
+db.example.com.
+pod "dns-test" deleted
 ```
 
-`canonical name = google.com` is a **CNAME** record. For a ClusterIP Service, CoreDNS answers with the Service's IP. For an ExternalName Service, it answers with **another name**, and the client then looks that one up like any other hostname on the internet. Your Google address will differ.
+The answer to "what is `external-db`?" is **another name**. That's a **CNAME** record. For a ClusterIP Service, CoreDNS answers with the Service's IP; for an ExternalName Service, it answers with the outside name, and that name is then resolved like any hostname on the internet. (The trailing `.` just marks a complete DNS name.)
 
-That's all an ExternalName Service does. Everything after the lookup happens directly between the Pod and `google.com`, with Kubernetes out of the way.
+For a real database, an IP address would follow on the next line. Here there's none: `example.com` is reserved for examples, and there's no database there. Notice that Kubernetes didn't object when you created the Service. It never checks that the outside name exists, or that anything answers there. It only hands out the alias.
 
-## 3. Call it over HTTP
+## 3. Move the database
 
-So a Pod that calls `http://my-external-svc` is calling Google. Try it, with a throwaway `curl` Pod that prints only the HTTP status code:
+Now the database moves. Change one field, and apply:
 
 ```bash
-kubectl run curl-test --rm -i --image=curlimages/curl:8.10.1 --restart=Never -- \
-  -s -o /dev/null -w '%{http_code}\n' http://my-external-svc
+sed -i 's/externalName: db.example.com/externalName: new-db.example.com/' \
+  /tmp/services/external-db.yaml
+kubectl apply -f /tmp/services/external-db.yaml
+kubectl run dns-test --rm -i --restart=Never \
+  --image=registry.k8s.io/e2e-test-images/jessie-dnsutils:1.3 -- \
+  dig +short external-db.default.svc.cluster.local
 ```
 
 ```text
-404
-pod "curl-test" deleted
+new-db.example.com.
+pod "dns-test" deleted
 ```
 
-The connection reached Google, and Google answered `404 Not Found`. The DNS trick changed **where** the request went, but not what the request **says**. An HTTP request carries the hostname the client used, in its `Host` header, and Google's servers have never heard of a site called `my-external-svc`. Send the name Google expects, and the answer changes:
+Same name, new target. An app configured with `external-db` would now be sent to `new-db.example.com`, and nothing about the app changed: not its code, not its configuration, not its Deployment.
 
-```bash
-kubectl run curl-test --rm -i --image=curlimages/curl:8.10.1 --restart=Never -- \
-  -s -o /dev/null -w '%{http_code}\n' -H 'Host: google.com' http://my-external-svc
-```
+## 4. What to watch out for
 
-```text
-301
-pod "curl-test" deleted
-```
+"Nothing about the app changed" is true for its configuration. A few things still depend on how the app behaves:
 
-`301` is Google's normal redirect from `google.com` to `www.google.com`: the request was understood. HTTPS has the same problem, one step earlier. The client checks that the server's certificate is for the name it asked for, and Google's certificate doesn't list `my-external-svc`:
-
-```bash
-kubectl run curl-test --rm -i --image=curlimages/curl:8.10.1 --restart=Never -- \
-  -sS -o /dev/null https://my-external-svc
-```
-
-```text
-curl: (60) SSL: no alternative certificate subject name matches target host name 'my-external-svc'
-More details here: https://curl.se/docs/sslcerts.html
-...
-```
-
-(`-sS` keeps `curl` quiet, except for errors.) Error `60` is a certificate problem: the connection reached Google, and `curl` refused to trust it, exactly as it should.
-
-So ExternalName fits some clients better than others:
-
-| Client | Works through ExternalName? |
+| Watch out for | Why |
 |---|---|
-| Databases, caches, and other TCP protocols, like PostgreSQL or Redis, **without** certificate checks | ✓ They don't send the hostname anywhere it matters |
-| HTTP to a server that hosts one site, and ignores the `Host` header | ✓ |
-| HTTP to a server that hosts many sites, like Google or most cloud APIs | ✗ Unless the client sets the real `Host` header |
-| Anything that verifies a TLS certificate: HTTPS, or a database connection with verification on, which managed cloud databases often require | ✗ The certificate is for the real name, not the alias |
+| **Existing connections** | The switch only affects **new** lookups. A database client with a connection pool keeps its open connections to the old database until they're closed. Plan for the app to reconnect, or restart it |
+| **DNS caching** | CoreDNS, and some clients, cache the old answer for a little while, so the switch isn't instant |
+| **TLS certificates** | A client that verifies the server's certificate checks it against the name **it** used, `external-db`. The certificate is for `new-db.example.com`, so verification fails. Managed cloud databases often require verification |
+| **HTTP `Host` headers** | An HTTP client sends `Host: external-db`. A server that hosts many sites, like most cloud APIs, won't recognize it |
 
-## 4. What it doesn't do
+And because it's only a DNS record, an ExternalName Service skips everything the other types do:
 
-Because it's only a DNS record, an ExternalName Service skips everything the other types do:
+- **No ports.** The client connects to the outside service's real port. There's no `port`/`targetPort` mapping.
+- **No load balancing and no proxying.** The client connects directly to whatever the outside name resolves to.
+- **No health checks.** If the database is down, the name still resolves, and the client finds out on its own.
+- **Names only, not IPs.** `externalName` must be a DNS name. An IP address is treated as a name made of digits, which won't resolve. To give an in-cluster name to an outside **IP**, use a Service without a selector, and add an EndpointSlice by hand.
 
-- **No ports.** The client connects to the external service's real port. There's no `port`/`targetPort` mapping to translate one into another.
-- **No load balancing and no proxying.** The client connects directly to whatever address the external name resolves to.
-- **No health checks.** If `google.com` is down, the name still resolves, and the client finds out on its own.
-- **Names only, not IPs.** `externalName` must be a DNS name. Put an IP address in it, and it's treated as a name made of digits, which won't resolve. To give an in-cluster name to an outside **IP**, use a Service without a selector, and add an EndpointSlice by hand.
-
-## 5. Swap what's behind the name
-
-Here's what an ExternalName Service is really for. Say an app calls an API at `http://my-external-svc`. Today that API runs outside the cluster; tomorrow you move it in. With an ExternalName Service, the app never has to know.
-
-Use color-api as the "API that moved in". Point the name at its ClusterIP Service, by its full DNS name:
-
-```bash
-sed -i 's/externalName: google.com/externalName: color-api-clusterip.default.svc.cluster.local/' \
-  /tmp/services/my-external-svc.yaml
-kubectl apply -f /tmp/services/my-external-svc.yaml
-kubectl get svc my-external-svc
-```
-
-```text
-NAME              TYPE           CLUSTER-IP   EXTERNAL-IP                                     PORT(S)   AGE
-my-external-svc   ExternalName   <none>       color-api-clusterip.default.svc.cluster.local   <none>    2m
-```
-
-Call the **same** URL as before:
-
-```bash
-kubectl run curl-test --rm -i --image=curlimages/curl:8.10.1 --restart=Never -- \
-  -s "http://my-external-svc/api?format=text"
-```
-
-```text
-COLOR: blue, HOSTNAME: color-api-deployment-579dc9c56-2kfwp
-pod "curl-test" deleted
-```
-
-Same name, same URL, a completely different backend. The client looked up `my-external-svc`, got the CNAME `color-api-clusterip.default.svc.cluster.local`, resolved that to the ClusterIP, and kube-proxy did the rest. It works over plain HTTP here because color-api ignores the `Host` header, and port `80` matches because `color-api-clusterip` listens on `80`.
-
-Once nothing depends on the old target, the alias can go: change the clients to `color-api-clusterip` at your own pace, then delete `my-external-svc`. Or keep it, as the one place where the name is decided.
-
-> Use the **full** name, `color-api-clusterip.default.svc.cluster.local`, in `externalName`. A CNAME is looked up as written, so a short name like `color-api-clusterip` wouldn't get the cluster's search domains and might not resolve.
+ExternalName fits best with clients that only need an address: a database or cache connection without certificate checks, or a service that ignores the `Host` header.
 
 ## Clean up
 
 ```bash
-kubectl delete -f /tmp/services/my-external-svc.yaml
+kubectl delete -f /tmp/services/external-db.yaml
 ```
 
 That's the end of the Services part. To remove everything from it:
@@ -199,10 +143,10 @@ rm -rf /tmp/services
 
 ## Best practices
 
-- **Use ExternalName to give outside dependencies an in-cluster name**, so moving them, or switching providers, is a change to one Service, not to every client.
-- **Check what the client sends besides the address.** HTTP `Host` headers and TLS certificates still carry the alias, and many servers reject it.
-- **It fits plain TCP services best**, like a database or cache that doesn't verify a certificate. Once TLS verification is on, the alias breaks it, just as it breaks HTTPS.
-- **Put full DNS names in `externalName`**, never IP addresses. For an outside IP, use a Service without a selector and a hand-made EndpointSlice.
+- **Give outside dependencies an in-cluster name**, so moving them, or switching providers, is a change to one Service, not to every app.
+- **Plan how clients pick up a switch.** Connection pools and DNS caches hold on to the old target until they reconnect.
+- **Check what the client sends besides the address.** TLS certificates and HTTP `Host` headers still carry the alias, and many servers reject it.
+- **Put DNS names in `externalName`**, never IP addresses. For an outside IP, use a Service without a selector and a hand-made EndpointSlice.
 - **Remember that it's only DNS.** No ports, no load balancing, and no health checks: the client talks to the outside service directly.
 
 ---
