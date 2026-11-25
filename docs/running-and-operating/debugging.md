@@ -42,7 +42,7 @@ In [k9s](../cluster-setup/k9s.md), a red `crasher` row jumps out; press `l` for 
 | `CrashLoopBackOff` | container starts then exits repeatedly | `logs --previous` |
 | `OOMKilled` (in describe) | hit the memory limit | raise/limit memory ([resources](resources.md)) |
 | `Running` but `0/1` READY | readiness probe failing | [health checks](health-checks.md), `describe` |
-| Service returns nothing | selector matches no Pods | `kubectl get endpoints <svc>` ([Service](../core-objects/service.md)) |
+| Service returns nothing | selector matches no Pods | `kubectl get endpoints <svc>` ([Service](../services/what-are-services.md)) |
 
 ## Best practices
 

@@ -103,7 +103,7 @@ web-1   1/1     Running   0          10s
 web-2   1/1     Running   0          10s
 ```
 
-A ReplicaSet's selector is exactly this kind of query, stored in the object and re-run continuously. So is a [Service's](../core-objects/service.md): it sends traffic to whichever Pods match its selector right now.
+A ReplicaSet's selector is exactly this kind of query, stored in the object and re-run continuously. So is a [Service's](../services/what-are-services.md): it sends traffic to whichever Pods match its selector right now.
 
 > **The catch:** a selector matches **any** Pod with the right labels, including Pods the ReplicaSet didn't create. [ReplicaSets and Existing Pods](replicaset-existing-pods.md) shows what happens then.
 

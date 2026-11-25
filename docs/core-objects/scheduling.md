@@ -193,4 +193,4 @@ kubectl taint node "$NODE" dedicated=lab:NoSchedule-
 
 ---
 
-[← Troubleshooting Failed Rollouts](../replicasets-deployments/troubleshooting-rollouts.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)
+[← ExternalName Services](../services/externalname-services.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)

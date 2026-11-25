@@ -4,7 +4,7 @@
 
 ---
 
-More load? Run more copies. Because a [Deployment](../replicasets-deployments/introduction-to-deployments.md)'s Pods are interchangeable and a [Service](../core-objects/service.md) load-balances across them, scaling is mostly just changing a number.
+More load? Run more copies. Because a [Deployment](../replicasets-deployments/introduction-to-deployments.md)'s Pods are interchangeable and a [Service](../services/what-are-services.md) load-balances across them, scaling is mostly just changing a number.
 
 ## Before you start
 

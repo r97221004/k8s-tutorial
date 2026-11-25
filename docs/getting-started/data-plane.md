@@ -10,7 +10,7 @@ The data plane is everything that runs on each **worker node**. The control plan
 |-----------|---------|--------------|
 | **`kubelet`** | Runs this node's Pods and reports their status | Containers **keep running**, but nothing restarts them or reports on them. The node turns `NotReady`; after about 5 minutes, Pods managed by a controller are recreated elsewhere. |
 | **`containerd`** | Pulls images and runs containers | Running containers survive, but no new ones can start. |
-| **`kube-proxy`** | Programs the rules that route [Service](../core-objects/service.md) traffic to Pods | Existing rules keep working, but Service changes aren't applied. |
+| **`kube-proxy`** | Programs the rules that route [Service](../services/what-are-services.md) traffic to Pods | Existing rules keep working, but Service changes aren't applied. |
 | CNI (**flannel**) *(add-on)* | Gives every Pod an IP and routes Pod-to-Pod traffic | Pod networking can't be set up or updated — new Pods may get stuck in `ContainerCreating`. |
 | **CoreDNS** *(add-on)* | In-cluster DNS, so Pods find Services by [name](../networking/dns.md) | Lookups by name fail; connections by IP still work. |
 

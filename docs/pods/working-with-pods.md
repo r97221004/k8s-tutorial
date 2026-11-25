@@ -127,7 +127,7 @@ Only the first one works. Here's why:
 
 Even the one that works has a catch: **the IP isn't stable.** Delete the Pod and create it again, and it comes back with a **different** IP. Anything that hard-coded `10.244.0.5` breaks.
 
-> **This is exactly the problem [Services](../core-objects/service.md) solve.** A Service gives a group of Pods a **stable name** (resolvable by DNS), a **stable IP**, and, with `type: NodePort`, a way in **from outside** the cluster. Until then, `kubectl port-forward` is the quick workaround.
+> **This is exactly the problem [Services](../services/what-are-services.md) solve.** A Service gives a group of Pods a **stable name** (resolvable by DNS), a **stable IP**, and, with `type: NodePort`, a way in **from outside** the cluster. Until then, `kubectl port-forward` is the quick workaround.
 
 ## 5. `port-forward`: reach the Pod without its IP
 
@@ -226,7 +226,7 @@ A bare Pod has no safety net: once it's deleted, nothing recreates it.
 ## Best practices
 
 - **Read before you act.** When something's wrong, start with `describe` → Events, then `logs` (add `--previous` for restarts). Resist deleting the Pod before you've read the cause. See [Debugging](../running-and-operating/debugging.md).
-- **Don't hard-code Pod IPs.** They change every time a Pod is recreated. Put a [Service](../core-objects/service.md) in front instead.
+- **Don't hard-code Pod IPs.** They change every time a Pod is recreated. Put a [Service](../services/what-are-services.md) in front instead.
 - **Use `exec` to inspect, not to fix.** Changes made inside a container disappear when it restarts.
 - For fast, visual browsing of all this, use [k9s](../cluster-setup/k9s.md): `l` for logs, `d` for describe, `s` for a shell.
 

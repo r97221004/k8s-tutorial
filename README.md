@@ -93,15 +93,24 @@ Two machines, plus basic shell and container familiarity:
 - [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count, see why scaling isn't a rollout, and hand the count to an autoscaler.
 - [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover.
 
-**Part 6 — Core Objects**
+**Part 6 — Services**
+
+- [**What Are Services**](docs/services/what-are-services.md) — a stable name and address in front of a changing set of Pods. *(coming soon)*
+- [**Traffic Generator**](docs/services/traffic-generator.md) — build a small app that keeps calling color-api. *(coming soon)*
+- [**Deploying Color API and Traffic Generator**](docs/services/deploying-color-api.md) — run both apps as Deployments, ready for a Service. *(coming soon)*
+- [**ClusterIP Services**](docs/services/clusterip-services.md) — a stable in-cluster address and DNS name, and load balancing across Pods. *(coming soon)*
+- [**NodePort Services**](docs/services/nodeport-services.md) — open a port on every node for traffic from outside. *(coming soon)*
+- [**Reaching NodePorts from Outside**](docs/services/nodeport-from-outside.md) — find the node's address and reach a NodePort from your laptop. *(coming soon)*
+- [**ExternalName Services**](docs/services/externalname-services.md) — give an outside hostname an in-cluster Service name. *(coming soon)*
+
+**Part 7 — Core Objects**
 
 - [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
-- [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
 - [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 7 — Configuration & Data**
+**Part 8 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -109,7 +118,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 8 — Running & Operating**
+**Part 9 — Running & Operating**
 
 - [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
 - [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
@@ -118,7 +127,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 9 — Networking & Access**
+**Part 10 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.

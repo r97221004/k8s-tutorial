@@ -35,7 +35,7 @@ Most of these kinds come later in the guide. For now, just know the commands exi
 
 ## 2. Expose
 
-In [Working with Pods](../pods/working-with-pods.md#4-pod-ip--name-why-you-cant-connect-yet), you couldn't reach the Pod from your laptop: the Pod network is private to the cluster. A [Service](../core-objects/service.md) fixes that, and one command creates it:
+In [Working with Pods](../pods/working-with-pods.md#4-pod-ip--name-why-you-cant-connect-yet), you couldn't reach the Pod from your laptop: the Pod network is private to the cluster. A [Service](../services/what-are-services.md) fixes that, and one command creates it:
 
 ```bash
 kubectl expose pod color-api --type=NodePort --port=80 --target-port=8080
@@ -79,7 +79,7 @@ How did the Service know which Pod to send traffic to? `expose` copied the Pod's
 kubectl get svc color-api -o jsonpath='{.spec.selector}'    # {"app":"color-api"}
 ```
 
-That's why the `--labels=app=color-api` mattered. Without it, `kubectl run` adds a `run=color-api` label instead, and the selector would use that. The [Service](../core-objects/service.md) chapter covers Services properly; for now, one command made the app reachable.
+That's why the `--labels=app=color-api` mattered. Without it, `kubectl run` adds a `run=color-api` label instead, and the selector would use that. The [Service](../services/what-are-services.md) chapter covers Services properly; for now, one command made the app reachable.
 
 ## 3. Change
 

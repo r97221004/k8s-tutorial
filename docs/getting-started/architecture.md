@@ -87,7 +87,7 @@ Three things to notice:
 ### Two names worth knowing
 
 - **"Master node"** is the old name for a control-plane node. You'll still see it in older docs and blog posts; Kubernetes now says **control plane**.
-- **`cloud-controller-manager`** is optional. On a cloud provider (AWS, GCP, Azure), it creates real cloud resources for you — load balancers, disks, routes. Our kubeadm lab has no cloud, so it isn't there. That's why a `type: LoadBalancer` Service [stays `<pending>`](../core-objects/service.md#a-note-on-loadbalancer-vanilla-kubeadm) here unless you add a provider.
+- **`cloud-controller-manager`** is optional. On a cloud provider (AWS, GCP, Azure), it creates real cloud resources for you — load balancers, disks, routes. Our kubeadm lab has no cloud, so it isn't there. That's why a `type: LoadBalancer` Service [stays `<pending>`](../services/what-are-services.md) here unless you add a provider.
 
 ### What happens on `kubectl apply`
 

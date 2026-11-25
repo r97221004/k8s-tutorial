@@ -93,7 +93,7 @@ Each Pod gets its own IP address from the Pod network, assigned by the CNI (flan
 Two consequences you'll meet later:
 
 - **Open by default isn't always what you want.** To restrict which Pods may talk to which, you add a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls).
-- **Pod IPs aren't stable.** When a Pod is replaced, the new one gets a different IP. That's why clients don't talk to Pod IPs directly. They go through a [Service](../core-objects/service.md), which gives a group of Pods one stable address.
+- **Pod IPs aren't stable.** When a Pod is replaced, the new one gets a different IP. That's why clients don't talk to Pod IPs directly. They go through a [Service](../services/what-are-services.md), which gives a group of Pods one stable address.
 
 ## What you can configure per container
 

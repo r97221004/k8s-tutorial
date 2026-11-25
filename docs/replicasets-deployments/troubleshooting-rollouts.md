@@ -234,4 +234,4 @@ rm -rf /tmp/deploy
 
 ---
 
-[← Scaling Deployments](scaling-deployments.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](../core-objects/scheduling.md)
+[← Scaling Deployments](scaling-deployments.md) · [↑ Contents](../../README.md) · [What Are Services →](../services/what-are-services.md)

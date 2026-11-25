@@ -34,7 +34,7 @@ kube-system    kube-proxy        1         1         1       1            1     
 
 `DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../cluster-setup/k9s.md) and type `:ds` to watch them.
 
-> **Why is `kube-proxy` a DaemonSet?** Every node needs [Service](service.md) routing, so it's the textbook DaemonSet use case — one copy per node, always. The short version: a Service is how traffic finds a moving target of Pods, and `kube-proxy` is the piece on each node that makes that routing work.
+> **Why is `kube-proxy` a DaemonSet?** Every node needs [Service](../services/what-are-services.md) routing, so it's the textbook DaemonSet use case — one copy per node, always. The short version: a Service is how traffic finds a moving target of Pods, and `kube-proxy` is the piece on each node that makes that routing work.
 
 ## When (not) to use one
 

@@ -93,7 +93,7 @@ stray                    1/1     Running   0          19s   app=nginx
 
 `bvffx` no longer matches, so the ReplicaSet **released** it: its `ownerReferences` are now empty, and the ReplicaSet created `t8wmz` to get back to three. `bvffx` keeps running as a bare Pod.
 
-This one is actually useful. If a Pod misbehaves and you want to investigate, take it out by removing its label: the ReplicaSet replaces it right away, so your app keeps its full count, and you can `exec` into the released Pod and read its logs at your leisure. (A [Service](../core-objects/service.md) that selects `app=nginx` stops sending it traffic too.)
+This one is actually useful. If a Pod misbehaves and you want to investigate, take it out by removing its label: the ReplicaSet replaces it right away, so your app keeps its full count, and you can `exec` into the released Pod and read its logs at your leisure. (A [Service](../services/what-are-services.md) that selects `app=nginx` stops sending it traffic too.)
 
 ## 4. Deleting the ReplicaSet
 

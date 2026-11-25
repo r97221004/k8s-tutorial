@@ -11,7 +11,7 @@
 | Probe | Question | If it fails |
 |-------|----------|-------------|
 | **startupProbe** | "Has it finished starting?" | keep waiting until `failureThreshold` is exhausted, then restart the container |
-| **readinessProbe** | "Can it serve traffic *right now*?" | remove the Pod from its [Service](../core-objects/service.md)'s endpoints (no traffic) — but don't restart |
+| **readinessProbe** | "Can it serve traffic *right now*?" | remove the Pod from its [Service](../services/what-are-services.md)'s endpoints (no traffic) — but don't restart |
 | **livenessProbe** | "Is it still healthy?" | **restart** the container |
 
 The crucial distinction: **readiness controls traffic; liveness controls restarts.** Mixing them up is a classic mistake. Say your app is just slow under heavy load, still working, just taking longer to respond:

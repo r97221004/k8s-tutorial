@@ -4,7 +4,7 @@
 
 ---
 
-Exposing every [Service](../core-objects/service.md) with its own NodePort or LoadBalancer gets ugly fast — many ports, many IPs, no shared TLS. An **Ingress** is one HTTP(S) entry point that routes by **host and path** to many Services behind it: `demo.com/` → web, `demo.com/api` → api, all on port 443 with one certificate.
+Exposing every [Service](../services/what-are-services.md) with its own NodePort or LoadBalancer gets ugly fast — many ports, many IPs, no shared TLS. An **Ingress** is one HTTP(S) entry point that routes by **host and path** to many Services behind it: `demo.com/` → web, `demo.com/api` → api, all on port 443 with one certificate.
 
 ## Ingress needs a controller
 
@@ -184,7 +184,7 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller --tail=5
 | `ADDRESS` stays empty | `ingressClassName` doesn't match an installed `IngressClass`, or no controller is running |
 | `curl` hangs or connection refused | Wrong host/IP, or nothing is forwarding to the controller's NodePort/LoadBalancer |
 | `404` from the controller itself (not your app) | No `path` rule matched — check `pathType` and exact path spelling |
-| `502`/`503` from the controller | Path matched, but the backend Service has no Ready endpoints — same checklist as [debugging an empty Service](../core-objects/service.md#debug-an-empty-service) |
+| `502`/`503` from the controller | Path matched, but the backend Service has no Ready endpoints — same checklist as [debugging an empty Service](../services/clusterip-services.md) |
 | Works on `/` but not `/api` | Backend app expects requests without the `/api` prefix — see the rewrite annotation above |
 
 ## Ingress vs LoadBalancer Service

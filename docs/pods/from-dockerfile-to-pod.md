@@ -111,7 +111,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 |---|---|
 | **Port 8080**, not 80 | The container runs as a non-root user (see the Dockerfile), and ports below 1024 normally need root. |
 | **`COLOR` from an environment variable** | You can change the app's behavior without rebuilding the image: `kubectl run --env=COLOR=red`. |
-| **`os.hostname()` in the response** | Inside a Pod, the hostname is the **Pod's name**. Once several Pods serve the same app (in [Deployments](../replicasets-deployments/introduction-to-deployments.md) and [Services](../core-objects/service.md)), this tells you which one answered. |
+| **`os.hostname()` in the response** | Inside a Pod, the hostname is the **Pod's name**. Once several Pods serve the same app (in [Deployments](../replicasets-deployments/introduction-to-deployments.md) and [Services](../services/what-are-services.md)), this tells you which one answered. |
 | **The signal handlers** | The app runs as PID 1 in its container, and PID 1 **ignores** any stop signal it has no handler for. Without them, `kubectl delete pod` hangs for the 30-second grace period before the container is force-killed, and Ctrl+C does nothing at all. See [Graceful Shutdown](../running-and-operating/graceful-shutdown.md). |
 
 ## 2. The Dockerfile

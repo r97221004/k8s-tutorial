@@ -191,4 +191,4 @@ kubectl delete -f manifests/core-objects/web-deployment.yaml --ignore-not-found
 
 ---
 
-[← Service](service.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)
+[← Job & CronJob](job-cronjob.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)

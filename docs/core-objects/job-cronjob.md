@@ -108,4 +108,4 @@ kubectl delete -f manifests/core-objects/pi-job.yaml
 
 ---
 
-[← DaemonSet (intro)](daemonset.md) · [↑ Contents](../../README.md) · [Service →](service.md)
+[← DaemonSet (intro)](daemonset.md) · [↑ Contents](../../README.md) · [Namespace →](namespace.md)
