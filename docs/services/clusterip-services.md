@@ -76,13 +76,23 @@ A Pod's `args` can't be changed once it's running (most of a [Pod's spec is immu
 kubectl delete pod traffic-generator --ignore-not-found
 CLUSTER_IP=$(kubectl get svc color-api-clusterip -o jsonpath='{.spec.clusterIP}')
 cp manifests/services/traffic-generator.yaml /tmp/services/
-sed -i "s/<YOUR_DOCKERHUB_USER>/$DOCKERHUB_USER/; s#http://<COLOR_API_POD_IP>:8080#http://$CLUSTER_IP#" /tmp/services/traffic-generator.yaml
-grep http /tmp/services/traffic-generator.yaml
+sed -i \
+  -e "s/<YOUR_DOCKERHUB_USER>/$DOCKERHUB_USER/" \
+  -e "s#http://<COLOR_API_POD_IP>:8080#http://$CLUSTER_IP#" \
+  /tmp/services/traffic-generator.yaml
 ```
 
+Check the URL that went into the file:
+
+```bash
+grep -o 'http://[^"]*' /tmp/services/traffic-generator.yaml
 ```
-        - "http://10.111.36.227/api?format=text"
+
+```text
+http://10.111.36.227/api?format=text
 ```
+
+Then create the new traffic generator:
 
 ```bash
 kubectl apply -f /tmp/services/traffic-generator.yaml
@@ -165,13 +175,16 @@ Now point it at the Service's **name** instead. Replace the IP in your copy, and
 
 ```bash
 sed -i "s#http://[0-9.]*/api#http://color-api-clusterip/api#" /tmp/services/traffic-generator.yaml
-grep http /tmp/services/traffic-generator.yaml
-kubectl delete pod traffic-generator
-kubectl apply -f /tmp/services/traffic-generator.yaml
+grep -o 'http://[^"]*' /tmp/services/traffic-generator.yaml
 ```
 
+```text
+http://color-api-clusterip/api?format=text
 ```
-        - "http://color-api-clusterip/api?format=text"
+
+```bash
+kubectl delete pod traffic-generator
+kubectl apply -f /tmp/services/traffic-generator.yaml
 ```
 
 Run `kubectl logs traffic-generator -f` in the second terminal again: requests are answered, by all the Pods. Then recreate the Service once more, in the first terminal:
