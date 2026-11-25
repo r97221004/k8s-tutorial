@@ -97,7 +97,7 @@ Two machines, plus basic shell and container familiarity:
 
 - [**What Are Services**](docs/services/what-are-services.md) — a stable name and address in front of a changing set of Pods, and the four types of Service.
 - [**Traffic Generator**](docs/services/traffic-generator.md) — build a small app that keeps calling color-api, and prints which Pod answered.
-- [**Deploying Color API and Traffic Generator**](docs/services/deploying-color-api.md) — run both apps as Deployments, ready for a Service. *(coming soon)*
+- [**Deploying Color API and Traffic Generator**](docs/services/deploying-color-api.md) — run both apps without a Service, and see what goes wrong.
 - [**ClusterIP Services**](docs/services/clusterip-services.md) — a stable in-cluster address and DNS name, and load balancing across Pods. *(coming soon)*
 - [**NodePort Services**](docs/services/nodeport-services.md) — open a port on every node for traffic from outside. *(coming soon)*
 - [**Reaching NodePorts from Outside**](docs/services/nodeport-from-outside.md) — find the node's address and reach a NodePort from your laptop. *(coming soon)*

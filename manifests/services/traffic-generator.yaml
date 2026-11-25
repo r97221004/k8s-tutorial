@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: traffic-generator
+  labels:
+    app: traffic-generator
+spec:
+  containers:
+    - name: traffic-generator
+      image: <YOUR_DOCKERHUB_USER>/traffic-generator:1.0.0
+      args:
+        - "http://<COLOR_API_POD_IP>:8080/api?format=text"
+        - "0.5"
