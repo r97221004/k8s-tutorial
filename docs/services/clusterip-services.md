@@ -137,7 +137,7 @@ kubectl logs traffic-generator | grep -o 'HOSTNAME: .*' | sort | uniq -c
       5 HOSTNAME: color-api-deployment-579dc9c56-hv7pt
 ```
 
-All five Pods get requests: **problem one solved**. The split isn't even, and it isn't meant to be. kube-proxy picks a Pod at random for each new connection; over many requests it evens out, but it's not round-robin.
+All five Pods get requests: **problem one solved**. The split isn't even, and it isn't meant to be. In its default mode, kube-proxy picks a Pod at random for each new connection; over many requests it evens out, but it's not round-robin.
 
 ## 3. Delete a color-api Pod
 
@@ -147,7 +147,7 @@ In the first terminal, delete one of the Pods behind the Service:
 kubectl delete pod $(kubectl get pods -l app=color-api -o jsonpath='{.items[0].metadata.name}')
 ```
 
-Watch the second terminal: not a single `no response`. The Deployment starts a replacement with a new IP, the EndpointSlice is updated to drop the old address and add the new one, and the very next requests include the new Pod:
+Watch the second terminal: you'll usually not see a single `no response`. The Deployment starts a replacement with a new IP, the EndpointSlice is updated to drop the old address and add the new one, and the very next requests include the new Pod:
 
 ```text
 [2026-11-25 08:26:59] COLOR: blue, HOSTNAME: color-api-deployment-579dc9c56-pd62n
@@ -155,6 +155,8 @@ Watch the second terminal: not a single `no response`. The Deployment starts a r
 ```
 
 **Problem two solved**: the traffic generator's address, the ClusterIP, didn't change, even though the Pods behind it did.
+
+"Usually", because a request can land on the old Pod in the moment it's shutting down, before its address has left the EndpointSlice. [Graceful Shutdown & Disruptions](../running-and-operating/graceful-shutdown.md) shows how to close that gap.
 
 ## 4. Use the name, not the IP
 
@@ -213,13 +215,13 @@ A few failures appear, and then, without you touching anything, it recovers:
 [2026-11-25 08:27:46] COLOR: blue, HOSTNAME: color-api-deployment-579dc9c56-hv7pt
 ```
 
-The name `color-api-clusterip` now leads to the new Service, whatever its IP is. The short gap is DNS caching: CoreDNS remembers an answer for up to 30 seconds (`cache 30` in its configuration), so for a little while the name still led to the deleted Service's IP.
+The name `color-api-clusterip` now leads to the new Service, whatever its IP is. The short gap is the cluster catching up: for a little while, the name can still resolve to the deleted Service's IP from a cached DNS answer, and the new Service's routing rules take a moment to reach the node.
 
 | The client uses | Pods replaced | Service recreated |
 |---|---|---|
 | A Pod IP | ✗ Broken for good | ✗ Broken for good |
 | The ClusterIP | ✓ Keeps working | ✗ Broken for good: the IP changes |
-| The Service name | ✓ Keeps working | ✓ Recovers by itself, within about 30 seconds |
+| The Service name | ✓ Keeps working | ✓ Recovers by itself, after a short gap |
 
 The name is the only thing that's the same in every case, and in every cluster: deploy the same manifests somewhere else, and the ClusterIP will be different, but `color-api-clusterip` won't. **Configure clients with the Service name.**
 
@@ -248,7 +250,8 @@ options ndots:5
 Check the full name's answer, from a throwaway Pod:
 
 ```bash
-kubectl run dns-test --rm -i --image=busybox:1.36 --restart=Never -- nslookup color-api-clusterip.default.svc.cluster.local
+kubectl run dns-test --rm -i --image=busybox:1.36 --restart=Never -- \
+  nslookup color-api-clusterip.default.svc.cluster.local
 ```
 
 ```text
@@ -266,13 +269,14 @@ Two limits to remember:
 
 ## 6. Debug a Service with no endpoints
 
-The most common Service bug is a selector that matches no Pods. Break yours on purpose, with a one-letter typo in the selector, applied from a corrected copy of the manifest:
+The most common Service bug is a selector that matches no Pods. Break yours on purpose, with a one-letter typo in the selector, applied from an edited copy of the manifest:
 
 ```bash
-sed '/selector:/{n;s/app: color-api$/app: color-apii/}' manifests/services/color-api-clusterip.yaml | kubectl apply -f -
+sed '/selector:/{n;s/app: color-api$/app: color-apii/}' manifests/services/color-api-clusterip.yaml \
+  | kubectl apply -f -
 ```
 
-(`/selector:/{n;…}` edits only the line right after `selector:`. A plain `s/app: color-api/…/` would also change the Service's own label, which looks exactly the same.) The second terminal fills with failures, and each one fails **instantly**, not after the 2-second timeout:
+(`/selector:/{n;…}` edits only the line right after `selector:`. A plain `s/app: color-api/…/` would also change the Service's own label, which looks exactly the same.) The second terminal fills with failures, and each one fails **instantly**, not after the 2-second timeout. Send one request yourself to see it:
 
 ```bash
 kubectl exec traffic-generator -- curl -s -m 2 http://color-api-clusterip/api
@@ -317,7 +321,10 @@ kubectl apply -f manifests/services/color-api-clusterip.yaml
 [NodePort Services](nodeport-services.md) continues with the same Deployment and traffic generator, so you can leave everything running. To remove it all:
 
 ```bash
-kubectl delete -f /tmp/services/traffic-generator.yaml -f manifests/services/color-api-clusterip.yaml -f /tmp/services/color-api-deployment.yaml
+kubectl delete \
+  -f /tmp/services/traffic-generator.yaml \
+  -f manifests/services/color-api-clusterip.yaml \
+  -f /tmp/services/color-api-deployment.yaml
 rm -rf /tmp/services
 ```
 
