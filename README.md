@@ -90,7 +90,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Creating and Managing Deployments**](docs/replicasets-deployments/creating-deployments.md) — read a Deployment's status, and see why you manage it, not its ReplicaSet.
 - [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — upgrade the image, watch the Pods get replaced, and see which changes trigger a rollout.
 - [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — revision history, change causes, rollbacks, and controlling the pace of a rollout.
-- [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count with kubectl or the manifest. *(coming soon)*
+- [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count, see why scaling isn't a rollout, and hand the count to an autoscaler.
 - [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover. *(coming soon)*
 
 **Part 6 — Core Objects**
