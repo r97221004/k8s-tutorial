@@ -12,7 +12,11 @@ app.get('/', (req, res) => {
   );
 });
 
+// JSON by default; ?format=text for one plain line, handy for scripts and logs.
 app.get('/api', (req, res) => {
+  if (req.query.format === 'text') {
+    return res.type('text/plain').send(`COLOR: ${color}, HOSTNAME: ${os.hostname()}\n`);
+  }
   res.json({ color, hostname: os.hostname() });
 });
 
