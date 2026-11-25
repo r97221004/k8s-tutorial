@@ -48,7 +48,14 @@ metadata:
           image: nginx:1.28                              # was nginx:1.27
 ```
 
-(Or with GNU `sed` on the node: `sed -i 's/^  labels:$/  annotations:\n    kubernetes.io\/change-cause: "Upgrade nginx to 1.28"\n  labels:/; s/image: nginx:1.27$/image: nginx:1.28/' /tmp/deploy/nginx-deployment.yaml`.)
+Or make both edits with GNU `sed` on the node:
+
+```bash
+sed -i \
+  -e 's/^  labels:$/  annotations:\n    kubernetes.io\/change-cause: "Upgrade nginx to 1.28"\n  labels:/' \
+  -e 's/image: nginx:1.27$/image: nginx:1.28/' \
+  /tmp/deploy/nginx-deployment.yaml
+```
 
 Apply it, and look at the history:
 
@@ -87,7 +94,16 @@ The annotation stays on the Deployment until you change it. Make another templat
               value: hello
 ```
 
-(Or with GNU `sed` on the node: `sed -i '/^          image: nginx:1.28$/a\          env:\n            - name: GREETING\n              value: hello' /tmp/deploy/nginx-deployment.yaml`.)
+Or with GNU `sed` on the node:
+
+```bash
+sed -i '/^          image: nginx:1.28$/a\
+          env:\
+            - name: GREETING\
+              value: hello' /tmp/deploy/nginx-deployment.yaml
+```
+
+Apply it, and look at the history again:
 
 ```bash
 kubectl apply -f /tmp/deploy/nginx-deployment.yaml
@@ -208,6 +224,8 @@ kubectl diff -f /tmp/deploy/nginx-deployment.yaml
 ```
 
 ```diff
++    kubernetes.io/change-cause: Add GREETING env var
+...
 -      - image: nginx:1.27
 +      - env:
 +        - name: GREETING
@@ -215,7 +233,7 @@ kubectl diff -f /tmp/deploy/nginx-deployment.yaml
 +        image: nginx:1.28
 ```
 
-It would roll forward again, straight back to the version you just rolled back from. That's the rule from [Declarative Object Management](../object-management/declarative-management.md#dont-mix-approaches-on-one-object) once more: the file wins. Treat `rollout undo` as the emergency brake. It gets you back to safety in seconds, and then you **update the file** to match, so the next `apply` doesn't undo the undo.
+It would roll forward again, straight back to the version you just rolled back from. Even the change cause would come back: the rollback to revision 1 cleared it from the live Deployment, because revision 1 never had one, but your file still has it. That's the rule from [Declarative Object Management](../object-management/declarative-management.md#dont-mix-approaches-on-one-object) once more: the file wins. Treat `rollout undo` as the emergency brake. It gets you back to safety in seconds, and then you **update the file** to match, so the next `apply` doesn't undo the undo.
 
 ## 5. Control the pace
 
@@ -236,12 +254,12 @@ Each can be a percentage or a number. For three replicas, some useful combinatio
 
 `maxSurge` and `maxUnavailable` can't both be `0`: the rollout could never make a move.
 
-Try the second combination. Add a `rollingUpdate` block under `strategy` in your file:
+Try the second combination. Your file already ends with a `strategy` block holding only `type: RollingUpdate`. Add the three `rollingUpdate` lines under it, so it reads:
 
 ```yaml
   strategy:
     type: RollingUpdate
-    rollingUpdate:
+    rollingUpdate:           # add these three lines
       maxSurge: 0
       maxUnavailable: 1
 ```
@@ -270,6 +288,8 @@ nginx-deployment   3/3     3            3           5s
 ```
 
 `READY` never goes above `3/3` (no surge), and `AVAILABLE` dips to `2` each time an old Pod goes before its replacement is up. Compare the default, where `READY` reached `4/3` and `AVAILABLE` never left `3`.
+
+This rollout also reused an old ReplicaSet. Your file's template, `1.28` with `GREETING`, is exactly the template of revision 3, so the Deployment scaled revision 3's ReplicaSet back up, just as the rollback in step 4 did, and relabeled it as revision **6**. That's why revision 3 is missing from the history in the next step.
 
 > **"Available" depends on readiness.** A new Pod counts as available once it's ready. Without a [readiness probe](../running-and-operating/health-checks.md), "ready" just means the container started, so a broken version can look healthy and the rollout carries on regardless. With one, a version that never gets ready stalls the rollout instead, while the old Pods keep serving. [Troubleshooting Failed Rollouts](troubleshooting-rollouts.md) shows what that looks like.
 
@@ -335,7 +355,21 @@ kubectl get deploy nginx-deployment -o jsonpath='{.spec.template.metadata.annota
 {"kubectl.kubernetes.io/restartedAt":"2026-11-24T20:03:18+08:00"}
 ```
 
-A changed template means a new revision, like any other rollout (with, again, whatever stale `change-cause` was there before). Unlike `set image`, it doesn't fight your file: the `restartedAt` annotation was never in your manifest, so `apply` [leaves it alone](../object-management/declarative-management.md#4-how-apply-remembers-what-it-manages), and `kubectl diff` stays empty.
+A changed template means a new revision, like any other rollout (with, again, whatever stale `change-cause` was there before). Unlike `set image`, it doesn't fight your file: the `restartedAt` annotation was never in your manifest, so `apply` [leaves it alone](../object-management/declarative-management.md#4-how-apply-remembers-what-it-manages). Check with `diff`:
+
+```bash
+kubectl diff -f /tmp/deploy/nginx-deployment.yaml
+```
+
+```diff
+         - name: GREETING
+-          value: hi
++          value: hello
+-        image: nginx:1.27
++        image: nginx:1.28
+```
+
+The image and `GREETING` lines are left over from step 6: the `set` commands changed the live Deployment, and your file never followed. There's no line for `restartedAt`, so the next `apply` won't touch it. `restart` adds nothing for your file to fight with.
 
 ## How much history is kept
 
