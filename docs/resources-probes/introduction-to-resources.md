@@ -192,7 +192,7 @@ Once a namespace has a quota on CPU or memory, every new Pod there must declare 
 Error from server (Forbidden): pods "color-api" is forbidden: failed quota: dev-quota: must specify limits.cpu for: color-api; limits.memory for: color-api; requests.cpu for: color-api; requests.memory for: color-api
 ```
 
-The `for:` part names the container that's missing each value; here the Pod and its container are both called `color-api`.
+The error lists each missing value, with the container it's missing from after `for:`. This Pod has one container, also called `color-api`, and it's missing all four: `requests.cpu`, `requests.memory`, `limits.cpu`, and `limits.memory`.
 
 Two details make this less strict than it sounds:
 
