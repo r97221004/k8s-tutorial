@@ -57,7 +57,7 @@ kube-system       Active   5d    kubernetes.io/metadata.name=kube-system
 prod              Active   3s    env=prod,kubernetes.io/metadata.name=prod
 ```
 
-Namespaces take labels like anything else, so `kubectl get namespaces -l env` lists just your two environments. Kubernetes also adds `kubernetes.io/metadata.name` to every namespace, holding its name. That one's there so a selector can pick a namespace by name, which you'll need for rules that apply across namespaces.
+Namespaces take labels like anything else, so `kubectl get namespaces -l env` lists just your two environments. Kubernetes also adds `kubernetes.io/metadata.name` to every namespace, holding its name. That one's there so a selector can pick a namespace by name: a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls), for example, uses a `namespaceSelector` on it to allow traffic from one namespace only.
 
 A namespace's name ends up in DNS names, as [Cross-Namespace Service Communication](cross-namespace-services.md) shows, so the rules are strict: lowercase letters, digits, and `-`, up to 63 characters.
 
@@ -187,6 +187,8 @@ web    2/2     2            2           1m
 
 `-n` still overrides it for a single command, so `kubectl get deployments -n prod` shows prod's `web`.
 
+In [k9s](../cluster-setup/k9s.md), type `:ns` and press Enter on a namespace to switch to it, or press `0` in any list to see all namespaces at once.
+
 This setting is convenient, and also the classic way to lose track of your objects. It lives in `~/.kube/config`, so it stays after you close the terminal. If, days later, `kubectl get pods` says `No resources found` for Pods you know are there, read the namespace in that message, or check `kubectl config get-contexts`. Switch back now:
 
 ```bash
@@ -253,9 +255,7 @@ NAME   STATUS        AGE
 dev    Terminating   3m
 ```
 
-`Terminating` means Kubernetes is deleting everything inside first: the Deployment, its ReplicaSet, the Pods, and anything else in there. The namespace goes last.
-
-"Everything inside" means namespaced objects. A PersistentVolumeClaim is deleted with its namespace, but the PersistentVolume behind it belongs to the cluster, and whether it and its data survive depends on its [reclaim policy](../config-and-data/volumes.md#reclaim-policy): `Delete` destroys the data, `Retain` keeps it. Check that before you delete a namespace that holds a database.
+`Terminating` means Kubernetes is deleting everything inside first: the Deployment, its ReplicaSet, the Pods, and anything else in there. The namespace goes last. If you already see `NotFound`, it was simply faster than you.
 
 A few seconds later:
 
@@ -278,7 +278,11 @@ NAMESPACE   NAME   READY   UP-TO-DATE   AVAILABLE   AGE
 prod        web    2/2     2            2           3m
 ```
 
-This is both the danger and the use of a namespace. One command removes a whole environment, with no confirmation and no undo, which is a good reason to keep RBAC in mind. But it's also the cleanest way to tear down a test setup: put it in its own namespace, and delete just that when you're done. Kubernetes protects a few of its own: `kubectl delete namespace default` is refused with `this namespace may not be deleted`, and so are `kube-system` and `kube-public`. `kube-node-lease` isn't on that list, so don't count on the API server to stop you there.
+This is both the danger and the use of a namespace. One command removes a whole environment, with no confirmation and no undo, which is a good reason to keep RBAC in mind. But it's also the cleanest way to tear down a test setup: put it in its own namespace, and delete just that when you're done.
+
+"Everything inside" means namespaced objects. A PersistentVolumeClaim is deleted with its namespace, but the PersistentVolume behind it belongs to the cluster, and whether it and its data survive depends on its [reclaim policy](../config-and-data/volumes.md#reclaim-policy): `Delete` destroys the data, `Retain` keeps it. Check that before you delete a namespace that holds a database.
+
+Kubernetes protects a few of its own: `kubectl delete namespace default` is refused with `this namespace may not be deleted`, and so are `kube-system` and `kube-public`. `kube-node-lease` isn't on that list, so don't count on the API server to stop you there.
 
 ## Clean up
 
