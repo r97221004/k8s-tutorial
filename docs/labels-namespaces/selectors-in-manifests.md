@@ -4,7 +4,7 @@
 
 ---
 
-[Labels and Selectors](labels-selectors.md#3-selectors-on-the-command-line) ran both kinds of selector from the command line, where they share one string: `-l 'app=color-api,release notin (canary)'`. A Deployment, a ReplicaSet, or a Service runs the same kind of query, but stores it in its manifest, and runs it again and again.
+[Labels and Selectors](labels-selectors.md#3-selectors-on-the-command-line) ran both kinds of selector from the command line, where they share one string: `-l 'app=color-api,release notin (canary)'`. A Deployment, a ReplicaSet, or a Service stores a query like that in its manifest, and runs it again and again. Not all of them can store all of it, though: a Service can only hold the simplest kind, as step 6 shows.
 
 In a manifest, the two kinds are separate fields: **`matchLabels`** for equality, and **`matchExpressions`** for sets. In this chapter you'll read both, put them in a Deployment, and see what the API server does when the selector breaks its rules.
 
@@ -113,19 +113,50 @@ NAME            READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES      
 selector-demo   2/2     2            2           10s   nginx        nginx:1.27   app=selector-demo,release in (canary,stable)
 ```
 
-The `SELECTOR` column shows the YAML turned into the `-l` form: `matchLabels` became `app=selector-demo`, and the expression became `release in (canary,stable)`. They're two ways to write the same query, so you can paste it straight into `kubectl get pods -l`:
+The `SELECTOR` column shows the YAML turned into the `-l` form: `matchLabels` became `app=selector-demo`, and the expression became `release in (canary,stable)`. They're two ways to write the same query, so you can paste it straight into `kubectl get pods -l`.
+
+So far, every Pod with `app: selector-demo` is the Deployment's own, and all of them are `stable`, so the `In` has nothing to do. Give it something: add two Pods by hand, with the same `app` but a different `release`:
 
 ```bash
-kubectl get pods -l 'app=selector-demo,release in (canary,stable)'
+kubectl run stray-beta --image=nginx:1.27 \
+  --labels=app=selector-demo,release=beta
+kubectl run stray-canary --image=nginx:1.27 \
+  --labels=app=selector-demo,release=canary
+```
+
+Now run the pasted selector:
+
+```bash
+kubectl get pods -l 'app=selector-demo,release in (canary,stable)' -L release
 ```
 
 ```text
-NAME                             READY   STATUS    RESTARTS   AGE
-selector-demo-6b8f9c7d5d-4kx2p   1/1     Running   0          20s
-selector-demo-6b8f9c7d5d-r7wqn   1/1     Running   0          20s
+NAME                             READY   STATUS    RESTARTS   AGE   RELEASE
+selector-demo-6b8f9c7d5d-4kx2p   1/1     Running   0          1m    stable
+selector-demo-6b8f9c7d5d-r7wqn   1/1     Running   0          1m    stable
+stray-canary                     1/1     Running   0          5s    canary
 ```
 
-Exactly the Pods the Deployment counts as its own.
+`stray-beta` is left out, because `beta` isn't in the set. `stray-canary` is in: it matches the Deployment's selector just like the Deployment's own Pods.
+
+But the Deployment didn't take it. It still runs its two Pods, and didn't delete one to get back to `replicas: 2`. That's because the Deployment doesn't count Pods itself. Its ReplicaSet does, with a selector of its own:
+
+```bash
+kubectl get rs -l app=selector-demo -o wide
+```
+
+```text
+NAME                       DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES       SELECTOR
+selector-demo-6b8f9c7d5d   2         2         2       1m    nginx        nginx:1.27   app=selector-demo,pod-template-hash=6b8f9c7d5d,release in (canary,stable)
+```
+
+It's the Deployment's selector, plus the `pod-template-hash` label from [Introduction to Deployments](../replicasets-deployments/introduction-to-deployments.md). The Deployment adds that label to the ReplicaSet's selector, and to every Pod it creates from the template. A Pod you made by hand doesn't have it, so the ReplicaSet never counts it, and never deletes it. A bare ReplicaSet has no such protection, and adopts any Pod that matches, as [ReplicaSets and Existing Pods](../replicasets-deployments/replicaset-existing-pods.md) showed.
+
+Delete the two stray Pods:
+
+```bash
+kubectl delete pod stray-beta stray-canary
+```
 
 ## 5. The rules a workload's selector follows
 
@@ -133,7 +164,7 @@ Two rules apply to the selector of a Deployment, and of a ReplicaSet, StatefulSe
 
 ### It must match the template's labels
 
-A Deployment counts its Pods with its selector. Pods that didn't match would never be counted, so it would create new ones forever. Change the template's `release` to a value the selector doesn't allow, and try it with `--dry-run=server`, which has the API server check the change without saving it:
+The Deployment's ReplicaSet creates Pods from the template, and counts them with the selector. Pods that didn't match would never be counted, so it would create new ones forever. Change the template's `release` to a value the selector doesn't allow, and try it with `--dry-run=server`, which has the API server check the change without saving it:
 
 ```bash
 sed -i 's/release: stable/release: beta/' /tmp/labels/selector-demo.yaml
