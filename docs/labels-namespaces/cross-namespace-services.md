@@ -1,12 +1,12 @@
 # Cross-Namespace Service Communication
 
-> Run color-api in `dev` and `prod`, see the short Service name stay inside its own namespace, and reach across with `name.namespace`.
+> Run color-api in `dev` and `prod`, call both from one traffic generator in `default`, and see which Service names get across.
 
 ---
 
 [ClusterIP Services](../services/clusterip-services.md#5-how-the-name-works) listed three ways to write a Service's name: the short name, `name.namespace`, and the full name. Back then everything lived in `default`, so the short name was all you needed. Now you have namespaces, and the question becomes real: when the traffic generator and color-api sit in **different** namespaces, which name gets through?
 
-You'll build this, with color-api answering `green` in dev and `blue` in prod, so every line of the traffic generator's output tells you which environment answered:
+You'll build this: color-api in dev answering `green`, color-api in prod answering `blue`, and one traffic generator in `default` that calls them. Every line of its output tells you which environment answered.
 
 ```mermaid
 ---
@@ -20,33 +20,30 @@ config:
   themeCSS: |
     .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
-flowchart LR
+flowchart TB
+    subgraph def["🗂️ namespace default"]
+        tg["📡 traffic-generator"]
+    end
     subgraph dev["🗂️ namespace dev"]
         direction TB
-        tgd["📡 traffic-generator"]
         sd["🔀 Service color-api"]
         cd["📦 color-api Pods<br/>COLOR: green"]
     end
     subgraph prod["🗂️ namespace prod"]
         direction TB
-        tgp["📡 traffic-generator"]
         sp["🔀 Service color-api"]
         cp["📦 color-api Pods<br/>COLOR: blue"]
     end
-    subgraph def["🗂️ namespace default"]
-        tg0["📡 traffic-generator"]
-    end
 
-    tgd -->|"color-api"| sd
+    tg -->|"color-api.dev"| sd
+    tg -->|"color-api.prod"| sp
     sd --> cd
-    tgp -->|"color-api"| sp
     sp --> cp
-    tg0 -->|"color-api.prod"| sp
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    class tg0,tgd,tgp eng
+    class tg eng
     class sd,sp ctrl
     class cd,cp tgt
 
@@ -103,54 +100,11 @@ dev         service/color-api   ClusterIP   10.105.56.166   <none>        80/TCP
 prod        service/color-api   ClusterIP   10.97.170.173   <none>        80/TCP    10s
 ```
 
-Two Services, both named `color-api`, each with its own ClusterIP, each sending traffic to the Pods in its own namespace. The only difference between them is the namespace, so the namespace is what has to end up in the name a client uses.
+Two Services, both named `color-api`, each with its own ClusterIP, each sending traffic to the Pods in its own namespace. The only difference between them is the namespace, so the namespace is what has to end up in the name the traffic generator uses.
 
-## 2. The short name stays at home
+## 2. The short name doesn't cross
 
-Start the same traffic generator in both namespaces. Its URL says only `color-api`:
-
-```bash
-kubectl apply -f /tmp/xns/traffic-generator.yaml -n dev
-kubectl apply -f /tmp/xns/traffic-generator.yaml -n prod
-kubectl wait --for=condition=Ready pod/traffic-generator -n dev --timeout=90s
-kubectl wait --for=condition=Ready pod/traffic-generator -n prod --timeout=90s
-```
-
-Give them a few seconds to send some requests, then read both:
-
-```bash
-kubectl logs traffic-generator -n dev --tail=3
-kubectl logs traffic-generator -n prod --tail=3
-```
-
-```text
-[2026-11-26 07:49:29] COLOR: green, HOSTNAME: color-api-654d697c4b-nvvm7
-[2026-11-26 07:49:30] COLOR: green, HOSTNAME: color-api-654d697c4b-nvvm7
-[2026-11-26 07:49:31] COLOR: green, HOSTNAME: color-api-654d697c4b-2hqdg
-[2026-11-26 07:49:29] COLOR: blue, HOSTNAME: color-api-65df75d46c-rtmz7
-[2026-11-26 07:49:30] COLOR: blue, HOSTNAME: color-api-65df75d46c-rtmz7
-[2026-11-26 07:49:31] COLOR: blue, HOSTNAME: color-api-65df75d46c-krpmh
-```
-
-The same file, with the same URL, reached dev's color-api from dev, and prod's from prod. Never the other one. The reason is the first line of each Pod's `/etc/resolv.conf`:
-
-```bash
-kubectl exec traffic-generator -n dev -- cat /etc/resolv.conf
-```
-
-```text
-search dev.svc.cluster.local svc.cluster.local cluster.local
-nameserver 10.96.0.10
-options ndots:5
-```
-
-In `default`, that line started with `default.svc.cluster.local`. Here it starts with `dev.svc.cluster.local`: each Pod's search list begins with **its own namespace**. So the short name `color-api` is tried as `color-api.dev.svc.cluster.local` in dev, and as `color-api.prod.svc.cluster.local` in prod.
-
-That's a feature, not a limitation. An app's configuration can say `color-api`, and the same manifest works in every environment, talking to that environment's own backend.
-
-## 3. Reach into another namespace
-
-Now run the traffic generator somewhere that has no color-api: `default`.
+Start the traffic generator in `default`. Its URL says only `color-api`:
 
 ```bash
 kubectl apply -f /tmp/xns/traffic-generator.yaml
@@ -180,9 +134,25 @@ curl: (6) Could not resolve host: color-api
 command terminated with exit code 6
 ```
 
-Not a timeout or a refused connection: the name doesn't exist. In `default`, `color-api` becomes `color-api.default.svc.cluster.local`, and there's no Service by that name. The Services in dev and prod are never tried.
+Not a timeout or a refused connection: the name doesn't exist. The first line of the Pod's `/etc/resolv.conf` shows why:
 
-To reach one, add its namespace to the name. Point a copy of the traffic generator at `color-api.prod`:
+```bash
+kubectl exec traffic-generator -- cat /etc/resolv.conf
+```
+
+```text
+search default.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+```
+
+The search list starts with the Pod's **own namespace**. So `color-api` is tried as `color-api.default.svc.cluster.local`, and there's no Service by that name. The Services in dev and prod are never tried.
+
+That's a feature, not a limitation. A Pod in dev would get `dev.svc.cluster.local` first, and the same short name would reach dev's color-api; in prod, prod's. An app whose config says `color-api` works unchanged in every environment, and always talks to the backend next to it. It just can't leave its namespace.
+
+## 3. Add the namespace
+
+To reach another namespace, put the namespace in the name. Point a copy of the traffic generator at `color-api.prod`:
 
 ```bash
 sed 's#http://color-api/#http://color-api.prod/#' /tmp/xns/traffic-generator.yaml \
@@ -204,7 +174,9 @@ kubectl logs traffic-generator --tail=3
 [2026-11-26 07:49:55] COLOR: blue, HOSTNAME: color-api-65df75d46c-krpmh
 ```
 
-Blue: prod answers. The search list did the rest: `color-api.prod` was tried as `color-api.prod.default.svc.cluster.local`, which doesn't exist, then as `color-api.prod.svc.cluster.local`, which does. The namespace in the name picks the environment, so `color-api.dev` gets green:
+Blue: prod answers. The search list did the rest: `color-api.prod` was tried as `color-api.prod.default.svc.cluster.local`, which doesn't exist, then as `color-api.prod.svc.cluster.local`, which does.
+
+The namespace in the name picks the environment. From the same Pod, `color-api.dev` gets green:
 
 ```bash
 kubectl exec traffic-generator -- curl -s -m 2 'http://color-api.dev/api?format=text'
@@ -214,9 +186,11 @@ kubectl exec traffic-generator -- curl -s -m 2 'http://color-api.dev/api?format=
 COLOR: green, HOSTNAME: color-api-654d697c4b-2hqdg
 ```
 
+One traffic generator, two namespaces, and the only thing that decides which one it reaches is the name.
+
 ## 4. Which name to write
 
-All of these work from any Pod in the cluster:
+The longer forms work too:
 
 ```bash
 kubectl exec traffic-generator -- curl -s -m 2 'http://color-api.prod.svc/api?format=text'
@@ -252,7 +226,7 @@ spec:
   externalName: color-api.prod.svc.cluster.local   # must be the full name
 ```
 
-Create it in `default`, and call the short name again:
+Create it in `default`, and try the short name that failed in step 2:
 
 ```bash
 kubectl apply -f manifests/labels-namespaces/color-api-alias.yaml
@@ -263,25 +237,17 @@ kubectl exec traffic-generator -- curl -sS -m 2 'http://color-api/api?format=tex
 COLOR: blue, HOSTNAME: color-api-65df75d46c-rtmz7
 ```
 
-If you get `Could not resolve host` instead, wait half a minute and try again. The traffic generator asked for `color-api` in step 3, and CoreDNS remembers a "not found" answer for up to 30 seconds.
+If you get `Could not resolve host` instead, wait half a minute and try again. The traffic generator asked for `color-api` in step 2, and CoreDNS remembers a "not found" answer for up to 30 seconds.
 
-Now `color-api` in `default` means prod's color-api. Clients keep their simple config, and switching them to dev is a one-line change to the alias, not to every client.
+Now `color-api` in `default` means prod's color-api. The client keeps its simple config, and switching it to dev is a one-line change to the alias, not to the client.
 
 The comment in the file matters. CoreDNS answers a lookup of the alias with the `externalName`, exactly as written, and then resolves that as a complete name: no search list is involved at that point. So `externalName: color-api.prod` leads to a name that doesn't exist, and `Could not resolve host`. Here, only the full name works.
 
-## 5. Nothing stops dev from calling prod
+## 5. Nothing checks whether it should
 
-The namespace in a name decides where a request goes. Nothing checks whether it **should** go there. From the dev traffic generator:
+The traffic generator in `default` just called both dev and prod, and nothing asked whether it was allowed to. The same goes for any Pod: one in dev can call `color-api.prod` as easily. With a real app, that's dev writing to prod's database because someone typed `.prod` into a config file.
 
-```bash
-kubectl exec traffic-generator -n dev -- curl -s -m 2 'http://color-api.prod/api?format=text'
-```
-
-```text
-COLOR: blue, HOSTNAME: color-api-65df75d46c-rtmz7
-```
-
-Dev just called prod. With a real app, that's dev writing to prod's database because someone typed `.prod` into a config file. As [Namespaces](namespaces.md#3-what-a-namespace-does-and-doesnt-separate) said, a namespace isn't a firewall. To allow traffic into prod only from prod, add a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls). It can pick the allowed namespaces by the `kubernetes.io/metadata.name` label you saw in [Creating and Managing Namespaces](managing-namespaces.md#1-create-dev-and-prod).
+As [Namespaces](namespaces.md#3-what-a-namespace-does-and-doesnt-separate) said, a namespace isn't a firewall. The name decides where a request goes; to decide whether it may go there, add a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls). It can allow traffic into prod only from chosen namespaces, picked by the `kubernetes.io/metadata.name` label you saw in [Creating and Managing Namespaces](managing-namespaces.md#1-create-dev-and-prod).
 
 ## Clean up
 
@@ -292,7 +258,7 @@ kubectl delete -f manifests/labels-namespaces/environments.yaml
 rm -rf /tmp/xns
 ```
 
-Deleting the two namespaces removes everything in them: both color-apis, their Services, and both traffic generators. The traffic generator and the alias in `default` are the only things you delete by hand.
+Deleting the two namespaces removes both color-apis and their Services. The traffic generator and the alias live in `default`, so you delete those by hand.
 
 ## Best practices
 
