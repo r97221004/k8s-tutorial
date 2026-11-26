@@ -113,7 +113,7 @@ Two machines, plus basic shell and container familiarity:
 
 **Part 8 — Resources & Health Probes**
 
-- [**Introduction to Resource Quotas, Requests, and Limits**](docs/resources-probes/introduction-to-resources.md) — what each of the three controls, who enforces it, and how they fit together. *(coming soon)*
+- [**Introduction to Resource Quotas, Requests, and Limits**](docs/resources-probes/introduction-to-resources.md) — what each of the three controls, who enforces it, and how they fit together.
 - [**Working with Resource Quotas**](docs/resources-probes/resource-quotas.md) — cap what a whole namespace can use, and watch a Pod get rejected when it doesn't fit. *(coming soon)*
 - [**Setting Requests and Limits**](docs/resources-probes/requests-limits.md) — what the scheduler reserves, what the kernel enforces, and what happens past a limit. *(coming soon)*
 - [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods. *(coming soon)*
