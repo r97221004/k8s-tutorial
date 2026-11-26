@@ -9,15 +9,50 @@ Picture a company with one cluster and two environments. Development and product
 A **namespace** solves the first two problems, and helps with the third. It's a named group inside the cluster. An object's name only has to be unique **within** its namespace, so dev and prod can each have an `ecommerce-backend`. Commands work on one namespace at a time, so you see and change one environment, not both. Namespaces are also where you attach rules: a quota on how much CPU and memory a group can use, and permissions for who can touch what.
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: default
+  themeVariables:
+    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
+    lineColor: '#94A3B8'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+---
 flowchart TB
-  subgraph dev["namespace: dev"]
-    d["Deployment web"] --> d1["Pod"] & d2["Pod"]
-  end
-  subgraph prod["namespace: prod"]
-    p["Deployment web"] --> p1["Pod"] & p2["Pod"]
-  end
-  n["node-1<br/>one pool of CPU and memory"]
-  d1 & d2 & p1 & p2 -. run on .-> n
+    subgraph dev["🗂️ namespace dev"]
+        direction TB
+        dd["🚀 Deployment web"]
+        dp1["📦 Pod"]
+        dp2["📦 Pod"]
+    end
+    subgraph prod["🗂️ namespace prod"]
+        direction TB
+        pd["🚀 Deployment web"]
+        pp1["📦 Pod"]
+        pp2["📦 Pod"]
+    end
+    node["🖥️ node-1<br/>one pool of CPU and memory"]
+
+    dd --> dp1
+    dd --> dp2
+    pd --> pp1
+    pd --> pp2
+    dp1 -.->|"all run here"| node
+    dp2 -.-> node
+    pp1 -.-> node
+    pp2 -.-> node
+
+    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
+    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
+    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
+    class dd,pd eng
+    class dp1,dp2,pp1,pp2 tgt
+    class node ctrl
+
+    style dev fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
+    style prod fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
 ```
 
 Note the bottom of that picture. A namespace groups **objects**. It doesn't give each group its own machines: Pods from every namespace run on the same nodes and share their CPU and memory. Step 3 comes back to what that means.
