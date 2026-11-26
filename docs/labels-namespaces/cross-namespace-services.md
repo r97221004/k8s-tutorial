@@ -271,4 +271,4 @@ Deleting the two namespaces removes both color-apis and their Services. The traf
 
 ---
 
-[← Creating and Managing Namespaces](managing-namespaces.md) · [↑ Contents](../../README.md) · [Requests and Limits →](../resources-probes/requests-limits.md)
+[← Creating and Managing Namespaces](managing-namespaces.md) · [↑ Contents](../../README.md) · [Introduction to Resource Quotas, Requests, and Limits →](../resources-probes/introduction-to-resources.md)
