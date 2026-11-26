@@ -80,7 +80,7 @@ ingresses     ing          networking.k8s.io/v1   true         Ingress
 | Field | What it's for |
 |---|---|
 | `name` | Required. Unique among objects of the same kind in a namespace. |
-| `namespace` | Which [namespace](../core-objects/namespace.md) it lives in. Leave it out to use your current one. |
+| `namespace` | Which [namespace](../labels-namespaces/namespaces.md) it lives in. Leave it out to use your current one. |
 | `labels` | Key-value pairs for finding and grouping objects. Selectors match on them (see [What Are ReplicaSets](../replicasets-deployments/what-are-replicasets.md)). |
 | `annotations` | Key-value pairs for extra information, meant for tools and people, not for selecting. |
 

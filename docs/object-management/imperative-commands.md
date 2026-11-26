@@ -28,7 +28,7 @@ kubectl wait --for=condition=Ready pod/color-api --timeout=60s
 | `kubectl create deployment web --image=nginx:1.27 --replicas=3` | a [Deployment](../replicasets-deployments/introduction-to-deployments.md) |
 | `kubectl create configmap color-config --from-literal=COLOR=blue` | a [ConfigMap](../config-and-data/configmap.md) |
 | `kubectl create secret generic db --from-literal=password=s3cret` | a [Secret](../config-and-data/secret.md) |
-| `kubectl create namespace dev` | a [Namespace](../core-objects/namespace.md) |
+| `kubectl create namespace dev` | a [Namespace](../labels-namespaces/namespaces.md) |
 | `kubectl create job hello --image=busybox:1.36 -- echo hi` | a [Job](../core-objects/job-cronjob.md) |
 
 Most of these kinds come later in the guide. For now, just know the commands exist. `kubectl create --help` lists every kind it knows. Each one takes only the handful of flags its subcommand offers, which is enough for a quick start and too little for most real configurations.
