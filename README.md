@@ -104,7 +104,8 @@ Two machines, plus basic shell and container familiarity:
 
 **Part 7 — Labels, Annotations & Namespaces**
 
-- [**Labels and Selectors in Depth**](docs/labels-namespaces/labels-selectors.md) — add and change labels, select with `matchLabels` and `matchExpressions`, and the recommended labels.
+- [**Labels and Selectors**](docs/labels-namespaces/labels-selectors.md) — label objects along several dimensions, change labels from the command line, and query them with selectors.
+- [**Selecting with matchLabels and matchExpressions**](docs/labels-namespaces/selectors-in-manifests.md) — write selectors into manifests, and the rules a workload's selector follows.
 - [**Annotations**](docs/labels-namespaces/annotations.md) — attach information you don't select by, and the annotations you've already met. *(coming soon)*
 - [**Namespaces**](docs/labels-namespaces/namespaces.md) — create and switch namespaces, see what they scope, and what deleting one removes. *(coming soon)*
 - [**Cross-Namespace Service Communication**](docs/labels-namespaces/cross-namespace-services.md) — reach a Service in another namespace by its full name. *(coming soon)*

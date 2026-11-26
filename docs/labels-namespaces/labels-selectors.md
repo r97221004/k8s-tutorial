@@ -1,12 +1,12 @@
-# Labels and Selectors in Depth
+# Labels and Selectors
 
-> Add and change labels, select with `matchLabels` and `matchExpressions`, and use the recommended labels.
+> Label objects along several dimensions, change labels from the command line, query them with selectors, and choose good keys.
 
 ---
 
 You've used labels since Part 3, and [What Are ReplicaSets](../replicasets-deployments/what-are-replicasets.md#labels-and-selectors) showed the basics: a **label** is a key-value tag on an object, and a **selector** is a query that matches objects by their labels. That's how a ReplicaSet finds its Pods, and how a Service finds where to send traffic.
 
-So far, though, each object had one or two labels, and every selector looked for `app: something`. Real clusters label along several dimensions at once: which app, which environment, which tier, which release. In this chapter you'll label a small set of Pods that way, change their labels from the command line, and write the two kinds of selector that manifests use.
+So far, though, each object had one or two labels, and every selector looked for `app: something`. Real clusters label along several dimensions at once: which app, which environment, which tier, which release. In this chapter you'll label a small set of Pods that way, change their labels from the command line, and query them with both kinds of selector. The [next chapter](selectors-in-manifests.md) writes the same queries into manifests.
 
 ## Before you start
 
@@ -240,154 +240,7 @@ ecomm-prod           1/1     Running   0          3m
 
 Four Pods, none of which has an `owner` at all. A Pod without the key isn't "owned by shop", so it matches. `!=` works the same way: `-l 'owner!=shop'` in the table above matched these same four Pods. That's often what you want, but if you meant "has an owner, and it isn't shop", require the key too: `-l 'owner,owner notin (shop)'`.
 
-## 4. Selectors in manifests
-
-On the command line, both kinds share one string. In a manifest they're separate fields: `matchLabels` for equality, and `matchExpressions` for sets.
-
-### `matchLabels`
-
-You've written this in every Deployment:
-
-```yaml
-selector:
-  matchLabels:
-    app: color-api
-    tier: backend
-```
-
-Each key must equal its value, and all of them must hold. It's `-l app=color-api,tier=backend`. There's no way to say `!=` here; for that, use `matchExpressions`.
-
-### `matchExpressions`
-
-Each expression is a `key`, an `operator`, and, for some operators, a list of `values`:
-
-```yaml
-selector:
-  matchExpressions:
-    - key: tier
-      operator: In
-      values: [frontend, backend]
-```
-
-```yaml
-selector:
-  matchExpressions:
-    - key: release
-      operator: NotIn
-      values: [canary]
-```
-
-There are four operators, one for each set-based form of `-l`:
-
-| `operator` | `values` | Same as |
-|---|---|---|
-| `In` | one or more | `-l 'tier in (frontend,backend)'` |
-| `NotIn` | one or more | `-l 'release notin (canary)'` |
-| `Exists` | none: leave `values` out | `-l owner` |
-| `DoesNotExist` | none: leave `values` out | `-l '!owner'` |
-
-The same rule as on the command line applies: `NotIn` and `DoesNotExist` also match objects that don't have the key at all.
-
-### Putting them together
-
-Every condition must hold: each entry in `matchLabels`, and each expression in `matchExpressions`. The non-canary color-api Pods from step 3 look like this:
-
-```yaml
-selector:
-  matchLabels:
-    app: color-api
-  matchExpressions:
-    - key: release
-      operator: NotIn
-      values: [canary]
-```
-
-### Try it on a Deployment
-
-[`manifests/labels-namespaces/selector-demo.yaml`](../../manifests/labels-namespaces/selector-demo.yaml) is a Deployment whose selector uses both fields:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: selector-demo
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: selector-demo
-    matchExpressions:
-      - key: release
-        operator: In
-        values: [stable, canary]
-  template:
-    metadata:
-      labels:
-        app: selector-demo    # must satisfy every condition in the selector
-        release: stable
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.27
-```
-
-It uses its own `app` label, so it doesn't pick up the five Pods from step 1. You'll edit it below, so work on a copy:
-
-```bash
-mkdir -p /tmp/labels
-cp manifests/labels-namespaces/selector-demo.yaml /tmp/labels/
-kubectl apply -f /tmp/labels/selector-demo.yaml
-kubectl get deployment selector-demo -o wide
-```
-
-```text
-NAME            READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR
-selector-demo   2/2     2            2           10s   nginx        nginx:1.27   app=selector-demo,release in (canary,stable)
-```
-
-The `SELECTOR` column shows the YAML turned into the `-l` form from step 3: `matchLabels` became `app=selector-demo`, and the expression became `release in (canary,stable)`. They're two ways to write the same query, so you can paste it straight into `kubectl get pods -l`.
-
-Two rules apply to a workload's selector, and the API server enforces both.
-
-**The selector must match the template's labels.** A Deployment counts its Pods with its selector, so Pods that don't match would never be counted, and it would create new ones forever. Change the template's `release` to a value the selector doesn't allow, and try it with `--dry-run=server`, which has the API server check the change without saving it:
-
-```bash
-sed -i 's/release: stable/release: beta/' /tmp/labels/selector-demo.yaml
-kubectl apply -f /tmp/labels/selector-demo.yaml --dry-run=server
-```
-
-```text
-The Deployment "selector-demo" is invalid: spec.template.metadata.labels: Invalid value: map[string]string{"app":"selector-demo", "release":"beta"}: `selector` does not match template `labels`
-```
-
-**The selector can't change after creation.** In `apps/v1`, `spec.selector` is immutable. Start from a fresh copy, and narrow the selector to `stable` only. The template still matches it, so this time the only problem is the change itself:
-
-```bash
-cp manifests/labels-namespaces/selector-demo.yaml /tmp/labels/
-sed -i 's/values: \[stable, canary\]/values: [stable]/' /tmp/labels/selector-demo.yaml
-kubectl apply -f /tmp/labels/selector-demo.yaml --dry-run=server
-```
-
-The error is one long line; the end of it is what matters:
-
-```text
-The Deployment "selector-demo" is invalid: spec.selector: Invalid value: ...: field is immutable
-```
-
-To change a Deployment's selector, you delete it and create it again, which replaces all its Pods. So choose a selector that will stay true for the Deployment's whole life, like the app's name, and leave labels that change, such as `release` or a version, out of it.
-
-### Services take less
-
-Not every selector is the same field. A Service's selector is just `key: value` pairs, as in [`color-api-clusterip.yaml`](../../manifests/services/color-api-clusterip.yaml):
-
-| Object | The selector is written as | It can express |
-|---|---|---|
-| Deployment, ReplicaSet, StatefulSet, DaemonSet | `matchLabels`, `matchExpressions`, or both | Everything from step 3 |
-| Service | Plain `key: value` pairs, no `matchLabels` | Equality only: no `!=`, `notin`, or `!key` |
-
-So a Service can't say "everything except the canary". It can only send traffic to Pods that **have** certain labels. To keep the canary out, select a label that only the stable Pods carry, like `release: stable`.
-
-## 5. Choosing label keys
+## 4. Choosing label keys
 
 Labels are free-form, but a few conventions keep them useful.
 
@@ -410,17 +263,27 @@ This tutorial keeps using a short `app:` for readability. In a shared cluster, t
 
 A key can have a **prefix**, a DNS name followed by `/`, like `app.kubernetes.io/name`. Keys without one, like `app`, are for you. Prefixes keep labels from different teams and tools from colliding.
 
-The `kubernetes.io/` and `k8s.io/` prefixes, and their subdomains, belong to Kubernetes. You've already got some: every node carries `kubernetes.io/hostname` and `kubernetes.io/os`, which `kubectl get nodes --show-labels` shows, and which [Scheduling](../core-objects/scheduling.md) uses to place Pods. Don't invent keys under them. `app.kubernetes.io/` is under `kubernetes.io/` too, but it's the exception: Kubernetes defines its keys for you to use, so use them as documented, and put your own keys under your own prefix.
+The `kubernetes.io/` and `k8s.io/` prefixes, and their subdomains, belong to Kubernetes. You've already got some, on your node. Use `-L` from step 1 to show two of them:
+
+```bash
+kubectl get nodes -L kubernetes.io/hostname,kubernetes.io/os
+```
+
+```text
+NAME     STATUS   ROLES           AGE   VERSION   HOSTNAME   OS
+node-1   Ready    control-plane   4d    v1.30.x   node-1     linux
+```
+
+Nobody wrote these into a manifest. The kubelet puts them on the node when it registers, and [Scheduling](../core-objects/scheduling.md) uses labels like them to place Pods. `-L` titles each column with the part of the key after the `/`, so `kubernetes.io/os` shows up as `OS`.
+
+Don't invent keys under these prefixes. `app.kubernetes.io/` is under `kubernetes.io/` too, but it's the exception: Kubernetes defines its keys for you to use, so use them as documented, and put your own keys under your own prefix.
 
 Both the name part of a key and a value can be up to 63 characters: letters, digits, `-`, `_`, and `.`, starting and ending with a letter or digit. A value can also be empty. Anything longer, or with spaces, isn't a label. That's what [Annotations](annotations.md) are for.
 
 ## Clean up
 
 ```bash
-kubectl delete \
-  -f manifests/labels-namespaces/labeled-pods.yaml \
-  -f manifests/labels-namespaces/selector-demo.yaml
-rm -rf /tmp/labels
+kubectl delete -f manifests/labels-namespaces/labeled-pods.yaml
 ```
 
 The `owner` label you added by hand goes with its Pod, so there's nothing else to remove.
@@ -429,10 +292,9 @@ The `owner` label you added by hand goes with its Pod, so there's nothing else t
 
 - **Label along several dimensions**, like app, environment, tier, and release, so you can slice the same objects in different ways.
 - **Keep labels in the manifest.** Use `kubectl label` for experiments; the next `apply` undoes changes to labels the file sets.
-- **Keep workload selectors small and stable.** They can't change later, so select on the app's name, not its version or release.
 - **Watch for missing keys with `notin` and `!=`.** They match objects without the key; add the bare key when you need it to exist.
 - **Prefer the `app.kubernetes.io/` labels in shared clusters**, and prefix your own keys when they could collide with someone else's.
 
 ---
 
-[← ExternalName Services](../services/externalname-services.md) · [↑ Contents](../../README.md) · [Annotations →](annotations.md)
+[← ExternalName Services](../services/externalname-services.md) · [↑ Contents](../../README.md) · [Selecting with matchLabels and matchExpressions →](selectors-in-manifests.md)

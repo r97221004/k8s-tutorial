@@ -151,4 +151,4 @@ rm -rf /tmp/services
 
 ---
 
-[← NodePort Services](nodeport-services.md) · [↑ Contents](../../README.md) · [Labels and Selectors in Depth →](../labels-namespaces/labels-selectors.md)
+[← NodePort Services](nodeport-services.md) · [↑ Contents](../../README.md) · [Labels and Selectors →](../labels-namespaces/labels-selectors.md)
