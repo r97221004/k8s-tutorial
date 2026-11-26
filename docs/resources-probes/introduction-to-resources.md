@@ -51,11 +51,8 @@ containers:
 
 They do different jobs, and they're enforced by different parts of the cluster:
 
-| | Request | Limit |
-|---|---|---|
-| **Means** | The minimum the container should always have | The maximum the container may ever use |
-| **Checked by** | The scheduler, when it picks a node | The kubelet and the Linux kernel, while the container runs |
-| **Effect** | The Pod only goes to a node with that much unreserved. Then it's set aside for this Pod | Past the CPU limit, the container is slowed down. Past the memory limit, it's killed |
+- A **request** is the minimum the container should always have. The scheduler only puts the Pod on a node with that much unreserved, then sets it aside for this Pod.
+- A **limit** is the maximum the container may ever use. The kubelet and the Linux kernel hold the container to it while it runs.
 
 Requests are a **reservation**, not a measurement. The scheduler doesn't look at how busy a node actually is; it adds up the requests of the Pods already there. You can see that sum on your node:
 
@@ -80,6 +77,8 @@ The two limits behave very differently, which is why [Setting Requests and Limit
 
 - **CPU can be shared over time**, so a container at its CPU limit is just made to wait. It runs slower, and keeps running.
 - **Memory can't be taken back** once it's handed out, so a container that goes past its memory limit is killed, `OOMKilled`, and restarted.
+
+The requests and limits a Pod's containers set also put the Pod in a **QoS class**: `Guaranteed`, `Burstable`, or `BestEffort`. When a node runs short of memory, the class decides which Pods are evicted first. [Setting Requests and Limits](requests-limits.md) covers that, too.
 
 ## 3. Resource quotas: per namespace
 
@@ -139,7 +138,7 @@ Error from server (Forbidden): pods "pod-c" is forbidden: exceeded quota: dev-qu
 Error from server (Forbidden): pods "pod-d" is forbidden: exceeded quota: dev-quota, requested: limits.memory=2Gi, used: limits.memory=3Gi, limited: limits.memory=4Gi
 ```
 
-Even if Pods C and D got past the quota, they'd still face the scheduler, which looks for a node with room for their requests, and later the kubelet, which holds them to their limits. A Pod passes three checks on its way to running:
+A Pod that passes the quota still faces the scheduler, which looks for a node with room for its requests. Once it's running, the kubelet and kernel hold it to its limits. That's two checks before it runs, and one for as long as it runs:
 
 ```mermaid
 ---
@@ -157,7 +156,8 @@ flowchart TB
     pod["📦 new Pod<br/>requests + limits"]
     api["🧮 API server<br/>fits the namespace's quota?"]
     sched["📍 scheduler<br/>a node with room for the requests?"]
-    run["⚙️ kubelet + kernel<br/>stays within the limits?"]
+    run["⚙️ kubelet + kernel, while it runs<br/>stays within the limits?"]
+    ok["✅ keeps running"]
     no1["❌ Forbidden<br/>never created"]
     no2["⏳ Pending"]
     no3["🐢 CPU slowed<br/>💥 memory: OOMKilled"]
@@ -165,6 +165,7 @@ flowchart TB
     pod --> api
     api -->|"yes"| sched
     sched -->|"yes"| run
+    run -->|"yes"| ok
     api -.->|"no"| no1
     sched -.->|"no"| no2
     run -.->|"no"| no3
@@ -173,7 +174,7 @@ flowchart TB
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef gone fill:#0F172A,stroke:#DC2626,stroke-width:2px,color:#FFFFFF
     class pod eng
-    class api,sched,run ctrl
+    class api,sched,run,ok ctrl
     class no1,no2,no3 gone
 ```
 
@@ -181,24 +182,24 @@ flowchart TB
 |---|---|---|---|---|
 | **Resource quota** | A namespace | The API server | When a Pod is created | The Pod is rejected |
 | **Request** | A container | The scheduler | When the Pod is placed | The Pod stays `Pending` |
-| **Limit** | A container | The kubelet and kernel | While the container runs | CPU is slowed; memory is killed |
+| **Limit** | A container | The kubelet and kernel | While the container runs | CPU is slowed; over memory, the container is `OOMKilled` |
 
 ## 5. A quota makes requests and limits required
 
 Once a namespace has a quota on CPU or memory, every new Pod there must declare the resources that quota counts. Otherwise there's nothing to add up. A Pod with no `resources` at all is turned away:
 
-The `for:` part names the container that's missing each value; here the Pod and its container are both called `color-api`.
-
 ```text
 Error from server (Forbidden): pods "color-api" is forbidden: failed quota: dev-quota: must specify limits.cpu for: color-api; limits.memory for: color-api; requests.cpu for: color-api; requests.memory for: color-api
 ```
+
+The `for:` part names the container that's missing each value; here the Pod and its container are both called `color-api`.
 
 Two details make this less strict than it sounds:
 
 - **Limits alone are enough.** If a container sets a limit and no request, Kubernetes uses the limit as the request, too. Only requests, without limits, isn't enough under this quota, because it counts limits.
 - **A LimitRange can fill in defaults.** It gives containers that don't declare anything a default request and limit, so they pass the quota. You'll set one up in [Working with Resource Quotas](resource-quotas.md).
 
-There's one trap. The quota checks **Pods**, not Deployments. A Deployment without resources is accepted without a word, in a namespace with a quota. Then its ReplicaSet tries to create Pods, and every one is rejected. `kubectl get deployments` shows `0/1` ready, and the reason only appears on the ReplicaSet:
+There's one trap. The quota checks **Pods**, not Deployments. A Deployment without resources is accepted without a word, in a namespace with a quota. Then its ReplicaSet tries to create Pods, and every one is rejected. `kubectl get deployments` shows `0/1` ready. `kubectl describe deployment` shows a `ReplicaFailure` condition, and the ReplicaSet's events have the full error:
 
 ```text
 pods "color-api-67f9b87f74-52smq" is forbidden: failed quota: dev-quota: must specify limits.cpu for: color-api; limits.memory for: color-api; requests.cpu for: color-api; requests.memory for: color-api
