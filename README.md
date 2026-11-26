@@ -102,14 +102,31 @@ Two machines, plus basic shell and container familiarity:
 - [**NodePort Services**](docs/services/nodeport-services.md) — open a port on every node, and reach color-api from your laptop through the cloud firewall.
 - [**ExternalName Services**](docs/services/externalname-services.md) — give an outside hostname an in-cluster name, so it can move without your apps noticing.
 
-**Part 7 — Core Objects**
+**Part 7 — Labels, Annotations & Namespaces**
+
+- [**Labels and Selectors in Depth**](docs/labels-namespaces/labels-selectors.md) — add and change labels, select with `matchLabels` and `matchExpressions`, and the recommended labels. *(coming soon)*
+- [**Annotations**](docs/labels-namespaces/annotations.md) — attach information you don't select by, and the annotations you've already met. *(coming soon)*
+- [**Namespaces**](docs/labels-namespaces/namespaces.md) — create and switch namespaces, see what they scope, and what deleting one removes. *(coming soon)*
+- [**Cross-Namespace Service Communication**](docs/labels-namespaces/cross-namespace-services.md) — reach a Service in another namespace by its full name. *(coming soon)*
+
+**Part 8 — Resources & Health Probes**
+
+- [**Requests and Limits**](docs/resources-probes/requests-limits.md) — what the scheduler reserves, what the kernel enforces, and what happens past a limit. *(coming soon)*
+- [**Resource Quotas**](docs/resources-probes/resource-quotas.md) — cap what a whole namespace can use, and give Pods defaults with a LimitRange. *(coming soon)*
+- [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods. *(coming soon)*
+- [**Health Probes**](docs/resources-probes/health-probes.md) — the three questions startup, liveness, and readiness probes answer. *(coming soon)*
+- [**Color API v1.2: Health Endpoints**](docs/resources-probes/color-api-health-endpoints.md) — add endpoints for the probes to call. *(coming soon)*
+- [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start before anything else checks it. *(coming soon)*
+- [**Liveness Probes**](docs/resources-probes/liveness-probes.md) — restart a container that's running but stuck. *(coming soon)*
+- [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — keep traffic away from a Pod until it can serve. *(coming soon)*
+
+**Part 9 — Core Objects**
 
 - [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
-- [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 8 — Configuration & Data**
+**Part 10 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -117,16 +134,14 @@ Two machines, plus basic shell and container familiarity:
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 9 — Running & Operating**
+**Part 11 — Running & Operating**
 
-- [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
-- [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
 - [**Graceful Shutdown & Disruptions**](docs/running-and-operating/graceful-shutdown.md) — SIGTERM, preStop, drains, and PDBs.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 10 — Networking & Access**
+**Part 12 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
