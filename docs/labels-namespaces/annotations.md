@@ -117,7 +117,7 @@ The error is long; the end of it is what matters:
 ... json: cannot unmarshal number into Go struct field ObjectMeta.metadata.annotations of type string
 ```
 
-So quote anything that YAML might read as something else: numbers, `true` and `false`, and anything that looks like a date. The [Ingress example](#5-annotations-that-configure-tools) in step 5 does the same with `"true"`. Put the quotes back:
+Booleans fail the same way, and YAML has more of them than you'd expect: besides `true` and `false`, an unquoted `yes`, `no`, `on`, or `off` is a boolean too, so `example.com/monitored: yes` is rejected as well. So quote anything that YAML might read as something else: numbers, and any of those six words. The [Ingress example](#5-annotations-that-configure-tools) in step 5 does the same with `"true"`. Put the quotes back:
 
 ```bash
 cp manifests/labels-namespaces/web-annotated.yaml /tmp/annotations/
@@ -223,7 +223,7 @@ Annotations **inside** the template are different. They're copied to every Pod, 
 
 | An annotation in… | Ends up on | Changing it |
 |---|---|---|
-| The Deployment's `metadata` | The Deployment, and its current ReplicaSet | Updates the ReplicaSet's copy; the Pods aren't touched |
+| The Deployment's `metadata` | The Deployment, and its current ReplicaSet | Adds or updates the ReplicaSet's copy, but removing it doesn't; the Pods aren't touched |
 | The template's `metadata` | Every Pod | Starts a rollout |
 
 ### Remove an annotation
@@ -237,6 +237,26 @@ kubectl annotate deployment web-annotated example.com/on-call-
 ```text
 deployment.apps/web-annotated annotated
 ```
+
+It's gone from the Deployment. Now look at the ReplicaSet again:
+
+```bash
+kubectl get rs -l app=web-annotated \
+  -o go-template='{{range .items}}{{range $k, $v := .metadata.annotations}}{{$k}}={{$v}}{{"\n"}}{{end}}{{end}}'
+```
+
+```text
+deployment.kubernetes.io/desired-replicas=2
+deployment.kubernetes.io/max-replicas=3
+deployment.kubernetes.io/revision=1
+example.com/build-number=42
+example.com/git-commit=3f9c2ab
+example.com/on-call=bob
+example.com/owner=Team Web <web@example.com>
+example.com/runbook=https://wiki.example.com/runbooks/web
+```
+
+`on-call=bob` is still there. The Deployment controller copies annotations to the ReplicaSet, and overwrites them when they change, but it never removes one. The stale copy does no harm, since nothing reads it, but don't look at a ReplicaSet's annotations to see what the Deployment says now. Ask the Deployment.
 
 The same rule as with `kubectl label` applies, too: the next `apply` puts back any annotation your file sets, and leaves alone the ones it doesn't. Keep annotations that belong to the app in its manifest.
 
@@ -276,7 +296,7 @@ rm -rf /tmp/annotations
 
 - **Use labels to select, annotations to describe.** If you'd ever filter by it, make it a label.
 - **Prefix your own keys**, like `example.com/owner`, and leave `kubernetes.io/` to Kubernetes.
-- **Quote values that YAML could read as something else:** numbers, `true` and `false`, and dates.
+- **Quote values that YAML could read as something else:** numbers, `true`/`false`, and `yes`/`no`/`on`/`off`.
 - **Keep annotations that belong to the app in its manifest.** `kubectl annotate` is for quick notes; the next `apply` puts back what the file says.
 - **Know where an annotation lands.** On the Deployment, it changes nothing else; in the Pod template, changing it starts a rollout.
 - **Check tool annotations against the tool's documentation.** A misspelled key is accepted without a word, and does nothing.
