@@ -197,11 +197,11 @@ The error lists each missing value, with the container it's missing from after `
 Two details make this less strict than it sounds:
 
 - **Limits alone are enough.** If a container sets a limit and no request, Kubernetes uses the limit as the request, too. Only requests, without limits, isn't enough under this quota, because it counts limits.
-- **A LimitRange can fill in defaults.** It gives containers that don't declare anything a default request and limit, so they pass the quota. You'll set one up in [Working with Resource Quotas](resource-quotas.md).
+- **A LimitRange can fill in defaults.** It gives containers that don't declare anything a default request and limit, so they pass the quota. You'll set one up in [Setting Requests and Limits](requests-limits.md).
 
 There's one trap. The quota checks **Pods**, not Deployments. In a namespace with a quota, a Deployment without resources is accepted without a word. Then its ReplicaSet tries to create Pods, and every one is rejected with the same `must specify` error as above. `kubectl get deployments` only shows `0/1` ready. To see why, look at the `ReplicaFailure` condition in `kubectl describe deployment`, or at the ReplicaSet's events.
 
-You'll make this happen on purpose, and fix it, in the next chapter.
+You'll make this happen on purpose, and fix it, in [Setting Requests and Limits](requests-limits.md).
 
 ## Best practices
 
