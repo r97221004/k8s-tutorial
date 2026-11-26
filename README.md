@@ -109,7 +109,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Annotations**](docs/labels-namespaces/annotations.md) — attach information you don't select by, and the annotations you've already met.
 - [**Namespaces**](docs/labels-namespaces/namespaces.md) — the namespaces your cluster came with, what a namespace does and doesn't keep apart, and when to use one.
 - [**Creating and Managing Namespaces**](docs/labels-namespaces/managing-namespaces.md) — create `dev` and `prod`, run the same app in both, switch namespaces, and delete one with everything in it.
-- [**Cross-Namespace Service Communication**](docs/labels-namespaces/cross-namespace-services.md) — reach a Service in another namespace by its full name. *(coming soon)*
+- [**Cross-Namespace Service Communication**](docs/labels-namespaces/cross-namespace-services.md) — see the short Service name stay inside its namespace, and reach across with `name.namespace`.
 
 **Part 8 — Resources & Health Probes**
 

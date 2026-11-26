@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: color-api                 # the short name clients in this namespace use
+spec:
+  type: ExternalName
+  externalName: color-api.prod.svc.cluster.local   # must be the full name
