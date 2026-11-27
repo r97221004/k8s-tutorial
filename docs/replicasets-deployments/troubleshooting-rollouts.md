@@ -212,7 +212,7 @@ The image typo is the most common case, but the investigation is always the same
 | `CrashLoopBackOff` | The app starts, then exits: bad config, a missing env var, a bug | `kubectl logs <pod> --previous` ([CrashLoopBackOff](../pods/pod-lifecycle.md#crashloopbackoff)) |
 | `Running`, but `READY 0/1` | The readiness probe keeps failing | `describe pod` → `Readiness probe failed` events ([Health Checks](../running-and-operating/health-checks.md)) |
 | `Pending`, never scheduled | No node has room for the requested CPU or memory | `describe pod` → `FailedScheduling` events ([Setting Requests and Limits](../resources-probes/requests-limits.md#3-requests-and-the-scheduler)) |
-| **No** new Pods at all | The ReplicaSet can't create them, for example because of a quota | `describe rs` on the new ReplicaSet → `FailedCreate` events |
+| **No** new Pods at all | The ReplicaSet can't create them, for example because of a quota | `describe rs` on the new ReplicaSet → `FailedCreate` events ([Rollouts Under a Quota](../resources-probes/rollouts-and-quotas.md)) |
 
 In each case, the same two ways out apply: `rollout undo` to get back to safety, then fix the file and apply.
 

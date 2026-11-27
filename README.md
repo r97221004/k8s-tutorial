@@ -116,7 +116,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Introduction to Resource Quotas, Requests, and Limits**](docs/resources-probes/introduction-to-resources.md) — what each of the three controls, who enforces it, and how they fit together.
 - [**Working with Resource Quotas**](docs/resources-probes/resource-quotas.md) — give `dev` and `prod` their own quotas, and find out what each allows and how much is used.
 - [**Setting Requests and Limits**](docs/resources-probes/requests-limits.md) — what the scheduler reserves, what the kernel enforces, and what happens past a limit.
-- [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods. *(coming soon)*
+- [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods, and how to make room.
 - [**Health Probes**](docs/resources-probes/health-probes.md) — the three questions startup, liveness, and readiness probes answer. *(coming soon)*
 - [**Color API v1.2: Health Endpoints**](docs/resources-probes/color-api-health-endpoints.md) — add endpoints for the probes to call. *(coming soon)*
 - [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start before anything else checks it. *(coming soon)*
