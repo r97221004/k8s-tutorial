@@ -46,11 +46,12 @@ flowchart TB
     start --> sp
     sp -->|"yes, once"| lp
     sp -->|"yes, once"| rp
-    sp -.->|"fails too often"| restart
-    lp -->|"yes: check again later"| lp
-    lp -.->|"fails too often"| restart
+    sp -->|"fails, below failureThreshold:<br/>check again"| sp
+    sp -.->|"failureThreshold reached"| restart
+    lp -->|"passes, or fails below<br/>failureThreshold: check again"| lp
+    lp -.->|"failureThreshold reached"| restart
     rp -->|"yes"| inn
-    rp -.->|"fails too often"| out
+    rp -.->|"failureThreshold reached"| out
     inn -->|"check again later"| rp
     out -->|"check again later"| rp
     restart --> start
@@ -64,6 +65,8 @@ flowchart TB
     class inn tgt
     class restart,out gone
 ```
+
+`failureThreshold` is how many failures **in a row** it takes before Kubernetes acts; [step 3](#3-when-it-counts-as-failing) covers it and the other timing settings.
 
 The difference between the last two is the important one. A failed **liveness** probe means "this container is broken, and only a restart will fix it". A failed **readiness** probe means "don't send it requests for now". Readiness keeps checking, and when it passes again, the Pod is put back in its Services. Nothing was restarted, and nothing was lost.
 
