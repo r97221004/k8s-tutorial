@@ -252,7 +252,9 @@ kubectl get pod -n dev -l app=web -o jsonpath='{.spec.containers[0].resources}{"
 {"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"100m","memory":"128Mi"}}
 ```
 
-Defaults only fill gaps. A container that sets its own values, like color-api, keeps them. `kubectl describe namespace dev` now lists the LimitRange under the quota, where [Working with Resource Quotas](resource-quotas.md#4-see-all-of-a-namespaces-rules) said `No LimitRange resource`. Its table also has `Min` and `Max` columns: a LimitRange can reject a container whose values fall outside a range, which stops one Pod from taking the whole quota.
+Defaults only fill gaps. A container that sets its own values, like color-api, keeps them.
+
+Defaults aren't all a LimitRange can set. It can also give each container a `min` and a `max`, and reject any container outside them. A CPU `max` of `500m` would have stopped heavy-api in step 2 on its own: no single container could ask for a whole core, however much of the quota was left.
 
 ## Clean up
 
