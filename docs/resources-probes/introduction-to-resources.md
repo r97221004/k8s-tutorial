@@ -73,7 +73,7 @@ Your numbers will differ. These are the requests of the cluster's own Pods, like
 
 Note the `0` under CPU limits: none of these Pods has a CPU limit, and that's allowed. Without a quota, requests and limits are optional, and a container without a limit may use whatever the node has free.
 
-The two limits behave very differently, which is why [Setting Requests and Limits](requests-limits.md) shows each one:
+The two limits behave very differently, and you'll see the memory one in action in [Setting Requests and Limits](requests-limits.md):
 
 - **CPU can be shared over time**, so a container at its CPU limit is just made to wait. It runs slower, and keeps running.
 - **Memory can't be taken back** once it's handed out, so a container that goes past its memory limit is killed, `OOMKilled`, and restarted.

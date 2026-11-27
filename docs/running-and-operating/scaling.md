@@ -45,7 +45,7 @@ kubectl autoscale deployment web --cpu-percent=50 --min=2 --max=10
 kubectl get hpa web      # TARGETS should show current% / target%
 ```
 
-Now the HPA watches average CPU across the Pods: above 50% of their *request* it adds replicas (up to 10), below it removes them (down to 2). This is exactly why [resource **requests**](resources.md) matter — the HPA measures usage *relative to the request*, so a missing request means the HPA can't compute a percentage.
+Now the HPA watches average CPU across the Pods: above 50% of their *request* it adds replicas (up to 10), below it removes them (down to 2). This is exactly why [resource **requests**](../resources-probes/requests-limits.md) matter — the HPA measures usage *relative to the request*, so a missing request means the HPA can't compute a percentage.
 
 If `kubectl top nodes` fails or the HPA shows `<unknown>` targets, metrics-server is not installed or cannot scrape kubelets yet. Fix metrics first; the HPA object can exist, but it can't make useful scaling decisions without those measurements.
 
@@ -75,4 +75,4 @@ Leave Metrics Server installed if you want `kubectl top` and future HPA examples
 
 ---
 
-[← Resource Requests & Limits](resources.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)
+[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)

@@ -60,7 +60,7 @@ The generated file works as-is, but a few lines are noise. Delete them before yo
 | Line | Why it's there | Keep it? |
 |---|---|---|
 | `creationTimestamp: null` | An empty field kubectl always prints. The cluster sets the real value. | Delete |
-| `resources: {}` | An empty placeholder. | Delete, or fill it in later (see [Resources](../running-and-operating/resources.md)) |
+| `resources: {}` | An empty placeholder. | Delete, or fill it in later (see [Resources](../resources-probes/requests-limits.md)) |
 | `status: {}` | `status` is written by the cluster, [never by you](manifest-files.md#spec-vs-status). | Delete |
 | `dnsPolicy: ClusterFirst`, `restartPolicy: Always` | These are the defaults, spelled out. | Either. Deleting them keeps the file short. |
 

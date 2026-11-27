@@ -22,7 +22,7 @@ Each of those is solvable with enough scripts. But the scripts grow, drift betwe
 
 | Challenge | With Docker alone | With Kubernetes |
 |-----------|-------------------|-----------------|
-| **Scheduling** | You pick a server for each container | Declare [CPU/memory requests](../running-and-operating/resources.md); the [scheduler](../core-objects/scheduling.md) places Pods |
+| **Scheduling** | You pick a server for each container | Declare [CPU/memory requests](../resources-probes/requests-limits.md); the [scheduler](../core-objects/scheduling.md) places Pods |
 | **Self-healing** | Restarts on one host; unhealthy containers aren't replaced | [Probes](../running-and-operating/health-checks.md) catch failures; Pods are replaced on any node |
 | **Load balancing** | Bring your own nginx/HAProxy | A [Service](../services/what-are-services.md) spreads traffic across Pods |
 | **Scaling** | Start containers by hand | Change `replicas`, or [autoscale](../running-and-operating/scaling.md) on metrics |
