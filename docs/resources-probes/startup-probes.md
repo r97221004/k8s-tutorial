@@ -41,7 +41,7 @@ You'll edit this copy twice in this chapter, with `sed`.
 
 The probe calls `/health` on port 8080 every 3 seconds. Two failures in a row, and the container is restarted. So the app has at most about 6 seconds to start. That's an upper bound: the first check comes almost as soon as the container starts, so the second failure lands nearer 3 seconds in. That's short on purpose; you'll see why in a moment.
 
-The startup probe calls `/health`, the same endpoint the liveness probe will. That's the usual choice: "has it started?" and "is it still working?" are both answered by the app being up and healthy.
+The startup probe calls `/health`, the same endpoint the liveness probe will. That's the usual choice: "has it started?" and "is it still working?" are both answered by the app being up and healthy. It stops working when `/health` can fail for other reasons, as you'll make it in [Liveness Probes](liveness-probes.md).
 
 Create the Pod, and watch it:
 
