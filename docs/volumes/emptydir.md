@@ -8,4 +8,4 @@
 
 ---
 
-[← Introduction to Volumes](introduction-to-volumes.md) · [↑ Contents](../../README.md) · [Introduction to Persistent Volume Claims →](introduction-to-pvcs.md)
+[← EmptyDir and Local Volumes](emptydir-and-local-volumes.md) · [↑ Contents](../../README.md) · [Introduction to Persistent Volume Claims →](introduction-to-pvcs.md)

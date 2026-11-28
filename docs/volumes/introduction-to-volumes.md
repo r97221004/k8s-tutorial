@@ -109,6 +109,7 @@ Kubernetes has many volume types. These are the ones that matter for apps:
 | `local` | A disk or directory on one specific node, as a PersistentVolume | Fast durable storage pinned to a node. Preferred over `hostPath` |
 | PersistentVolume, through a PersistentVolumeClaim | Wherever the volume is: a cloud disk, NFS, a node's disk | App data that must outlive Pods: databases, uploads |
 | `configMap`, `secret` | A ConfigMap or Secret object in the cluster | Configuration and credentials, as files. See [Environment Variables & Mounts](../config-and-data/env-and-mounts.md#2-as-files-on-disk) |
+
 That's not the whole list. Cloud disks, network filesystems, and storage systems like Ceph all plug in as PersistentVolumes, through **CSI** (Container Storage Interface) drivers. Anyone can write a driver for their own storage, as long as it follows the CSI specification. Older Kubernetes had some of these built in, like `awsElasticBlockStore`; those have moved out into CSI drivers. Your app's manifest doesn't change either way: it asks for storage with a claim, and the driver provides it. The rest of this part covers claims, from [Introduction to Persistent Volume Claims](introduction-to-pvcs.md) on.
 
 ## 3. `emptyDir` and node-local volumes
@@ -171,4 +172,4 @@ Your own Pods have a volume too, one you never declared. Run `kubectl describe p
 
 ---
 
-[← Readiness Probes](../resources-probes/readiness-probes.md) · [↑ Contents](../../README.md) · [Working with emptyDir →](emptydir.md)
+[← Readiness Probes](../resources-probes/readiness-probes.md) · [↑ Contents](../../README.md) · [EmptyDir and Local Volumes →](emptydir-and-local-volumes.md)
