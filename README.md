@@ -121,7 +121,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Color API v1.3: Health Endpoints**](docs/resources-probes/color-api-health-endpoints.md) — add `/health` and `/ready` for the probes to call, and switches that make the app fail on purpose.
 - [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start, and watch a probe that allows too little restart it over and over.
 - [**Liveness Probes**](docs/resources-probes/liveness-probes.md) — break `/health` on purpose, and watch the kubelet restart a container that looks fine from the outside.
-- [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — keep traffic away from a Pod until it can serve. *(coming soon)*
+- [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — let half the Pods fail readiness, and watch the Service send traffic only to the ready ones.
 
 **Part 9 — Core Objects**
 
