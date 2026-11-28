@@ -179,7 +179,7 @@ Why not just make `failureThreshold` huge, to be safe? Because it's also how lon
 ## Clean up
 
 ```bash
-kubectl delete pod color-api-startup
+kubectl delete -f /tmp/probes/color-api-startup.yaml
 ```
 
 Keep `/tmp/probes`: the next chapters put their manifests there too.

@@ -134,7 +134,7 @@ Wait a minute, long enough for several liveness checks, and run `kubectl get pod
 ## Clean up
 
 ```bash
-kubectl delete pod color-api-liveness
+kubectl delete -f /tmp/probes/color-api-liveness.yaml
 ```
 
 Keep `/tmp/probes` for the next chapter.
