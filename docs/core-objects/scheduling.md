@@ -193,4 +193,4 @@ kubectl taint node "$NODE" dedicated=lab:NoSchedule-
 
 ---
 
-[← ExternalName Services](../services/externalname-services.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)
+[← Readiness Probes](../resources-probes/readiness-probes.md) · [↑ Contents](../../README.md) · [DaemonSet (intro) →](daemonset.md)

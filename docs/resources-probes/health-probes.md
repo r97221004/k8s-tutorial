@@ -17,10 +17,10 @@ You only need a running cluster. This chapter only looks; it doesn't create anyt
 | Probe | Asks | When it runs | If it fails too often |
 |---|---|---|---|
 | **Startup** | Has the app finished starting? | From when the container starts, until it passes once | The container is restarted |
-| **Liveness** | Is the app still working? | After startup, for the container's whole life | The container is restarted |
-| **Readiness** | Can the app take traffic right now? | After startup, for the container's whole life | The Pod is taken out of its Services. Nothing is restarted |
+| **Liveness** | Is the app still working? | Once the startup probe passes (from the start, if there's none), for the container's whole life | The container is restarted |
+| **Readiness** | Can the app take traffic right now? | Once the startup probe passes (from the start, if there's none), for the container's whole life | The Pod is taken out of its Services. Nothing is restarted |
 
-The startup probe comes first, and holds the other two back. While it runs, liveness and readiness aren't checked at all, so a slow-starting app isn't restarted for being slow. Once it passes, it never runs again, and the other two take over, side by side:
+The startup probe comes first, and holds the other two back. While it runs, liveness and readiness aren't checked at all, so a slow-starting app isn't restarted for being slow. Once it passes, it doesn't run again until the container restarts, and the other two take over, side by side:
 
 ```mermaid
 ---
@@ -50,10 +50,11 @@ flowchart TB
     sp -.->|"failureThreshold reached"| restart
     lp -->|"passes, or fails below<br/>failureThreshold: check again"| lp
     lp -.->|"failureThreshold reached"| restart
-    rp -->|"yes"| inn
+    rp -->|"passes"| inn
+    rp -->|"fails, below failureThreshold:<br/>no change, check again"| rp
     rp -.->|"failureThreshold reached"| out
-    inn -->|"check again later"| rp
-    out -->|"check again later"| rp
+    inn -->|"check again"| rp
+    out -->|"still checked:<br/>back in once it passes"| rp
     restart --> start
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
@@ -115,11 +116,11 @@ kubectl describe pod -n kube-system -l component=kube-apiserver | grep -E 'Liven
     Startup:      http-get https://172.28.125.129:6443/livez delay=10s timeout=15s period=10s #success=1 #failure=24
 ```
 
-Each line is one probe, in the settings from step 3: `delay` is `initialDelaySeconds`, `#failure` is `failureThreshold`, and so on. Read them as answers to the three questions:
+Your IP address will differ: it's your node's. Each line is one probe, in the settings from step 3: `delay` is `initialDelaySeconds`, `#failure` is `failureThreshold`, and so on. Read them as answers to the three questions:
 
 - **Startup**: calls `/livez` every 10 seconds, and allows 24 failures. The API server gets about four minutes to start, for the times it's slow.
 - **Liveness**: calls the same `/livez`, but gives up after 8 failures, about 80 seconds. Once it's up, a long silence means it's stuck.
-- **Readiness**: calls a different endpoint, `/readyz`, **every second**, and takes it out of service after 3 failures. Whether it can serve right now has to be known quickly.
+- **Readiness**: calls a different endpoint, `/readyz`, **every second**, and marks the Pod not ready after 3 failures. Whether it can serve right now has to be known quickly. The API server isn't behind a Service that selects its Pod, so here that only changes its `READY` column. An ordinary Pod would be taken out of its Services at that point.
 
 Readiness is also what the `READY` column has shown all along. `1/1` means one container, and one of them ready. For a Pod without a readiness probe, that's simply "running".
 
@@ -141,4 +142,4 @@ Probes are easy to get wrong in ways that make things worse, not better:
 
 ---
 
-[← Rollouts Under a Quota](rollouts-and-quotas.md) · [↑ Contents](../../README.md) · [Color API v1.2: Health Endpoints →](color-api-health-endpoints.md)
+[← Rollouts Under a Quota](rollouts-and-quotas.md) · [↑ Contents](../../README.md) · [Color API v1.3: Health Endpoints →](color-api-health-endpoints.md)
