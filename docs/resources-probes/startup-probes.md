@@ -39,9 +39,9 @@ You'll edit this copy twice in this chapter, with `sed`.
         failureThreshold: 2
 ```
 
-The probe calls `/health` on port 8080 every 3 seconds. Two failures in a row, and the container is restarted. So the app has at most about 6 seconds to start. That's an upper bound: the first check comes almost as soon as the container starts, so the second failure lands nearer 3 seconds in. That's short on purpose; you'll see why in a moment.
+The probe calls `/health` on port 8080 every 3 seconds. Two failures in a row, and the container is restarted. So the app has at most about 6 seconds to start. That's short on purpose; you'll see why in a moment.
 
-The startup probe calls `/health`, the same endpoint the liveness probe will. That's the usual choice: "has it started?" and "is it still working?" are both answered by the app being up and healthy. It stops working when `/health` can fail for other reasons, as you'll make it in [Liveness Probes](liveness-probes.md).
+The startup probe calls `/health`, the same endpoint the liveness probe will. That's the usual choice: "has it started?" and "is it still working?" are both answered by the app being up and healthy. Sharing `/health` stops working when it can fail for reasons other than starting up; you'll hit that in [Liveness Probes](liveness-probes.md).
 
 Create the Pod, and watch it:
 
@@ -95,16 +95,18 @@ kubectl get pod color-api-startup -w
 ```text
 pod "color-api-startup" deleted
 pod/color-api-startup replaced
-NAME                READY   STATUS             RESTARTS     AGE
-color-api-startup   0/1     Running            0            2s
-color-api-startup   0/1     Running            1 (1s ago)   9s
-color-api-startup   0/1     Running            2 (1s ago)   18s
-color-api-startup   0/1     CrashLoopBackOff   2 (1s ago)   25s
-color-api-startup   0/1     Running            3 (22s ago)  45s
+NAME                READY   STATUS             RESTARTS      AGE
+color-api-startup   0/1     Running            0             2s
+color-api-startup   0/1     Running            1 (1s ago)    5s
+color-api-startup   0/1     CrashLoopBackOff   1 (1s ago)    9s
+color-api-startup   0/1     Running            2 (11s ago)   19s
+color-api-startup   0/1     CrashLoopBackOff   2 (1s ago)    23s
+color-api-startup   0/1     Running            3 (20s ago)   42s
+color-api-startup   0/1     CrashLoopBackOff   3 (1s ago)    46s
 ...
 ```
 
-Your timings will differ a little. The pattern won't: `RESTARTS` goes up every few seconds, and the Pod never gets to `1/1`. The app needs 60 seconds, and it's killed within about 6, every time. Soon the restarts are spaced out by `CrashLoopBackOff`, the same back-off as for a container that [crashes on its own](../pods/pod-lifecycle.md#crashloopbackoff). Press Ctrl+C, and ask why:
+Your timings will differ a little. The pattern won't: `RESTARTS` keeps going up, and the Pod never gets to `1/1`. The app needs 60 seconds, and it's killed within about 6, every time. Between restarts, the Pod sits in `CrashLoopBackOff`, waiting longer each time: the same back-off as for a container that [crashes on its own](../pods/pod-lifecycle.md#crashloopbackoff). The time in brackets is when the previous container stopped. Press Ctrl+C, and ask why:
 
 ```bash
 kubectl describe pod color-api-startup | grep -A 10 Events
@@ -115,17 +117,17 @@ Events:
   Type     Reason     Age                From               Message
   ----     ------     ----               ----               -------
   Normal   Scheduled  50s                default-scheduler  Successfully assigned default/color-api-startup to node-1
-  Normal   Pulled     20s (x4 over 50s)  kubelet            Container image "<you>/color-api:1.3.0" already present on machine
-  Normal   Created    20s (x4 over 50s)  kubelet            Created container color-api
-  Normal   Started    20s (x4 over 50s)  kubelet            Started container color-api
-  Warning  Unhealthy  14s (x8 over 47s)  kubelet            Startup probe failed: Get "http://10.244.0.31:8080/health": dial tcp 10.244.0.31:8080: connect: connection refused
-  Normal   Killing    14s (x4 over 44s)  kubelet            Container color-api failed startup probe, will be restarted
+  Normal   Pulled     8s (x4 over 49s)   kubelet            Container image "<YOUR_DOCKERHUB_USER>/color-api:1.3.0" already present on machine
+  Normal   Created    8s (x4 over 49s)   kubelet            Created container color-api
+  Normal   Started    8s (x4 over 49s)   kubelet            Started container color-api
+  Warning  Unhealthy  5s (x8 over 49s)   kubelet            Startup probe failed: Get "http://10.244.0.31:8080/health": dial tcp 10.244.0.31:8080: connect: connection refused
+  Normal   Killing    5s (x4 over 46s)   kubelet            Container color-api failed startup probe, will be restarted
 ```
 
 Two lines tell the story:
 
 - **`Unhealthy`**: `connection refused`. Nothing is listening on 8080 yet, because the app is still in its 60-second delay. Eight failures so far, two per start.
-- **`Killing`**: `failed startup probe, will be restarted`. After the second failure in a row, the kubelet stops the container, and starts a new one, which begins its 60 seconds all over again.
+- **`Killing`**: `failed startup probe, will be restarted`. After the second failure in a row, the kubelet stops the container, and after the back-off starts a new one, which begins its 60 seconds all over again.
 
 The app isn't broken. It just needs more time than the probe gives it, so it never gets to finish. The logs agree: every container is stopped during its delay.
 
@@ -184,6 +186,7 @@ Keep `/tmp/probes`: the next chapters put their manifests there too.
 ## Best practices
 
 - **Size `periodSeconds × failureThreshold` from the slowest real start**, plus a margin. Too short, and the app is killed before it's ready. Too long, and a start that's really stuck takes that long to be noticed.
+- **Use a startup probe for slow starts, not a long `initialDelaySeconds` on liveness.** A fixed delay has to cover the slowest start, so a container that hangs right after a fast start goes unnoticed for just as long. The startup probe waits only as long as the start actually takes.
 - **When `RESTARTS` climbs but the app never logs an error**, look for `failed startup probe` in `kubectl describe pod`.
 
 ---
