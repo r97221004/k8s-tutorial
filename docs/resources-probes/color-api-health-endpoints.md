@@ -76,7 +76,9 @@ setTimeout(() => {
 }, startupDelayMs);
 ```
 
-For that minute, the process runs but nothing listens on port 8080, so every request fails, just like an app that's still loading. The stop-signal handler checks for this, so `docker stop` and Ctrl+C still work during the delay: with no server yet, it exits straight away.
+For that minute, the process runs but nothing listens on port 8080, so every request fails, just like an app that's still loading.
+
+The stop-signal handler checks for this: with no server yet, it exits straight away. That matters in Kubernetes, which sends `SIGTERM` when it deletes a Pod or restarts a container that fails its probe, often while it's still in the delay. A container that doesn't exit on `SIGTERM` sits out the 30-second grace period before it's killed.
 
 The app also logs all three switches when it starts, so `docker logs` and `kubectl logs` tell you which way the coin landed.
 
@@ -88,126 +90,42 @@ On your laptop, from the repo root, build `1.3.0`. On an Apple Silicon Mac, add 
 docker build -t <YOUR_DOCKERHUB_USER>/color-api:1.3.0 apps/color-api
 ```
 
-You'll check each endpoint by its status code alone, which is all a probe looks at. This `curl` prints just the code:
+Then run it once with each switch on, and check each path's status code, which is all a probe looks at:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-```
-
-`-o /dev/null` throws the body away, and `-w '%{http_code}\n'` prints the status. If nothing answers at all, it prints `000`.
-
-### No switches
-
-```bash
-docker run -d --rm --name capi -p 8080:8080 <YOUR_DOCKERHUB_USER>/color-api:1.3.0
-sleep 2      # give the app a moment to start listening
-docker logs capi
-```
-
-```text
-9c3f5a1e2b7d...
-Delay startup: false, fail liveness: false, fail readiness: false
-color-api listening on port 8080 (color: blue)
-```
-
-The first line is the new container's ID, which `docker run -d` prints; yours will differ. Then the app's log: no switches on, and listening. Check all three paths:
-
-```bash
-for path in /health /ready /api; do
-  echo "$path $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080$path)"
+for switch in DELAY_STARTUP FAIL_LIVENESS FAIL_READINESS; do
+  docker run -d --rm --name capi -p 8080:8080 -e $switch=true <YOUR_DOCKERHUB_USER>/color-api:1.3.0 > /dev/null
+  sleep 2      # give the app a moment to start listening
+  echo "$switch -> $(docker logs capi | head -1)"
+  for path in /health /ready /api; do
+    echo "  $path $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080$path)"
+  done
+  docker rm -f capi > /dev/null   # stop and remove, so the next run can reuse the name
 done
 ```
 
-```text
-/health 200
-/ready 200
-/api 200
-```
-
-All healthy. Stop it before the next one, since each run uses port 8080:
-
-```bash
-docker stop capi
-```
-
-### `FAIL_LIVENESS`: everything but `/health`
-
-```bash
-docker run -d --rm --name capi -p 8080:8080 -e FAIL_LIVENESS=true <YOUR_DOCKERHUB_USER>/color-api:1.3.0
-sleep 2      # give the app a moment to start listening
-for path in /health /ready /api; do
-  echo "$path $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080$path)"
-done
-docker stop capi
-```
+`curl -o /dev/null -w '%{http_code}'` throws the body away and prints only the status code, or `000` if nothing answers.
 
 ```text
-4b1e0c7f9a2d...
-/health 503
-/ready 200
-/api 200
-capi
+DELAY_STARTUP -> Delay startup: true, fail liveness: false, fail readiness: false
+  /health 000
+  /ready 000
+  /api 000
+FAIL_LIVENESS -> Delay startup: false, fail liveness: true, fail readiness: false
+  /health 503
+  /ready 200
+  /api 200
+FAIL_READINESS -> Delay startup: false, fail liveness: false, fail readiness: true
+  /health 200
+  /ready 503
+  /api 200
 ```
 
-Only `/health` fails. `/api` still answers, so from the outside the app looks fine, which is exactly the case a liveness probe exists for.
+- **`DELAY_STARTUP`**: `000` everywhere, because nothing is listening yet. A liveness probe with the default settings would give up after about 30 seconds (`periodSeconds` 10 × `failureThreshold` 3), and restart the container before it ever finished starting. That's the problem the startup probe solves.
+- **`FAIL_LIVENESS`**: only `/health` fails. `/api` still answers, so from the outside the app looks fine, which is exactly the case a liveness probe exists for.
+- **`FAIL_READINESS`**: `fail readiness` in the log is the coin's result, not the variable. If yours says `false` and `/ready` answers `200`, the coin landed the other way; run the loop again to see both.
 
-(The last line is `docker stop` naming the container it stopped. Without the `sleep`, the `curl`s can run before the app is listening, and print `000`.)
-
-### `FAIL_READINESS`: a coin flip
-
-Run it a few times, and look at the first log line and `/ready` each time:
-
-```bash
-for i in 1 2 3 4; do
-  docker run -d --rm --name capi -p 8080:8080 -e FAIL_READINESS=true <YOUR_DOCKERHUB_USER>/color-api:1.3.0 > /dev/null
-  sleep 2
-  echo "$(docker logs capi | head -1) -> /ready $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/ready)"
-  docker stop capi > /dev/null
-done
-```
-
-```text
-Delay startup: false, fail liveness: false, fail readiness: false -> /ready 200
-Delay startup: false, fail liveness: false, fail readiness: true -> /ready 503
-Delay startup: false, fail liveness: false, fail readiness: true -> /ready 503
-Delay startup: false, fail liveness: false, fail readiness: false -> /ready 200
-```
-
-Yours will come out in a different order. Note that `fail readiness` in the log is the coin's result, not the variable: the variable was `true` every time, and the coin decided whether this container fails. Within one container, the answer never changes.
-
-### `DELAY_STARTUP`: a slow start
-
-```bash
-docker run -d --rm --name capi -p 8080:8080 -e DELAY_STARTUP=true <YOUR_DOCKERHUB_USER>/color-api:1.3.0
-sleep 2
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-docker logs capi
-```
-
-```text
-7e2d9b4c1a6f...
-000
-Delay startup: true, fail liveness: false, fail readiness: false
-Starting in 60 seconds
-```
-
-`000`: nothing answered. The container is running, but the app isn't listening yet. Wait a minute, and try again:
-
-```bash
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/health
-docker logs capi
-docker stop capi
-```
-
-```text
-200
-Delay startup: true, fail liveness: false, fail readiness: false
-Starting in 60 seconds
-color-api listening on port 8080 (color: blue)
-capi
-```
-
-A liveness probe with the default settings would have given up on this container after about 30 seconds, and restarted it before it ever finished starting. That's the problem the startup probe solves.
+With no switches set, all three paths answer `200`.
 
 ## 4. Push it
 
@@ -219,7 +137,7 @@ The Pods in the next chapters pull `1.3.0` from Docker Hub, with one switch set 
 
 ## Clean up
 
-Every container above ran with `--rm`, so stopping it removed it. Check nothing is left:
+The loop removed each container with `docker rm -f`. Check nothing is left:
 
 ```bash
 docker ps --filter name=capi
