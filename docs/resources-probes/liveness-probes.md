@@ -66,7 +66,7 @@ Your timings will differ a little, and you may also see a brief `Completed` line
 
 1. **About 4 seconds in, `1/1`.** The app is listening, so the startup probe passed, and with no readiness probe, the container counts as ready. `/health` is already failing, but nothing about `READY` says so.
 2. **About 30 seconds in, `RESTARTS` goes to 1.** The liveness probe started once startup passed, failed three times, 10 seconds apart, and the kubelet restarted the container.
-3. **Then it starts over.** The new container passes its startup probe, which runs again after every restart, is ready for half a minute, and is restarted again.
+3. **Then it starts over.** The new container passes its startup probe again (it runs after every restart), is ready for half a minute, and is restarted.
 
 Look at step 1 again: for those 30 seconds, the Pod was `1/1`, and a Service in front of it would have sent it traffic. A liveness probe doesn't affect whether a Pod is ready; only a readiness probe does, and that's the [next chapter](readiness-probes.md).
 
@@ -113,48 +113,20 @@ SIGTERM received, shutting down
 
 So `RESTARTS` going up doesn't always mean a crash. When the exit code is `0` and the events say `failed liveness probe`, Kubernetes stopped a container that was still running.
 
-The restart is of the **container**, not the Pod. Same Pod name, same IP, same node:
-
-```bash
-kubectl get pod color-api-liveness -o wide
-```
-
-```text
-NAME                 READY   STATUS    RESTARTS      AGE    IP            NODE     NOMINATED NODE   READINESS GATES
-color-api-liveness   1/1     Running   3 (20s ago)   2m5s   10.244.0.33   node-1   <none>           <none>
-```
-
-Run it again after the next restart: `RESTARTS` goes up, and the `IP` stays the same.
+The restart is of the **container**, not the Pod. The Pod keeps its name, its IP, and its node; only the container inside it is replaced. Run `kubectl get pod color-api-liveness -o wide` after a couple of restarts, and the `IP` hasn't changed.
 
 ## 4. A restart only helps if it fixes something
 
 These restarts will never end. `FAIL_LIVENESS` is set in the Pod's spec, so every new container fails `/health` exactly like the last. That's the limit of a liveness probe: it can only help when a fresh start fixes the problem, like a deadlock or a leak. It's also why, as [Health Probes](health-probes.md#5-common-mistakes) warned, `/health` shouldn't check a database. A restart doesn't fix a database either.
 
-Here, the fix is in the app. Turn the switch off, and replace the Pod:
+In a real app, the fix would be in the code. Here, it's turning off the switch. Do that, and replace the Pod:
 
 ```bash
 sed -i 's/value: "true"/value: "false"/' /tmp/probes/color-api-liveness.yaml
 kubectl replace --force -f /tmp/probes/color-api-liveness.yaml
 ```
 
-```text
-pod "color-api-liveness" deleted
-pod/color-api-liveness replaced
-```
-
-Wait a minute, long enough for several liveness checks, and look:
-
-```bash
-kubectl get pod color-api-liveness
-kubectl describe pod color-api-liveness | grep -E 'Unhealthy|Killing'
-```
-
-```text
-NAME                 READY   STATUS    RESTARTS   AGE
-color-api-liveness   1/1     Running   0          70s
-```
-
-No restarts, and the `grep` finds nothing: no failed checks at all. The liveness probe is still calling `/health` every 10 seconds; it just gets `200` every time.
+Wait a minute, long enough for several liveness checks, and run `kubectl get pod color-api-liveness`: `RESTARTS` is still `0`, and `kubectl describe` shows no `Unhealthy` events. The liveness probe is still calling `/health` every 10 seconds; it just gets `200` every time.
 
 ## Clean up
 
