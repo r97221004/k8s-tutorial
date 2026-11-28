@@ -43,7 +43,7 @@ spec:
 
 The name ties the two halves together. Each container decides for itself whether to mount a volume, and where: here `app` and `helper` share `scratch`, at different paths, and a file `app` writes to `/tmp/work/out.txt` is the file `helper` reads at `/data/out.txt`. Only `app` mounts `config`, and read-only.
 
-Whatever the type, the container just sees a directory. The app doesn't know, or care, whether the files are on the node's disk, in a ConfigMap, or on a network disk. That's the type's business, and it's what decides the volume's lifetime:
+Whatever the type, the container just sees a directory. The app doesn't know, or care, whether the files are on the node's disk, in a ConfigMap, or on a network disk. That's the type's business, and it's what decides the volume's lifetime. Here's a Pod with four volumes, each of a different type, and where each one's data really is: inside the Pod, on the node, in the cluster, or outside it altogether:
 
 ```mermaid
 ---
@@ -53,34 +53,46 @@ config:
   themeVariables:
     fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
     lineColor: '#94A3B8'
+    edgeLabelBackground: '#475569'
+  themeCSS: |
+    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
 ---
 flowchart LR
-    subgraph node["🖥️ Node"]
-        subgraph pod["📦 Pod"]
-            app["app container"]
-            helper["helper container"]
+    subgraph cluster["☸️ Cluster"]
+        subgraph node["🖥️ Node 1"]
+            subgraph pod["📦 Pod"]
+                vols["volumes:<br/>- pod-temp-storage<br/>- local-dir-in-node<br/>- config-map<br/>- aws-ebs"]
+                c1["container 1<br/>volumeMounts:<br/>local-dir-in-node → /usr/data"]
+                c2["container 2<br/>volumeMounts:<br/>aws-ebs → /data/db"]
+                tmp["🗂️ pod-temp-storage<br/>emptyDir"]
+            end
+            local["📁 local-dir-in-node<br/>a directory on the node"]
         end
-        empty["🗂️ emptyDir<br/>a directory for this Pod"]
-        host["📁 hostPath / local<br/>a directory on this node"]
+        cm["📄 config-map<br/>a ConfigMap"]
     end
-    cm["📄 ConfigMap / Secret<br/>objects in the cluster"]
-    pv["💾 PersistentVolume<br/>a disk outside the Pod"]
+    ebs["💾 aws-ebs<br/>a cloud disk"]
+    note["Kubernetes supports many other<br/>storage backends, and you can add<br/>your own through a CSI driver"]
 
-    app --> empty
-    helper --> empty
-    app --> host
-    app --> cm
-    app --> pv
+    c1 -.->|mounts| vols
+    c2 -.->|mounts| vols
+    vols --> tmp
+    vols --> local
+    vols --> cm
+    vols --> ebs
+    ebs ~~~ note
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    class app,helper eng
-    class empty,host ctrl
-    class cm,pv tgt
+    classDef memo fill:#FFFFFF,stroke:#DC2626,stroke-width:2px,color:#0F172A
+    class c1,c2 eng
+    class vols ctrl
+    class tmp,local,cm,ebs tgt
+    class note memo
 
-    style node fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
-    style pod fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
+    style cluster fill:#0B1120,stroke:#2563EB,color:#F1F5F9,fillStyle:solid
+    style node fill:#1E293B,stroke:#334155,stroke-dasharray:5 5,color:#F1F5F9,fillStyle:solid
+    style pod fill:#000000,stroke:#16A34A,color:#FFFFFF,fillStyle:solid
 ```
 
 ## 2. The types you'll meet
