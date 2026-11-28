@@ -56,6 +56,8 @@ config:
     edgeLabelBackground: '#475569'
   themeCSS: |
     .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
+  flowchart:
+    wrappingWidth: 400
 ---
 flowchart LR
     subgraph cluster["☸️ Cluster"]
@@ -71,7 +73,7 @@ flowchart LR
         cm["📄 config-map<br/>a ConfigMap"]
     end
     ebs["💾 aws-ebs<br/>a cloud disk"]
-    note["Kubernetes supports many other<br/>storage backends, and you can add<br/>your own through a CSI driver"]
+    note["Kubernetes supports many<br/>other storage backends,<br/>and you can add your own<br/>through a CSI driver"]
 
     c1 -.->|mounts| vols
     c2 -.->|mounts| vols
@@ -84,7 +86,7 @@ flowchart LR
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
     classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
     classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    classDef memo fill:#FFFFFF,stroke:#DC2626,stroke-width:2px,color:#0F172A
+    classDef memo fill:#0F172A,stroke:#DC2626,stroke-width:3px,color:#FFFFFF
     class c1,c2 eng
     class vols ctrl
     class tmp,local,cm,ebs tgt
@@ -93,6 +95,7 @@ flowchart LR
     style cluster fill:#0B1120,stroke:#2563EB,color:#F1F5F9,fillStyle:solid
     style node fill:#1E293B,stroke:#334155,stroke-dasharray:5 5,color:#F1F5F9,fillStyle:solid
     style pod fill:#000000,stroke:#16A34A,color:#FFFFFF,fillStyle:solid
+    style note fillStyle:solid
 ```
 
 ## 2. The types you'll meet
