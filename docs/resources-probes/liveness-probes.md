@@ -53,18 +53,21 @@ kubectl get pod color-api-liveness -w
 
 ```text
 NAME                 READY   STATUS    RESTARTS      AGE
-color-api-liveness   0/1     Running   0             2s
-color-api-liveness   1/1     Running   0             4s
-color-api-liveness   0/1     Running   1 (1s ago)    35s
-color-api-liveness   1/1     Running   1 (4s ago)    38s
-color-api-liveness   0/1     Running   2 (1s ago)    68s
-color-api-liveness   1/1     Running   2 (4s ago)    71s
+color-api-liveness   0/1     Running   0             3s
+color-api-liveness   0/1     Running   0             4s
+color-api-liveness   1/1     Running   0             5s
+color-api-liveness   0/1     Running   1 (1s ago)    32s
+color-api-liveness   0/1     Running   1 (3s ago)    34s
+color-api-liveness   1/1     Running   1 (4s ago)    35s
+color-api-liveness   0/1     Running   2 (1s ago)    62s
+color-api-liveness   0/1     Running   2 (3s ago)    64s
+color-api-liveness   1/1     Running   2 (3s ago)    64s
 ...
 ```
 
-Your timings will differ a little, and you may also see a brief `Completed` line before each restart. Read it in steps:
+Your timings will differ a little. `-w` prints a line whenever the Pod's status changes, including changes these columns don't show, so some lines look repeated. Read it in steps:
 
-1. **About 4 seconds in, `1/1`.** The app is listening, so the startup probe passed, and with no readiness probe, the container counts as ready. `/health` is already failing, but nothing about `READY` says so.
+1. **About 5 seconds in, `1/1`.** The app is listening, so the startup probe passed, and with no readiness probe, the container counts as ready. `/health` is already failing, but nothing about `READY` says so.
 2. **About 30 seconds in, `RESTARTS` goes to 1.** The liveness probe started once startup passed, failed three times, 10 seconds apart, and the kubelet restarted the container.
 3. **Then it starts over.** The new container passes its startup probe again (it runs after every restart), is ready for half a minute, and is restarted.
 
