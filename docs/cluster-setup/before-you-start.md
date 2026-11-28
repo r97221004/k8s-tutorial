@@ -93,7 +93,7 @@ cd k8s-tutorial
 
 kubeadm installs only the core components. A few things later chapters rely on are deliberately left out:
 
-- **No default StorageClass.** PVCs stay `Pending` until you install one. local-path-provisioner is installed in [Volumes](../config-and-data/volumes.md).
+- **No default StorageClass.** PVCs stay `Pending` until you install one. local-path-provisioner is installed in [Dynamic Provisioning](../volumes/dynamic-provisioning.md).
 - **No LoadBalancer provider.** `type: LoadBalancer` Services sit at `<pending>`. Use NodePort or MetalLB; see [Service](../services/what-are-services.md).
 - **No Ingress controller.** ingress-nginx is installed in [Ingress](../networking/ingress.md).
 

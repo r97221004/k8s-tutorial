@@ -36,7 +36,7 @@ In [k9s](../cluster-setup/k9s.md), a red `crasher` row jumps out; press `l` for 
 
 | Status | Usually means | First check |
 |--------|---------------|-------------|
-| `Pending` | can't be scheduled / PVC unbound | `describe` → Events ("Insufficient cpu", "unbound PVC"); [requests](../resources-probes/requests-limits.md#3-requests-and-the-scheduler), [volumes](../config-and-data/volumes.md) |
+| `Pending` | can't be scheduled / PVC unbound | `describe` → Events ("Insufficient cpu", "unbound PVC"); [requests](../resources-probes/requests-limits.md#3-requests-and-the-scheduler), [volumes](../volumes/introduction-to-pvcs.md) |
 | `ContainerCreating` (stuck) | image pull or volume mount in progress/failing | `describe` → Events |
 | `ImagePullBackOff` | wrong image name/tag or no registry access | image string, pull secret |
 | `CrashLoopBackOff` | container starts then exits repeatedly | `logs --previous` |

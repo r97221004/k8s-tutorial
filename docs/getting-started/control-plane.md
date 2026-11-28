@@ -16,7 +16,7 @@ The control plane is made of **four core components**, each with a single, narro
 
 The last column holds the key idea: **the control plane going down doesn't take your apps down.** The kubelet on each node keeps its containers running (and restarts them if they crash). What you lose is the ability to *change* anything — and the loops that fix things for you.
 
-`etcd` is not a database for your application data — it only holds Kubernetes objects. Your app's data belongs in [volumes](../config-and-data/volumes.md).
+`etcd` is not a database for your application data — it only holds Kubernetes objects. Your app's data belongs in [volumes](../volumes/introduction-to-volumes.md).
 
 ### Static Pods
 

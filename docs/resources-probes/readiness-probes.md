@@ -170,4 +170,4 @@ This is the last probes chapter, so `/tmp/probes` can go too.
 
 ---
 
-[← Liveness Probes](liveness-probes.md) · [↑ Contents](../../README.md) · [Scheduling, Taints & Tolerations →](../core-objects/scheduling.md)
+[← Liveness Probes](liveness-probes.md) · [↑ Contents](../../README.md) · [Introduction to Volumes →](../volumes/introduction-to-volumes.md)

@@ -37,7 +37,7 @@ nslookup web                 # shows web.<ns>.svc.cluster.local + its ClusterIP
 wget -qO- http://web         # reaches the Service by name
 ```
 
-> **Headless Services** (`clusterIP: None`, used by [StatefulSets](../config-and-data/statefulset.md)) resolve differently: instead of one Service IP, DNS returns each Pod's IP, and each Pod gets its own name like `postgres-0.postgres.<ns>.svc.cluster.local`. That's how you address a *specific* replica.
+> **Headless Services** (`clusterIP: None`, used by [StatefulSets](../statefulsets/headless-services.md)) resolve differently: instead of one Service IP, DNS returns each Pod's IP, and each Pod gets its own name like `postgres-0.postgres.<ns>.svc.cluster.local`. That's how you address a *specific* replica.
 
 ## Best practices
 

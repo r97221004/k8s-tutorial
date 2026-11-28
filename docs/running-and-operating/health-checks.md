@@ -141,4 +141,4 @@ kubectl rollout status deployment/web
 
 ---
 
-[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Scaling →](scaling.md)
+[← Environment Variables & Mounts](../config-and-data/env-and-mounts.md) · [↑ Contents](../../README.md) · [Scaling →](scaling.md)

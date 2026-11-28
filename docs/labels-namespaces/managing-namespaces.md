@@ -280,7 +280,7 @@ prod        web    2/2     2            2           3m
 
 This is both the danger and the use of a namespace. One command removes a whole environment, with no confirmation and no undo, which is a good reason to keep RBAC in mind. But it's also the cleanest way to tear down a test setup: put it in its own namespace, and delete just that when you're done.
 
-"Everything inside" means namespaced objects. A PersistentVolumeClaim is deleted with its namespace, but the PersistentVolume behind it belongs to the cluster, and whether it and its data survive depends on its [reclaim policy](../config-and-data/volumes.md#reclaim-policy): `Delete` destroys the data, `Retain` keeps it. Check that before you delete a namespace that holds a database.
+"Everything inside" means namespaced objects. A PersistentVolumeClaim is deleted with its namespace, but the PersistentVolume behind it belongs to the cluster, and whether it and its data survive depends on its [reclaim policy](../volumes/deleting-pvs-pvcs.md): `Delete` destroys the data, `Retain` keeps it. Check that before you delete a namespace that holds a database.
 
 Kubernetes protects a few of its own: `kubectl delete namespace default` is refused with `this namespace may not be deleted`, and so are `kube-system` and `kube-public`. `kube-node-lease` isn't on that list, so don't count on the API server to stop you there.
 

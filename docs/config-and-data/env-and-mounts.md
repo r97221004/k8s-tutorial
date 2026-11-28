@@ -55,7 +55,7 @@ env:
 
 ## 2. As files on disk
 
-Mount the whole ConfigMap/Secret as a directory — each key becomes a file:
+Mount the whole ConfigMap/Secret as a directory — each key becomes a file. It's the same `volumes:` / `volumeMounts:` pattern as any other [volume](../volumes/introduction-to-volumes.md), with the data coming from a cluster object:
 
 ```yaml
 volumeMounts:
@@ -205,6 +205,16 @@ To watch Secret/env-var restart behavior in k9s:
 - **Mark all config mounts `readOnly: true`** — a container that can write to its own config volume is a misconfiguration waiting to cause confusion.
 - **Set restrictive file modes** on Secret volumes that hold private keys or certs — `defaultMode: 0400` is a good target when the container user can read it; otherwise adjust ownership/group access with your `securityContext`.
 
+## Reset after Configuration & Data
+
+If you're moving on to Running & Operating and want a clean default namespace, remove the config examples:
+
+```bash
+kubectl delete -f manifests/config-and-data/web-with-config.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/app-config.yaml --ignore-not-found
+kubectl delete -f manifests/config-and-data/app-secret.yaml --ignore-not-found
+```
+
 ---
 
-[← Secret](secret.md) · [↑ Contents](../../README.md) · [Volumes & PersistentVolumes →](volumes.md)
+[← Secret](secret.md) · [↑ Contents](../../README.md) · [Scaling →](../running-and-operating/scaling.md)

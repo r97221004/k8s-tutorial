@@ -207,7 +207,7 @@ A few workloads need a different controller, which later chapters cover:
 | Stateless apps (most things) | **Deployment** |
 | One Pod per node, like a log agent | [DaemonSet](../core-objects/daemonset.md) |
 | Run to completion, like a batch job | [Job & CronJob](../core-objects/job-cronjob.md) |
-| Stable names and per-Pod storage, like a database | [StatefulSet](../config-and-data/statefulset.md) |
+| Stable names and per-Pod storage, like a database | [StatefulSet](../statefulsets/introduction-to-statefulsets.md) |
 
 ## Best practices
 

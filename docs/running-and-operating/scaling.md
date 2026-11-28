@@ -75,4 +75,4 @@ Leave Metrics Server installed if you want `kubectl top` and future HPA examples
 
 ---
 
-[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)
+[← Environment Variables & Mounts](../config-and-data/env-and-mounts.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)

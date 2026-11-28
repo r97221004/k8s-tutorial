@@ -189,7 +189,7 @@ kubectl logs <pod> --all-containers --prefix    # same, each line tagged with [p
 kubectl exec -it <pod> -c <container-name> -- sh
 ```
 
-You'll use both in the [sidecar example in Volumes](../config-and-data/volumes.md). There, the `writer` container writes to a file instead of stdout, so `kubectl logs` shows nothing, and you read the file with `exec -c reader` instead.
+You'll use both in the [emptyDir example](../volumes/emptydir.md). There, the `writer` container writes to a file instead of stdout, so `kubectl logs` shows nothing, and you read the file with `exec -c reader` instead.
 
 ## 8. Changing a Pod
 

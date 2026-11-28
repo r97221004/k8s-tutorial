@@ -29,7 +29,7 @@ Each of those is solvable with enough scripts. But the scripts grow, drift betwe
 | **Service discovery** | Names resolve within one host | [Cluster DNS](../networking/dns.md) works from any node |
 | **Config & secrets** | Copied onto every host | [ConfigMaps](../config-and-data/configmap.md) and [Secrets](../config-and-data/secret.md), injected at deploy |
 | **Releases** | Stop old, start new, roll back by hand | [Rolling updates](../replicasets-deployments/understanding-rollouts.md) with one-command rollback |
-| **Data** | Volumes tied to one host | [PersistentVolumeClaims](../config-and-data/volumes.md) outlive the Pod |
+| **Data** | Volumes tied to one host | [PersistentVolumeClaims](../volumes/introduction-to-pvcs.md) outlive the Pod |
 
 **What about Docker Swarm?** Swarm (and HashiCorp Nomad) can also run containers across many hosts. Kubernetes isn't the only orchestrator — but it has become the industry standard, with the largest ecosystem of tools, managed offerings, and jobs.
 

@@ -71,11 +71,11 @@ flowchart TB
 
 - **One network identity.** Every container in the Pod shares the same IP address and the same set of ports. They reach each other over `localhost`, as if they were processes on one machine. The flip side: two containers in one Pod **can't listen on the same port**. If both try to bind `:80`, the second fails with `address already in use`.
 - **Shared storage, if you ask for it.** A volume declared on the Pod can be mounted into any of its containers, so one can write a file and another can read it. How long that data lives depends on the kind of volume:
-  - an [`emptyDir`](../config-and-data/volumes.md#ephemeral-emptydir) is scratch space that is **deleted with the Pod**;
-  - a [PersistentVolume](../config-and-data/volumes.md#durable-persistentvolume--persistentvolumeclaim) lives outside the Pod and **survives** it being deleted and recreated.
+  - an [`emptyDir`](../volumes/emptydir.md) is scratch space that is **deleted with the Pod**;
+  - a [PersistentVolume](../volumes/introduction-to-pvcs.md) lives outside the Pod and **survives** it being deleted and recreated.
 - **One node, one lifetime.** All containers in a Pod are always scheduled onto the **same node**. They share the Pod's lifetime: they're created together when the Pod starts and removed together when it's deleted. In between, a single container that crashes can be restarted on its own while the others keep running; [The Pod Lifecycle](pod-lifecycle.md) covers how.
 
-You'll see two containers share a volume hands-on in [Volumes](../config-and-data/volumes.md#ephemeral-emptydir), which runs a writer and a reader container in one Pod and has them pass a file through an `emptyDir`. (The quick `kubectl run` in [Try it](#try-it) below only creates single-container Pods.)
+You'll see two containers share a volume hands-on in [Working with emptyDir](../volumes/emptydir.md). (The quick `kubectl run` in [Try it](#try-it) below only creates single-container Pods.)
 
 ## One container or several?
 

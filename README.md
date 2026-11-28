@@ -123,28 +123,43 @@ Two machines, plus basic shell and container familiarity:
 - [**Liveness Probes**](docs/resources-probes/liveness-probes.md) — break `/health` on purpose, and watch the kubelet restart a container that looks fine from the outside.
 - [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — let half the Pods fail readiness, and watch the Service send traffic only to the ready ones.
 
-**Part 9 — Core Objects**
+**Part 9 — Volumes & Persistent Storage**
+
+- [**Introduction to Volumes**](docs/volumes/introduction-to-volumes.md) — why a container's files vanish, and the kinds of volumes that keep them: emptyDir, hostPath, and persistent storage. *(coming soon)*
+- [**Working with emptyDir**](docs/volumes/emptydir.md) — share scratch files between the containers of a Pod, and see what survives a restart and what doesn't. *(coming soon)*
+- [**Introduction to Persistent Volume Claims**](docs/volumes/introduction-to-pvcs.md) — how PersistentVolumes and PersistentVolumeClaims split storage between the cluster and the app. *(coming soon)*
+- [**Creating PVs and PVCs**](docs/volumes/creating-pvs-pvcs.md) — create a PersistentVolume by hand, and claim it with a PersistentVolumeClaim. *(coming soon)*
+- [**Mounting Volumes in Pods**](docs/volumes/mounting-volumes.md) — mount a claim into a Pod, write to it, and see the data outlive the Pod. *(coming soon)*
+- [**Deleting PVs and PVCs**](docs/volumes/deleting-pvs-pvcs.md) — what happens to the data when a claim or a volume is deleted, and how the reclaim policy decides. *(coming soon)*
+- [**Dynamic Provisioning**](docs/volumes/dynamic-provisioning.md) — install a StorageClass, and let claims create their own PersistentVolumes. *(coming soon)*
+
+**Part 10 — StatefulSets**
+
+- [**Introduction to StatefulSets**](docs/statefulsets/introduction-to-statefulsets.md) — stable names, stable storage, and ordered startup, for apps whose Pods aren't interchangeable. *(coming soon)*
+- [**Creating a StatefulSet**](docs/statefulsets/creating-statefulsets.md) — prepare PersistentVolumes, create a StatefulSet, and see each Pod keep its name and its data. *(coming soon)*
+- [**StatefulSets with Dynamic Provisioning**](docs/statefulsets/statefulsets-dynamic-provisioning.md) — let volumeClaimTemplates create a claim, and a volume, for every Pod. *(coming soon)*
+- [**Headless Services**](docs/statefulsets/headless-services.md) — give each StatefulSet Pod its own DNS name, with a Service that has no ClusterIP. *(coming soon)*
+
+**Part 11 — Core Objects**
 
 - [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
 
-**Part 10 — Configuration & Data**
+**Part 12 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
 - [**Environment Variables & Mounts**](docs/config-and-data/env-and-mounts.md) — how config reaches the container.
-- [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
-- [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 11 — Running & Operating**
+**Part 13 — Running & Operating**
 
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
 - [**Graceful Shutdown & Disruptions**](docs/running-and-operating/graceful-shutdown.md) — SIGTERM, preStop, drains, and PDBs.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 12 — Networking & Access**
+**Part 14 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
