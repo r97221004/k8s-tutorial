@@ -50,10 +50,11 @@ flowchart TB
     sp -.->|"failureThreshold reached"| restart
     lp -->|"passes, or fails below<br/>failureThreshold: check again"| lp
     lp -.->|"failureThreshold reached"| restart
-    rp -->|"yes"| inn
+    rp -->|"passes"| inn
+    rp -->|"fails, below failureThreshold:<br/>no change, check again"| rp
     rp -.->|"failureThreshold reached"| out
-    inn -->|"check again later"| rp
-    out -->|"check again later"| rp
+    inn -->|"check again"| rp
+    out -->|"still checked:<br/>back in once it passes"| rp
     restart --> start
 
     classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
