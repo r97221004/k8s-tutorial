@@ -127,7 +127,7 @@ Two machines, plus basic shell and container familiarity:
 
 - [**Introduction to Volumes**](docs/volumes/introduction-to-volumes.md) — why a container's files vanish, and the kinds of volumes that keep them: `emptyDir`, `hostPath` and `local`, and persistent storage.
 - [**EmptyDir and Local Volumes**](docs/volumes/emptydir-and-local-volumes.md) — the volumes that live on the node: `emptyDir` for one Pod's lifetime, and `hostPath` and `local`, which outlive it.
-- [**Working with emptyDir**](docs/volumes/emptydir.md) — share scratch files between the containers of a Pod, and see what survives a restart and what doesn't. *(coming soon)*
+- [**Working with emptyDir**](docs/volumes/emptydir.md) — share scratch files between the containers of a Pod, and see what survives a restart and what doesn't.
 - [**Introduction to Persistent Volume Claims**](docs/volumes/introduction-to-pvcs.md) — how PersistentVolumes and PersistentVolumeClaims split storage between the cluster and the app. *(coming soon)*
 - [**Creating PVs and PVCs**](docs/volumes/creating-pvs-pvcs.md) — create a PersistentVolume by hand, and claim it with a PersistentVolumeClaim. *(coming soon)*
 - [**Mounting Volumes in Pods**](docs/volumes/mounting-volumes.md) — mount a claim into a Pod, write to it, and see the data outlive the Pod. *(coming soon)*
