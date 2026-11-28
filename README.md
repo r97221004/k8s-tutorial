@@ -119,7 +119,7 @@ Two machines, plus basic shell and container familiarity:
 - [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods, and how to make room.
 - [**Health Probes**](docs/resources-probes/health-probes.md) — the three questions startup, liveness, and readiness probes answer.
 - [**Color API v1.3: Health Endpoints**](docs/resources-probes/color-api-health-endpoints.md) — add `/health` and `/ready` for the probes to call, and switches that make the app fail on purpose.
-- [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start before anything else checks it. *(coming soon)*
+- [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start, and watch a probe that allows too little restart it over and over.
 - [**Liveness Probes**](docs/resources-probes/liveness-probes.md) — restart a container that's running but stuck. *(coming soon)*
 - [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — keep traffic away from a Pod until it can serve. *(coming soon)*
 
