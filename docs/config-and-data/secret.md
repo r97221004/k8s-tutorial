@@ -75,7 +75,7 @@ DB_USER:      7 bytes
 
 The byte count lets you confirm a key exists and roughly validate its length without exposing the value.
 
-In [k9s](../getting-started/k9s.md), use the same habit:
+In [k9s](../cluster-setup/k9s.md), use the same habit:
 
 1. Launch `k9s`.
 2. Type `:secrets` and press Enter.
@@ -218,7 +218,7 @@ Then in k9s:
    kubectl rollout restart deployment/web-config
    ```
 
-   In k9s: go to `:deployments`, highlight `web-config`, and press `Ctrl-R`.
+   In k9s: go to `:deployments`, highlight `web-config`, press `r`, and confirm.
 
    **Option B — delete the Pod:** The Deployment notices the Pod is gone and immediately creates a replacement. There is a brief gap while the new Pod starts.
 

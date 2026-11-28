@@ -4,7 +4,7 @@
 
 ---
 
-A [Deployment](../core-objects/deployment.md) treats its Pods as **interchangeable** — random names, shared storage, any order. Perfect for stateless web apps. But a database replica is *not* interchangeable: it has its own data and its own identity. A **StatefulSet** is the controller for workloads where each Pod must be distinct and durable.
+A [Deployment](../replicasets-deployments/introduction-to-deployments.md) treats its Pods as **interchangeable** — random names, shared storage, any order. Perfect for stateless web apps. But a database replica is *not* interchangeable: it has its own data and its own identity. A **StatefulSet** is the controller for workloads where each Pod must be distinct and durable.
 
 The PostgreSQL example below is a lab for learning StatefulSet mechanics, not a production database recommendation. Real production databases need backup/restore, upgrade, failover, monitoring, and storage choices beyond this intro.
 
@@ -127,7 +127,7 @@ pod/postgres-0   1/1   Running          ← ordinal name, not a random suffix
 persistentvolumeclaim/pgdata-postgres-0  Bound   ← its own dedicated volume
 ```
 
-In [k9s](../getting-started/k9s.md), `:sts` ⏎ shows the StatefulSet's `READY` column climb to `1/1`; `:pods` ⏎ lets you watch `postgres-0` move through `Pending` → `ContainerCreating` → `Running` (`0/1` while the `startupProbe`/`readinessProbe` are still warming up, then `1/1`). Press `l` on it to tail PostgreSQL's own boot log instead of polling `pg_isready` from your terminal.
+In [k9s](../cluster-setup/k9s.md), `:sts` ⏎ shows the StatefulSet's `READY` column climb to `1/1`; `:pods` ⏎ lets you watch `postgres-0` move through `Pending` → `ContainerCreating` → `Running` (`0/1` while the `startupProbe`/`readinessProbe` are still warming up, then `1/1`). Press `l` on it to tail PostgreSQL's own boot log instead of polling `pg_isready` from your terminal.
 
 With the headless Service, that same Pod also gets a stable DNS name:
 
@@ -156,7 +156,7 @@ kubectl exec postgres-0 -- psql -U appuser -d appuser -c \
 kubectl exec postgres-0 -- psql -U appuser -d appuser -c "SELECT * FROM statefulset_lab;"
 ```
 
-Delete `postgres-0` and watch (in [k9s](../getting-started/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC**.
+Delete `postgres-0` and watch (in [k9s](../cluster-setup/k9s.md), `:sts` / `:pods`): it comes back with the **same name** and **reattaches the same PVC**.
 
 ```bash
 kubectl delete pod postgres-0
@@ -244,7 +244,7 @@ This is still a tutorial-sized lab, not a hardened production posture — real p
 ## When (not) to use one
 
 - ✅ Databases, message queues, anything where each replica owns data or needs a stable identity.
-- ❌ Stateless apps — use a [Deployment](../core-objects/deployment.md). StatefulSets are heavier and slower to roll out; don't reach for one just because your app *uses* a database. (Often the right answer is: **stateless app as a Deployment** talking to a **managed database** outside the cluster.)
+- ❌ Stateless apps — use a [Deployment](../replicasets-deployments/introduction-to-deployments.md). StatefulSets are heavier and slower to roll out; don't reach for one just because your app *uses* a database. (Often the right answer is: **stateless app as a Deployment** talking to a **managed database** outside the cluster.)
 
 ## Best practices
 
@@ -253,9 +253,9 @@ This is still a tutorial-sized lab, not a hardened production posture — real p
 - **Size `volumeClaimTemplates` carefully** — they're created per replica and usually persist even after the StatefulSet is deleted (so data isn't lost by accident).
 - **Pin production images and storage deliberately** — this lab uses `postgres:16` and the default StorageClass for portability, but production manifests should pin image versions/digests and choose an explicit storage class.
 
-## Reset after Part 2
+## Reset after Configuration & Data
 
-If you're moving on to Part 3 and want a clean default namespace, remove the config examples and the StatefulSet:
+If you're moving on to Running & Operating and want a clean default namespace, remove the config examples and the StatefulSet:
 
 ```bash
 kubectl delete -f manifests/config-and-data/web-with-config.yaml --ignore-not-found

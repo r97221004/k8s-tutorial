@@ -17,151 +17,119 @@
 
 Many tutorials start you off on minikube or kind — quick to set up, but the components are mostly hidden. Here you stand up a real, upstream Kubernetes cluster with **[kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)** instead, learn it by taking every component apart — `kube-apiserver`, `etcd`, `kubelet`, the CNI — and then put it to work, watching the cluster live in **[k9s](https://k9scli.io)**.
 
-Every concept is paired with a runnable `kubectl apply` example, all building toward one concrete outcome: **deploying a two-tier app (web + database)** — configured with ConfigMaps/Secrets, persisted on a PVC, exposed through a Service + Ingress — then rolling out an update and tearing it back down.
+Every concept is paired with a runnable `kubectl apply` example — configure apps with ConfigMaps/Secrets, persist data on a PVC, expose them through a Service + Ingress, then roll out an update and tear it back down.
 
 > **No prior Kubernetes experience assumed.** New to k8s? Read top to bottom. Already know the basics? Jump straight to the [Table of Contents](#table-of-contents).
 
-**The single-node cluster you'll build by hand — control plane _and_ your app on one machine:**
-
-```mermaid
----
-config:
-  look: handDrawn
-  theme: default
-  themeVariables:
-    fontFamily: '"Comic Sans MS", "Comic Sans", "Segoe Print", "Bradley Hand", cursive'
-    clusterBkg: '#FAFAFA'
-    clusterBorder: '#94A3B8'
-    lineColor: '#FFFFFF'
-    edgeLabelBackground: '#475569'
-  themeCSS: |
-    .edgeLabel, .edgeLabel p, .edgeLabel span { color: #FFFFFF !important; }
----
-flowchart TB
-    you(["👩‍💻 you<br/>kubectl · k9s"])
-
-    subgraph host["🖥️ Your ONE node"]
-        direction TB
-
-        subgraph cp["🧠 Control Plane · static Pods"]
-            direction LR
-            sched["📌 kube-scheduler"]
-            kcm["🔁 kube-controller-manager"]
-            api["🚪 kube-apiserver<br/>the front door"]
-            etcd[("🗄️ etcd<br/>cluster state")]
-            sched --> api
-            kcm --> api
-            api <--> etcd
-        end
-
-        subgraph runtime["⚙️ Node Runtime"]
-            direction LR
-            kubelet["🤖 kubelet<br/>runs Pods on this node"]
-            cri["📦 containerd<br/>CRI runtime"]
-            proxy["🔀 kube-proxy<br/>Service routing"]
-        end
-
-        pods["🚀 your Pods<br/>web &amp; database"]
-
-        subgraph addons["🔌 Add-ons · also Pods"]
-            direction LR
-            cni["🌐 CNI · flannel<br/>pod networking"]
-            dns["📇 CoreDNS<br/>in-cluster DNS"]
-        end
-
-        kubelet --> cri --> pods
-        proxy -. routes traffic to .-> pods
-        cni -. networking .-> pods
-        dns -. DNS .-> pods
-    end
-
-    you --> api
-    api ==>|"schedule &amp; run"| kubelet
-
-    classDef ctrl fill:#0F172A,stroke:#2563EB,stroke-width:2px,color:#FFFFFF
-    classDef eng fill:#D97706,stroke:#92400E,stroke-width:3px,color:#FFFFFF
-    classDef tgt fill:#0F172A,stroke:#16A34A,stroke-width:2px,color:#FFFFFF
-    class you ctrl
-    class api eng
-    class etcd,sched,kcm,kubelet,proxy,cri,pods,cni,dns tgt
-    linkStyle 9 stroke:#D97706,stroke-width:3px
-    style host fill:#1E293B,stroke:#334155,color:#F1F5F9,fillStyle:solid
-    style cp fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-    style runtime fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-    style addons fill:#000000,stroke:#94A3B8,color:#FFFFFF,fillStyle:solid
-```
-
-> Every box above is something you set up and understand with **kubeadm** — not a black box a one-line installer hid from you.
-
-> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). k3s, by contrast, is a *repackaged lightweight distro* with batteries-included defaults baked in. Analogy: Kubernetes is the Linux kernel, kubeadm is a clean standard install, k3s is a pre-loaded distro like Ubuntu. More in [Architecture Overview](docs/getting-started/architecture.md).
+> **"kubeadm" is not a different kind of Kubernetes.** It's the official *installer* that assembles upstream components the standard way — so a kubeadm cluster **is** plain, vanilla Kubernetes (the same thing the official docs and the CKA exam describe). Analogy: Kubernetes is the Linux kernel, and kubeadm is a clean, standard install of it.
 
 ## What You'll Learn
 
 By the end you'll be able to:
 
-- **Read the architecture** and say what each component does — control plane vs. node (see the [diagram above](#kubernetes-in-practice)).
+- **Read the architecture** and say what each component does — control plane vs. data plane (see [Architecture Overview](docs/getting-started/architecture.md)).
 - **Deploy and expose apps** with the core objects: Pods, Deployments, Services.
 - **Separate config from images** with ConfigMaps and Secrets, and **persist data** with PersistentVolumeClaims.
 - **Keep apps healthy and current** — health probes, resource limits, scaling, and rolling updates with rollback.
 - **Control where Pods run and who can touch them** — taints/tolerations for placement, RBAC and NetworkPolicy for access control.
 - **Route traffic in** with an Ingress, and **debug** confidently when things break.
-- **Tie it all together** in the [capstone](docs/capstone/two-tier-app.md): a Vue + FastAPI Todo app — configured, persisted with SQLite on a PVC, exposed, updated, and torn down.
 
 Every section is hands-on: a manifest you `kubectl apply`, then watch take effect.
 
 ## Prerequisites
 
-A Linux host (or WSL2 / a VM), `kubectl` installed, and basic shell + container familiarity.
+Two machines, plus basic shell and container familiarity:
 
-For the kubeadm path, use a fresh Linux machine where you can run `sudo` (Ubuntu is the assumed happy path in the companion Ansible role). A single-node lab is comfortable with **2 vCPU, 4 GB RAM, and 20 GB disk**. Start from a clean host if you can; old container runtimes, stale kubeconfigs, or half-removed clusters make first-time Kubernetes debugging unnecessarily noisy.
+- **A control machine** (your laptop) with Ansible and SSH. It runs the playbook that builds the cluster; see the Ansible tutorial's [Install Ansible](https://github.com/r97221004/ansible-tutorial/blob/master/docs/getting-started/install-ansible.md).
+- **A target Linux VM** that becomes the single cluster node. You need SSH access and `sudo` on it. The companion Ansible tutorial uses **Ubuntu 22.04** (an Azure VM works well). A single-node lab is comfortable with **2 vCPU, 4 GB RAM, and 20 GB disk**. Start from a clean host if you can; old container runtimes, stale kubeconfigs, or half-removed clusters make first-time Kubernetes debugging unnecessarily noisy.
 
-**You'll need a cluster to follow along. Two ways to get one:**
-
-1. **The real lesson — build it with kubeadm.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**, then read [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) to understand every component you just stood up. This is the path the guide is built around.
-2. **Fast lane — just want to run the examples?** Spin up a real single-node cluster with k3s in one line and circle back to kubeadm later:
-
-   ```bash
-   curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
-   export KUBECONFIG=/etc/rancher/k3s/k3s.yaml   # so plain kubectl just works
-   ```
-
-   This is convenient for a throwaway lab, but it still runs a remote install script as root. For anything beyond a local practice VM, inspect the script first or use your platform's normal package/install process.
-
-   k3s is great for running the manifests quickly, but its defaults are not identical to bare kubeadm: it may include built-in storage, ingress, and load-balancer helpers that vanilla kubeadm does not. When this guide calls that out, trust the kubeadm behavior as the main lesson.
-
-Before starting Part 1, verify your cluster is reachable and healthy:
-
-```bash
-kubectl get nodes                 # one node, STATUS Ready
-kubectl get pods -n kube-system   # CoreDNS, kube-proxy, flannel, and control-plane Pods Running
-```
-
-If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started/setup-kubeadm.md) or fix your kubeconfig before continuing.
+**You'll need a cluster to follow along.** Provision the single-node cluster with the companion **[Ansible tutorial → kubeadm Role](https://github.com/r97221004/ansible-tutorial/blob/master/docs/roles/kubeadm.md)**. You don't install `kubectl` or anything else Kubernetes-related on your laptop: the role installs it all on the VM, and you work from there over SSH. Then work through [Before You Start](docs/cluster-setup/before-you-start.md) before Part 3 to make sure the cluster is ready for the examples.
 
 ## Table of Contents
 
-**Getting Started**
+**Part 1 — Getting Started**
 
+- [**Why Use Kubernetes?**](docs/getting-started/why-kubernetes.md) — the problems of running containers by hand, and when you don't need k8s.
 - [**What is Kubernetes?**](docs/getting-started/what-is-kubernetes.md) — declarative vs. imperative; the one idea behind everything.
-- [**Architecture Overview**](docs/getting-started/architecture.md) — every component, and why a kubeadm cluster is vanilla k8s.
-- [**Set Up a Cluster (kubeadm)**](docs/getting-started/setup-kubeadm.md) — build the cluster, then understand each piece the installer wires up.
-- [**kubectl 101**](docs/getting-started/kubectl-101.md) — the everyday commands you'll live in.
-- [**Anatomy of a Manifest**](docs/getting-started/manifest-anatomy.md) — `apiVersion`/`kind`/`metadata`/`spec`, once and for all.
-- [**Inspect with k9s**](docs/getting-started/k9s.md) — a live terminal dashboard for your cluster.
+- [**Architecture Overview**](docs/getting-started/architecture.md) — the big picture, and why a kubeadm cluster is vanilla k8s.
+- [**The Control Plane**](docs/getting-started/control-plane.md) — apiserver, etcd, scheduler, controller-manager: the brain.
+- [**The Data Plane**](docs/getting-started/data-plane.md) — kubelet, containerd, kube-proxy, and add-ons: the muscle.
+- [**The kubectl CLI**](docs/getting-started/kubectl-cli.md) — how kubectl talks to the cluster, and the three kinds of commands.
 
-**Part 1 — Core Objects**
+**Part 2 — Cluster Setup**
 
-- [**Pod**](docs/core-objects/pod.md) — the smallest thing Kubernetes runs.
-- [**Labels & Selectors**](docs/core-objects/labels-selectors.md) — the glue wiring objects together.
-- [**Deployment**](docs/core-objects/deployment.md) — keep N replicas alive and roll out updates.
-- [**ReplicaSet**](docs/core-objects/replicaset.md) — what actually maintains the replica count.
+- [**Before You Start**](docs/cluster-setup/before-you-start.md) — a checklist: a kubeadm cluster, a shell on its node, this repo, and what a bare kubeadm cluster lacks.
+- [**Inspect with k9s**](docs/cluster-setup/k9s.md) — a live terminal dashboard for your cluster.
+
+**Part 3 — Pods**
+
+- [**What Is a Pod**](docs/pods/what-is-a-pod.md) — the smallest thing Kubernetes runs.
+- [**The Pod Lifecycle**](docs/pods/pod-lifecycle.md) — the phases a Pod moves through, and what restarts its containers.
+- [**Creating Pods**](docs/pods/creating-pods.md) — check the cluster, create a Pod with `kubectl run`, and confirm it's running.
+- [**Working with Pods**](docs/pods/working-with-pods.md) — inspect, debug, and clean up Pods with kubectl.
+- [**From Dockerfile to Pod**](docs/pods/from-dockerfile-to-pod.md) — build your own image, push it to Docker Hub, and run it as a Pod.
+
+**Part 4 — Object Management**
+
+- [**Object Management**](docs/object-management/object-management.md) — three ways to create and change objects, and when to use each.
+- [**Manifest Files**](docs/object-management/manifest-files.md) — the four fields every object has, and what the cluster adds.
+- [**Imperative Commands**](docs/object-management/imperative-commands.md) — build and expose an app with commands alone, and see what that leaves out.
+- [**Generating Manifests**](docs/object-management/generating-manifests.md) — let kubectl write the YAML with `--dry-run=client -o yaml`, then tidy it up.
+- [**Imperative Commands with Files**](docs/object-management/imperative-object-configuration.md) — `create -f`, `replace -f`, and `delete -f`, and where they fall short.
+- [**Declarative Object Management**](docs/object-management/declarative-management.md) — `kubectl apply` and `diff`, and how apply decides what to change.
+- [**From Imperative to Declarative**](docs/object-management/imperative-to-declarative.md) — hand objects made with commands over to `apply`, safely.
+- [**Multiple Objects in One File**](docs/object-management/multiple-objects-per-file.md) — put an app's objects in one file with `---`, in the right order.
+
+**Part 5 — ReplicaSets & Deployments**
+
+- [**What Are ReplicaSets**](docs/replicasets-deployments/what-are-replicasets.md) — keep N identical Pods running, and find them with labels and selectors.
+- [**Creating and Managing ReplicaSets**](docs/replicasets-deployments/creating-replicasets.md) — create one, watch it replace a deleted Pod, scale it, and delete it.
+- [**ReplicaSets Can't Update Pods**](docs/replicasets-deployments/replicaset-updates.md) — change the image, and see why running Pods stay on the old version.
+- [**ReplicaSets and Existing Pods**](docs/replicasets-deployments/replicaset-existing-pods.md) — how a selector adopts Pods it didn't create, and releases ones that stop matching.
+- [**Introduction to Deployments**](docs/replicasets-deployments/introduction-to-deployments.md) — the object that manages ReplicaSets for you, and how it upgrades Pods safely.
+- [**Creating and Managing Deployments**](docs/replicasets-deployments/creating-deployments.md) — read a Deployment's status, and see why you manage it, not its ReplicaSet.
+- [**Updating the Pod Template**](docs/replicasets-deployments/updating-pod-template.md) — upgrade the image, watch the Pods get replaced, and see which changes trigger a rollout.
+- [**Understanding Rollouts**](docs/replicasets-deployments/understanding-rollouts.md) — revision history, change causes, rollbacks, and controlling the pace of a rollout.
+- [**Scaling Deployments**](docs/replicasets-deployments/scaling-deployments.md) — change the replica count, see why scaling isn't a rollout, and hand the count to an autoscaler.
+- [**Troubleshooting Failed Rollouts**](docs/replicasets-deployments/troubleshooting-rollouts.md) — spot a stuck rollout, find out why, and recover.
+
+**Part 6 — Services**
+
+- [**What Are Services**](docs/services/what-are-services.md) — a stable name and address in front of a changing set of Pods, and the four types of Service.
+- [**Traffic Generator**](docs/services/traffic-generator.md) — build a small app that keeps calling color-api, and prints which Pod answered.
+- [**Deploying Color API and Traffic Generator**](docs/services/deploying-color-api.md) — run both apps without a Service, and see what goes wrong.
+- [**ClusterIP Services**](docs/services/clusterip-services.md) — a stable in-cluster address, load balancing across Pods, and why the name beats the IP.
+- [**NodePort Services**](docs/services/nodeport-services.md) — open a port on every node, and reach color-api from your laptop through the cloud firewall.
+- [**ExternalName Services**](docs/services/externalname-services.md) — give an outside hostname an in-cluster name, so it can move without your apps noticing.
+
+**Part 7 — Labels, Annotations & Namespaces**
+
+- [**Labels and Selectors**](docs/labels-namespaces/labels-selectors.md) — label objects along several dimensions, change labels from the command line, and query them with selectors.
+- [**Selecting with matchLabels and matchExpressions**](docs/labels-namespaces/selectors-in-manifests.md) — write selectors into manifests, and the rules a workload's selector follows.
+- [**Annotations**](docs/labels-namespaces/annotations.md) — attach information you don't select by, and the annotations you've already met.
+- [**Namespaces**](docs/labels-namespaces/namespaces.md) — the namespaces your cluster came with, what a namespace does and doesn't keep apart, and when to use one.
+- [**Creating and Managing Namespaces**](docs/labels-namespaces/managing-namespaces.md) — create `dev` and `prod`, run the same app in both, switch namespaces, and delete one with everything in it.
+- [**Cross-Namespace Service Communication**](docs/labels-namespaces/cross-namespace-services.md) — see the short Service name stay inside its namespace, and reach across with `name.namespace`.
+
+**Part 8 — Resources & Health Probes**
+
+- [**Introduction to Resource Quotas, Requests, and Limits**](docs/resources-probes/introduction-to-resources.md) — what each of the three controls, who enforces it, and how they fit together.
+- [**Working with Resource Quotas**](docs/resources-probes/resource-quotas.md) — give `dev` and `prod` their own quotas, and find out what each allows and how much is used.
+- [**Setting Requests and Limits**](docs/resources-probes/requests-limits.md) — what the scheduler reserves, what the kernel enforces, and what happens past a limit.
+- [**Rollouts Under a Quota**](docs/resources-probes/rollouts-and-quotas.md) — why a rollout stalls when the quota has no room for surge Pods, and how to make room.
+- [**Health Probes**](docs/resources-probes/health-probes.md) — the three questions startup, liveness, and readiness probes answer.
+- [**Color API v1.2: Health Endpoints**](docs/resources-probes/color-api-health-endpoints.md) — add endpoints for the probes to call. *(coming soon)*
+- [**Startup Probes**](docs/resources-probes/startup-probes.md) — give a slow app time to start before anything else checks it. *(coming soon)*
+- [**Liveness Probes**](docs/resources-probes/liveness-probes.md) — restart a container that's running but stuck. *(coming soon)*
+- [**Readiness Probes**](docs/resources-probes/readiness-probes.md) — keep traffic away from a Pod until it can serve. *(coming soon)*
+
+**Part 9 — Core Objects**
+
 - [**Scheduling, Taints & Tolerations**](docs/core-objects/scheduling.md) — control where Pods can land.
 - [**DaemonSet (intro)**](docs/core-objects/daemonset.md) — one Pod per node.
 - [**Job & CronJob**](docs/core-objects/job-cronjob.md) — batch and scheduled work.
-- [**Service**](docs/core-objects/service.md) — a stable address + load balancer for Pods.
-- [**Namespace**](docs/core-objects/namespace.md) — partition the cluster.
 
-**Part 2 — Configuration & Data**
+**Part 10 — Configuration & Data**
 
 - [**ConfigMap**](docs/config-and-data/configmap.md) — keep config out of the image.
 - [**Secret**](docs/config-and-data/secret.md) — sensitive values.
@@ -169,34 +137,14 @@ If those commands fail, finish [Set Up a Cluster (kubeadm)](docs/getting-started
 - [**Volumes & PersistentVolumes**](docs/config-and-data/volumes.md) — storage that survives restarts.
 - [**StatefulSet (intro)**](docs/config-and-data/statefulset.md) — stable identity + storage for stateful apps.
 
-**Part 3 — Running & Operating**
+**Part 11 — Running & Operating**
 
-- [**Health Checks**](docs/running-and-operating/health-checks.md) — liveness / readiness / startup probes.
-- [**Resource Requests & Limits**](docs/running-and-operating/resources.md) — CPU/memory scheduling and caps.
 - [**Scaling**](docs/running-and-operating/scaling.md) — manual and autoscaling.
-- [**Rolling Update & Rollback**](docs/running-and-operating/rolling-updates.md) — zero-downtime releases, instant undo.
 - [**Graceful Shutdown & Disruptions**](docs/running-and-operating/graceful-shutdown.md) — SIGTERM, preStop, drains, and PDBs.
 - [**Debugging**](docs/running-and-operating/debugging.md) — the commands that explain a broken Pod.
 - [**Security Basics**](docs/running-and-operating/security-basics.md) — ServiceAccounts, RBAC, Secrets, and NetworkPolicy.
 
-**Part 4 — Networking & Access**
+**Part 12 — Networking & Access**
 
 - [**Service Discovery & DNS**](docs/networking/dns.md) — find Pods by name.
 - [**Ingress**](docs/networking/ingress.md) — route external traffic by host/path.
-
-**Part 5 — Packaging & Beyond**
-
-- [**Helm**](docs/packaging/helm.md) — the Kubernetes package manager, and how to read a chart.
-- [**Kustomize (intro)**](docs/packaging/kustomize.md) — overlay-based config.
-
-**Capstone**
-
-- [**Deploy Todo Board**](docs/capstone/two-tier-app.md) — Vue + FastAPI + SQLite, end to end.
-- [**Cleanup**](docs/capstone/cleanup.md) — tear it all back down.
-
-**Appendix**
-
-- [**Cluster Lifecycle (kubeadm)**](docs/appendix/cluster-lifecycle.md) — upgrades, etcd backup, certs, and reset.
-- [**kubectl Cheat Sheet**](docs/appendix/cheatsheet.md) — one-page reference.
-- [**Troubleshooting**](docs/appendix/troubleshooting.md) — symptom → cause → fix.
-- [**Further Reading**](docs/appendix/further-reading.md) — advanced topics beyond this guide.

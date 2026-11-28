@@ -4,11 +4,11 @@
 
 ---
 
-More load? Run more copies. Because a [Deployment](../core-objects/deployment.md)'s Pods are interchangeable and a [Service](../core-objects/service.md) load-balances across them, scaling is mostly just changing a number.
+More load? Run more copies. Because a [Deployment](../replicasets-deployments/introduction-to-deployments.md)'s Pods are interchangeable and a [Service](../services/what-are-services.md) load-balances across them, scaling is mostly just changing a number.
 
 ## Before you start
 
-Start from the Part 3 `web` Deployment:
+Start from the Running & Operating `web` Deployment:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml
@@ -45,13 +45,13 @@ kubectl autoscale deployment web --cpu-percent=50 --min=2 --max=10
 kubectl get hpa web      # TARGETS should show current% / target%
 ```
 
-Now the HPA watches average CPU across the Pods: above 50% of their *request* it adds replicas (up to 10), below it removes them (down to 2). This is exactly why [resource **requests**](resources.md) matter — the HPA measures usage *relative to the request*, so a missing request means the HPA can't compute a percentage.
+Now the HPA watches average CPU across the Pods: above 50% of their *request* it adds replicas (up to 10), below it removes them (down to 2). This is exactly why [resource **requests**](../resources-probes/requests-limits.md) matter — the HPA measures usage *relative to the request*, so a missing request means the HPA can't compute a percentage.
 
 If `kubectl top nodes` fails or the HPA shows `<unknown>` targets, metrics-server is not installed or cannot scrape kubelets yet. Fix metrics first; the HPA object can exist, but it can't make useful scaling decisions without those measurements.
 
 > **requests, not limits, drive the HPA.** If CPU sits at 50% target, set sensible requests first or autoscaling misbehaves.
 
-There's also the **VerticalPodAutoscaler** (resize a Pod's requests) and **Cluster Autoscaler** (add nodes) — beyond this guide, see [Further Reading](../appendix/further-reading.md).
+There's also the **VerticalPodAutoscaler** (resize a Pod's requests) and **Cluster Autoscaler** (add nodes) — both are beyond this guide.
 
 > 📝 **Multi-node note:** scaling a Deployment to 5 replicas here lands all 5 on the one node. On a multi-node cluster the scheduler spreads them across machines for real high availability — and a dead node's Pods get rescheduled elsewhere (something a single node can't demonstrate).
 
@@ -75,4 +75,4 @@ Leave Metrics Server installed if you want `kubectl top` and future HPA examples
 
 ---
 
-[← Resource Requests & Limits](resources.md) · [↑ Contents](../../README.md) · [Rolling Update & Rollback →](rolling-updates.md)
+[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Graceful Shutdown & Disruptions →](graceful-shutdown.md)

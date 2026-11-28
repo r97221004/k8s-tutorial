@@ -13,7 +13,7 @@ kubectl delete -f manifests/core-objects/pi-job.yaml --ignore-not-found
 kubectl delete -f manifests/core-objects/hello-cronjob.yaml --ignore-not-found
 ```
 
-Everything so far runs **forever** — a [Deployment](deployment.md) restarts a Pod that exits, because a web server stopping is a failure. But some work is *supposed* to finish: a database migration, a batch import, a nightly report. For that you want a workload that runs **to completion** and then stops. That's a **Job**.
+Everything so far runs **forever** — a [Deployment](../replicasets-deployments/introduction-to-deployments.md) restarts a Pod that exits, because a web server stopping is a failure. But some work is *supposed* to finish: a database migration, a batch import, a nightly report. For that you want a workload that runs **to completion** and then stops. That's a **Job**.
 
 ## Job — run once, to completion
 
@@ -85,7 +85,7 @@ kubectl get jobs -w             # a new Job appears each minute
 kubectl logs job/<job-name>     # read the logs from one CronJob run
 ```
 
-In [k9s](../getting-started/k9s.md), `:cronjobs` and `:jobs` let you watch each run spawn — a satisfying way to *see* the schedule fire.
+In [k9s](../cluster-setup/k9s.md), `:cronjobs` and `:jobs` let you watch each run spawn — a satisfying way to *see* the schedule fire.
 
 ## Best practices
 
@@ -108,4 +108,4 @@ kubectl delete -f manifests/core-objects/pi-job.yaml
 
 ---
 
-[← DaemonSet (intro)](daemonset.md) · [↑ Contents](../../README.md) · [Service →](service.md)
+[← DaemonSet (intro)](daemonset.md) · [↑ Contents](../../README.md) · [Namespace →](namespace.md)

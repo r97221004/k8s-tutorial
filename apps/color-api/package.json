@@ -1,0 +1,12 @@
+{
+  "name": "color-api",
+  "description": "A tiny web app for the From Dockerfile to Pod chapter. Its version is the image tag.",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

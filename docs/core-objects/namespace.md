@@ -31,7 +31,7 @@ kube-public       Active   1h
 kube-node-lease   Active   1h
 ```
 
-Everything you've created so far landed in `default`. The control plane you saw in [Set Up](../getting-started/setup-kubeadm.md) lives in `kube-system`.
+Everything you've created so far landed in `default`. The control plane you saw in [The Control Plane](../getting-started/control-plane.md) lives in `kube-system`.
 
 ## Using namespaces
 
@@ -56,7 +56,7 @@ That default sticks until you change it again. When a later command seems to "lo
 
 For namespaced objects, `kubectl -n dev` decides where an object goes when the manifest does **not** set `metadata.namespace`. If the manifest already says `metadata.namespace: dev`, `kubectl apply -f file.yaml` uses that namespace. Cluster-scoped objects ignore `-n` entirely.
 
-In [k9s](../getting-started/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
+In [k9s](../cluster-setup/k9s.md), press `:ns` to switch, or `0` to see all namespaces at once.
 
 ## Capping usage with a ResourceQuota
 
@@ -129,7 +129,7 @@ kubectl describe resourcequota dev-quota -n dev   # USED vs HARD for each resour
 kubectl describe limitrange dev-defaults -n dev    # default requests/limits
 ```
 
-Once a quota tracks CPU/memory, every Pod in that namespace needs `resources.requests`/`limits`. The [Deployment](deployment.md) example declares them directly; the LimitRange provides defaults for simpler Pods that do not. Without either one, the apiserver rejects the Pod because it cannot count it against the quota.
+Once a quota tracks CPU/memory, every Pod in that namespace needs `resources.requests`/`limits`. The [Deployment](../replicasets-deployments/introduction-to-deployments.md) example declares them directly; the LimitRange provides defaults for simpler Pods that do not. Without either one, the apiserver rejects the Pod because it cannot count it against the quota.
 
 Try pushing past the cap:
 
@@ -158,7 +158,7 @@ kubectl api-resources --namespaced=false
 - ✅ **Names** — `web` in `dev` and `web` in `prod` are different objects.
 - ✅ **A scope for `ResourceQuota`, `LimitRange`, and RBAC** — cap resources or restrict access per namespace.
 - ✅ **DNS** — the `web` Service you created in `dev` is reachable cross-namespace as `web.dev.svc.cluster.local` (see [Service Discovery & DNS](../networking/dns.md)).
-- ❌ **Not a security boundary by default** — without a [NetworkPolicy](../appendix/further-reading.md), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
+- ❌ **Not a security boundary by default** — without a [NetworkPolicy](../running-and-operating/security-basics.md#networkpolicy-namespaces-are-not-firewalls), Pods in one namespace can still reach Pods in another over the network. Namespaces organize; they don't firewall.
 - ❌ **Not for every little thing** — cluster-wide objects (Nodes, PersistentVolumes, Namespaces themselves) aren't namespaced.
 
 ## Best practices
@@ -182,7 +182,7 @@ Then delete the lab namespace. This removes the `web` Deployment, Service, Resou
 kubectl delete namespace dev
 ```
 
-To fully reset after Part 1, also remove the `web` Service and Deployment left in `default`:
+To fully reset after Core Objects, also remove the `web` Service and Deployment left in `default`:
 
 ```bash
 kubectl delete -f manifests/core-objects/web-service.yaml --ignore-not-found
@@ -191,4 +191,4 @@ kubectl delete -f manifests/core-objects/web-deployment.yaml --ignore-not-found
 
 ---
 
-[← Service](service.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)
+[← Job & CronJob](job-cronjob.md) · [↑ Contents](../../README.md) · [ConfigMap →](../config-and-data/configmap.md)

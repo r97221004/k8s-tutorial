@@ -11,7 +11,7 @@
 | Probe | Question | If it fails |
 |-------|----------|-------------|
 | **startupProbe** | "Has it finished starting?" | keep waiting until `failureThreshold` is exhausted, then restart the container |
-| **readinessProbe** | "Can it serve traffic *right now*?" | remove the Pod from its [Service](../core-objects/service.md)'s endpoints (no traffic) — but don't restart |
+| **readinessProbe** | "Can it serve traffic *right now*?" | remove the Pod from its [Service](../services/what-are-services.md)'s endpoints (no traffic) — but don't restart |
 | **livenessProbe** | "Is it still healthy?" | **restart** the container |
 
 The crucial distinction: **readiness controls traffic; liveness controls restarts.** Mixing them up is a classic mistake. Say your app is just slow under heavy load, still working, just taking longer to respond:
@@ -21,7 +21,7 @@ The crucial distinction: **readiness controls traffic; liveness controls restart
 
 ## Before you start
 
-Use the known-good `web` Deployment for Part 3:
+Use the known-good `web` Deployment for Running & Operating:
 
 ```bash
 kubectl apply -f manifests/running-and-operating/web-healthy.yaml
@@ -94,7 +94,7 @@ kubectl rollout status deployment/web
 
 ## See readiness gate traffic (with k9s)
 
-Open [k9s](../getting-started/k9s.md), type `:pods`, and filter for `web`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints. Press `d` on a Pod to see the configured Readiness/Liveness/Startup probes in its describe view.
+Open [k9s](../cluster-setup/k9s.md), type `:pods`, and filter for `web`. The **READY** column (`0/1` → `1/1`) flips only when readiness passes — that's the moment the Pod is added to its Service's endpoints. Press `d` on a Pod to see the configured Readiness/Liveness/Startup probes in its describe view.
 
 Break readiness on purpose:
 
@@ -141,4 +141,4 @@ kubectl rollout status deployment/web
 
 ---
 
-[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Resource Requests & Limits →](resources.md)
+[← StatefulSet (intro)](../config-and-data/statefulset.md) · [↑ Contents](../../README.md) · [Scaling →](scaling.md)

@@ -8,7 +8,7 @@
 
 You only need the cluster components from setup. This chapter observes existing DaemonSets in `kube-system`; it does not create new app resources.
 
-A [Deployment](deployment.md) says *"run N copies, anywhere there's room."* A **DaemonSet** says something different: *"run exactly one copy on every node."* As nodes join the cluster, they automatically get the Pod; as they leave, it goes with them.
+A [Deployment](../replicasets-deployments/introduction-to-deployments.md) says *"run N copies, anywhere there's room."* A **DaemonSet** says something different: *"run exactly one copy on every node."* As nodes join the cluster, they automatically get the Pod; as they leave, it goes with them.
 
 That's the right model for **per-node agents** — things that must touch each machine:
 
@@ -20,26 +20,26 @@ That's the right model for **per-node agents** — things that must touch each m
 
 ## See one you already have
 
-You don't need to create a DaemonSet to study one — your cluster already runs a couple in `kube-system`:
+You don't need to create a DaemonSet to study one — your cluster already runs a couple (`kube-proxy` in `kube-system`, flannel in its own `kube-flannel` namespace):
 
 ```bash
-kubectl get daemonset -n kube-system
+kubectl get daemonset -A
 ```
 
 ```
-NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
-kube-flannel-ds   1         1         1       1            1           <none>                   1h
-kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   1h
+NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-flannel   kube-flannel-ds   1         1         1       1            1           <none>                   1h
+kube-system    kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   1h
 ```
 
-`DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../getting-started/k9s.md) and type `:ds` to watch them.
+`DESIRED 1` here is simply "1 node in the cluster". Add nodes and these counts rise to match — no config change needed. Open [k9s](../cluster-setup/k9s.md) and type `:ds` to watch them.
 
-> **Why is `kube-proxy` a DaemonSet?** Every node needs [Service](service.md) routing, so it's the textbook DaemonSet use case — one copy per node, always. The short version: a Service is how traffic finds a moving target of Pods, and `kube-proxy` is the piece on each node that makes that routing work.
+> **Why is `kube-proxy` a DaemonSet?** Every node needs [Service](../services/what-are-services.md) routing, so it's the textbook DaemonSet use case — one copy per node, always. The short version: a Service is how traffic finds a moving target of Pods, and `kube-proxy` is the piece on each node that makes that routing work.
 
 ## When (not) to use one
 
 - ✅ A per-node agent (logs, metrics, networking, storage).
-- ❌ A regular app — use a [Deployment](deployment.md). You want "N replicas for capacity/availability", not "one per machine".
+- ❌ A regular app — use a [Deployment](../replicasets-deployments/introduction-to-deployments.md). You want "N replicas for capacity/availability", not "one per machine".
 
 ## Scoping to specific nodes
 

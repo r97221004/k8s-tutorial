@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selector-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: selector-demo
+    matchExpressions:
+      - key: release
+        operator: In
+        values: [stable, canary]
+  template:
+    metadata:
+      labels:
+        app: selector-demo    # must satisfy every condition in the selector
+        release: stable
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27

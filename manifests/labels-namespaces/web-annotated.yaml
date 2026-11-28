@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-annotated
+  labels:
+    app: web-annotated                 # labels: for selecting
+  annotations:                         # annotations: for information
+    example.com/git-commit: "3f9c2ab"
+    example.com/build-number: "42"     # values are strings: quote numbers
+    example.com/owner: "Team Web <web@example.com>"
+    example.com/runbook: "https://wiki.example.com/runbooks/web"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-annotated
+  template:
+    metadata:
+      labels:
+        app: web-annotated
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27

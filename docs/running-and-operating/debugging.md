@@ -30,26 +30,25 @@ kubectl describe pod crasher      # Events: "Back-off restarting failed containe
 kubectl delete -f manifests/running-and-operating/crashloop-pod.yaml
 ```
 
-In [k9s](../getting-started/k9s.md), a red `crasher` row jumps out; press `l` for logs, `d` for describe — same data, faster.
+In [k9s](../cluster-setup/k9s.md), a red `crasher` row jumps out; press `l` for logs, `d` for describe — same data, faster.
 
 ## Status cheat-sheet
 
 | Status | Usually means | First check |
 |--------|---------------|-------------|
-| `Pending` | can't be scheduled / PVC unbound | `describe` → Events ("Insufficient cpu", "unbound PVC"); [resources](resources.md), [volumes](../config-and-data/volumes.md) |
+| `Pending` | can't be scheduled / PVC unbound | `describe` → Events ("Insufficient cpu", "unbound PVC"); [requests](../resources-probes/requests-limits.md#3-requests-and-the-scheduler), [volumes](../config-and-data/volumes.md) |
 | `ContainerCreating` (stuck) | image pull or volume mount in progress/failing | `describe` → Events |
 | `ImagePullBackOff` | wrong image name/tag or no registry access | image string, pull secret |
 | `CrashLoopBackOff` | container starts then exits repeatedly | `logs --previous` |
-| `OOMKilled` (in describe) | hit the memory limit | raise/limit memory ([resources](resources.md)) |
+| `OOMKilled` (in describe) | hit the memory limit | raise/limit memory ([memory limits](../resources-probes/requests-limits.md#4-past-a-limit-slowed-down-or-killed)) |
 | `Running` but `0/1` READY | readiness probe failing | [health checks](health-checks.md), `describe` |
-| Service returns nothing | selector matches no Pods | `kubectl get endpoints <svc>` ([Service](../core-objects/service.md)) |
+| Service returns nothing | selector matches no Pods | `kubectl get endpoints <svc>` ([Service](../services/what-are-services.md)) |
 
 ## Best practices
 
 - **Start with `describe` → Events**, then `logs` (add `--previous` for restarts). Resist random `delete`/restart before you've read the cause.
 - **`kubectl exec -it <pod> -- sh`** to inspect from inside (env vars, mounted files, reach a dependency).
 - **`kubectl get events`** when something cluster-wide is off (scheduling, node pressure).
-- See the [Troubleshooting appendix](../appendix/troubleshooting.md) for a fuller symptom→fix table.
 
 ---
 

@@ -40,7 +40,7 @@ kubectl get configmap app-config -o yaml    # inspect it
 kubectl get configmap app-config -o jsonpath='{.data.APP_GREETING}'
 ```
 
-In [k9s](../getting-started/k9s.md), inspect the same object without printing every command:
+In [k9s](../cluster-setup/k9s.md), inspect the same object without printing every command:
 
 1. Launch `k9s`.
 2. Type `:configmaps` and press Enter.
@@ -182,42 +182,6 @@ In k9s, type `:pods`, filter for `web-config`, and highlight the Pod:
 
 - Press `d` to describe it. The Events section is where missing ConfigMap or missing key errors show up.
 - Press `s` to open a shell, then run `printenv APP_GREETING` or `cat /etc/app/app.properties` from inside the container.
-
-## Real backend example
-
-A backend service usually consumes several scalar settings at once: app name, version, database path, feature flags, upstream URLs. In the capstone app, the backend ConfigMap looks like this:
-
-▶ **Runnable manifest:** [`manifests/capstone/backend-config.yaml`](../../manifests/capstone/backend-config.yaml)
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: todo-backend-config
-data:
-  APP_NAME: "Todo Board API"
-  APP_VERSION: "0.1.0"
-  DATABASE_PATH: "/data/todo.db"
-```
-
-The backend Deployment injects the whole ConfigMap with `envFrom`:
-
-```yaml
-containers:
-  - name: backend
-    image: todo-backend:0.1.0
-    envFrom:
-      - configMapRef:
-          name: todo-backend-config
-```
-
-That gives the container `APP_NAME`, `APP_VERSION`, and `DATABASE_PATH` environment variables. The app code reads those variables at startup, so the same backend image can run with different config in dev, staging, and prod.
-
-Verify it in the capstone namespace (only if you have already deployed the capstone app):
-
-```bash
-kubectl exec deploy/todo-backend -n demo -- printenv APP_NAME APP_VERSION DATABASE_PATH
-```
 
 The full chapter on all injection options (including `envFrom` to pull in every key at once) is [Environment Variables & Mounts](env-and-mounts.md).
 

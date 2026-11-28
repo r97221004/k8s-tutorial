@@ -98,4 +98,4 @@ kubectl delete -f manifests/running-and-operating/graceful-web.yaml --ignore-not
 
 ---
 
-[← Rolling Update & Rollback](rolling-updates.md) · [↑ Contents](../../README.md) · [Debugging →](debugging.md)
+[← Scaling](scaling.md) · [↑ Contents](../../README.md) · [Debugging →](debugging.md)

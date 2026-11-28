@@ -1,8 +1,0 @@
-# Patterns to leave out when packaging the chart into a .tgz.
-.DS_Store
-.git/
-.gitignore
-*.tmproj
-*.swp
-*.bak
-*.orig

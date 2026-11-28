@@ -4,7 +4,7 @@
 
 ---
 
-[Service](../core-objects/service.md) IPs are stable, but you still don't want to hard-code them. **CoreDNS** (running in `kube-system`) gives every Service a DNS name, so Pods talk to each other by *name* — `http://web`, not `http://10.96.x.x`.
+[Service](../services/what-are-services.md) IPs are stable, but you still don't want to hard-code them. **CoreDNS** (running in `kube-system`) gives every Service a DNS name, so Pods talk to each other by *name* — `http://web`, not `http://10.96.x.x`.
 
 ## The naming scheme
 
@@ -26,9 +26,11 @@ So a frontend in namespace `dev` reaches its backend with just `http://api`, and
 
 ## Try it
 
-Spin up a throwaway Pod and resolve a Service by name (assumes the `web` Service from the [Service chapter](../core-objects/service.md) exists):
+Spin up a throwaway Pod and resolve a Service by name (this creates the `web` Deployment and its Service first, if they aren't already there; see [What Are Services](../services/what-are-services.md)):
 
 ```bash
+kubectl apply -f manifests/core-objects/web-deployment.yaml -f manifests/core-objects/web-service.yaml
+kubectl rollout status deployment/web
 kubectl run tmp --rm -it --image=busybox:1.36 -- sh
 # inside the Pod:
 nslookup web                 # shows web.<ns>.svc.cluster.local + its ClusterIP
@@ -41,7 +43,7 @@ wget -qO- http://web         # reaches the Service by name
 
 - **Address Services by name, never by IP** — names are stable across restarts and environments; IPs aren't.
 - **Use the short name within a namespace**, the `svc.namespace` form across namespaces — clearer and portable.
-- **If name resolution fails**, check CoreDNS is healthy (`kubectl get pods -n kube-system -l k8s-app=kube-dns`) and that the target Service has [endpoints](../core-objects/service.md).
+- **If name resolution fails**, check CoreDNS is healthy (`kubectl get pods -n kube-system -l k8s-app=kube-dns`) and that the target Service has [endpoints](../services/what-are-services.md).
 
 ---
 

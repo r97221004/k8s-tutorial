@@ -184,7 +184,7 @@ There are two ways a PVC gets a PV:
 
 Most tutorials use dynamic provisioning because it keeps the app manifest focused on the claim, not the storage backend. Static PVs are useful when the storage already exists or needs hand-tuned settings.
 
-> **⚠️ Vanilla kubeadm has no default StorageClass.** Unlike k3s (which bundles `local-path`), bare kubeadm ships no storage provisioner — PVCs stay `Pending` indefinitely without one. Fix it once before running the exercise below:
+> **⚠️ Vanilla kubeadm has no default StorageClass.** Bare kubeadm ships no storage provisioner — PVCs stay `Pending` indefinitely without one. Fix it once before running the exercise below:
 >
 > ```bash
 > kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
@@ -283,7 +283,7 @@ kubectl exec writer -- cat /data/log.txt   # 'persisted!' appears again, appende
 
 The writer's command appends (`>>`) rather than overwrites, so the new Pod adds a *second* `persisted!` line instead of replacing the file. Seeing two lines (not one) is the actual proof: if the volume had been wiped along with the old Pod, you'd only see one.
 
-In [k9s](../getting-started/k9s.md):
+In [k9s](../cluster-setup/k9s.md):
 
 1. Type `:pvc`, press `/`, and filter for `data`. Confirm it shows `Bound`, note the `STORAGECLASS`, and press `d` to describe it if it is stuck `Pending`.
 2. Type `:pv` — see the backing PersistentVolume, its `CLAIM`, and its `RECLAIM POLICY`.
