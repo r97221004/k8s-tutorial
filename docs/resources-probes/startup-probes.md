@@ -96,17 +96,18 @@ kubectl get pod color-api-startup -w
 pod "color-api-startup" deleted
 pod/color-api-startup replaced
 NAME                READY   STATUS             RESTARTS      AGE
-color-api-startup   0/1     Running            0             2s
-color-api-startup   0/1     Running            1 (1s ago)    5s
-color-api-startup   0/1     CrashLoopBackOff   1 (1s ago)    9s
-color-api-startup   0/1     Running            2 (11s ago)   19s
-color-api-startup   0/1     CrashLoopBackOff   2 (1s ago)    23s
-color-api-startup   0/1     Running            3 (20s ago)   42s
-color-api-startup   0/1     CrashLoopBackOff   3 (1s ago)    46s
+color-api-startup   0/1     Running            0             5s
+color-api-startup   0/1     Running            1 (1s ago)    7s
+color-api-startup   0/1     Running            2 (1s ago)    13s
+color-api-startup   0/1     CrashLoopBackOff   2 (1s ago)    19s
+color-api-startup   0/1     Running            3 (13s ago)   31s
+color-api-startup   0/1     CrashLoopBackOff   3 (1s ago)    37s
+color-api-startup   0/1     Running            4 (27s ago)   63s
+color-api-startup   0/1     CrashLoopBackOff   4 (1s ago)    67s
 ...
 ```
 
-Your timings will differ a little. The pattern won't: `RESTARTS` keeps going up, and the Pod never gets to `1/1`. The app needs 60 seconds, and it's killed within about 6, every time. Between restarts, the Pod sits in `CrashLoopBackOff`, waiting longer each time: the same back-off as for a container that [crashes on its own](../pods/pod-lifecycle.md#crashloopbackoff). The time in brackets is when the previous container stopped. Press Ctrl+C, and ask why:
+Your timings will differ a little. The pattern won't: `RESTARTS` keeps going up, and the Pod never gets to `1/1`. The app needs 60 seconds, and it's killed within about 6, every time. The first restarts come right away. After that, the Pod sits in `CrashLoopBackOff` between them, waiting longer each time: the same back-off as for a container that [crashes on its own](../pods/pod-lifecycle.md#crashloopbackoff). The time in brackets is when the previous container stopped. Press Ctrl+C, and ask why:
 
 ```bash
 kubectl describe pod color-api-startup | grep -A 10 Events
@@ -116,17 +117,17 @@ kubectl describe pod color-api-startup | grep -A 10 Events
 Events:
   Type     Reason     Age                From               Message
   ----     ------     ----               ----               -------
-  Normal   Scheduled  50s                default-scheduler  Successfully assigned default/color-api-startup to node-1
-  Normal   Pulled     8s (x4 over 49s)   kubelet            Container image "<YOUR_DOCKERHUB_USER>/color-api:1.3.0" already present on machine
-  Normal   Created    8s (x4 over 49s)   kubelet            Created container color-api
-  Normal   Started    8s (x4 over 49s)   kubelet            Started container color-api
-  Warning  Unhealthy  5s (x8 over 49s)   kubelet            Startup probe failed: Get "http://10.244.0.31:8080/health": dial tcp 10.244.0.31:8080: connect: connection refused
-  Normal   Killing    5s (x4 over 46s)   kubelet            Container color-api failed startup probe, will be restarted
+  Normal   Scheduled  70s                default-scheduler  Successfully assigned default/color-api-startup to node-1
+  Normal   Pulled     8s (x5 over 69s)   kubelet            Container image "<YOUR_DOCKERHUB_USER>/color-api:1.3.0" already present on machine
+  Normal   Created    8s (x5 over 69s)   kubelet            Created container color-api
+  Normal   Started    8s (x5 over 69s)   kubelet            Started container color-api
+  Warning  Unhealthy  4s (x10 over 69s)  kubelet            Startup probe failed: Get "http://10.244.0.31:8080/health": dial tcp 10.244.0.31:8080: connect: connection refused
+  Normal   Killing    4s (x5 over 64s)   kubelet            Container color-api failed startup probe, will be restarted
 ```
 
 Two lines tell the story:
 
-- **`Unhealthy`**: `connection refused`. Nothing is listening on 8080 yet, because the app is still in its 60-second delay. Eight failures so far, two per start.
+- **`Unhealthy`**: `connection refused`. Nothing is listening on 8080 yet, because the app is still in its 60-second delay. Ten failures so far, two per start.
 - **`Killing`**: `failed startup probe, will be restarted`. After the second failure in a row, the kubelet stops the container, and after the back-off starts a new one, which begins its 60 seconds all over again.
 
 The app isn't broken. It just needs more time than the probe gives it, so it never gets to finish. The logs agree: every container is stopped during its delay.
