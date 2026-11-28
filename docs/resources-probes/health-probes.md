@@ -142,4 +142,4 @@ Probes are easy to get wrong in ways that make things worse, not better:
 
 ---
 
-[← Rollouts Under a Quota](rollouts-and-quotas.md) · [↑ Contents](../../README.md) · [Color API v1.2: Health Endpoints →](color-api-health-endpoints.md)
+[← Rollouts Under a Quota](rollouts-and-quotas.md) · [↑ Contents](../../README.md) · [Color API v1.3: Health Endpoints →](color-api-health-endpoints.md)
